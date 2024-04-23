@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:vista_notes/View/Screens/signupScreen.dart';
 import 'package:vista_notes/View/widgets/widgets.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,26 +21,31 @@ class _LoginScreenState extends State<LoginScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         VistaTextLogo(),
-        SizedBox(height: 50),
+        const SizedBox(height: 50),
         Container(
-            padding: EdgeInsets.only(top: 50),
+            padding: const EdgeInsets.only(top: 50),
             child: TextInputWidget(username, "نام کاربری", false)),
         TextInputWidget(password, "رمز عبور", true),
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 20),
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: () {},
-            child: Text("ورود",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
+        LoginAndSignUpButton(),
+        const SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // TextButton(onPressed: () {}, child: Text("ثبت نام")),
+            GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => const SignUpScreen()));
+                },
+                child: const Text(
+                  "ثبت نام ",
+                  style: TextStyle(color: Colors.blue, fontSize: 16),
                 )),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
+            const Text(
+              "حساب کاربری ندارید؟",
+              style: TextStyle(fontSize: 15),
             ),
-          ),
+          ],
         )
       ],
     )));
