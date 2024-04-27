@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:vista_notes/PocketBase/remoteService.dart';
 import 'package:vista_notes/View/Screens/signupScreen.dart';
 import 'package:vista_notes/View/widgets/widgets.dart';
 
@@ -26,8 +27,28 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.only(top: 50),
             child: TextInputWidget(username, "نام کاربری", false)),
         TextInputWidget(password, "رمز عبور", true),
-        LoginAndSignUpButton(),
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 20),
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {
+              LoginUserRemote(username.text, password.text, context);
+            },
+            child: Text("ورود",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                )),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+            ),
+          ),
+        ),
         const SizedBox(height: 15),
+
+//not account?
+
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -49,5 +70,18 @@ class _LoginScreenState extends State<LoginScreen> {
         )
       ],
     )));
+  }
+}
+
+class Detail extends StatelessWidget {
+  const Detail({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        child: Text("Tsojfkdspioji"),
+      ),
+    );
   }
 }
