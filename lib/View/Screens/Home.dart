@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vista_notes/View/Screens/LoginScreen.dart';
 
 import '../../PocketBase/remoteService.dart';
 
@@ -20,7 +21,21 @@ class _HomeState extends State<Home> {
       ),
       body: Container(
         child: Center(
-          child: Text(widget.username),
+          child: Column(
+            children: [
+              Text(widget.username),
+              ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LoginScreen()));
+                    });
+                  },
+                  child: Text("refresh"))
+            ],
+          ),
         ),
       ),
     );
