@@ -4,9 +4,10 @@ import 'package:vista_notes/View/Screens/LoginScreen.dart';
 import '../../PocketBase/remoteService.dart';
 
 class Home extends StatefulWidget {
-  Home({Key? key, required this.username}) : super(key: key);
+  Home({super.key, required this.title, required this.description});
 
-  String username;
+  List title;
+  List description;
 
   @override
   _HomeState createState() => _HomeState();
@@ -21,22 +22,18 @@ class _HomeState extends State<Home> {
       ),
       body: Container(
         child: Center(
-          child: Column(
-            children: [
-              Text(widget.username),
-              ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LoginScreen()));
-                    });
-                  },
-                  child: Text("refresh"))
-            ],
-          ),
-        ),
+            child: ListView.builder(
+                itemCount: widget.title.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: Column(
+                      children: [
+                        Text(widget.title[index].toString()),
+                        Text(widget.description[index]),
+                      ],
+                    ),
+                  );
+                })),
       ),
     );
   }

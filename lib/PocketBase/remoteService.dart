@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 
@@ -21,83 +23,60 @@ Future<void> SignUpUserRemote(String username, String email, String password,
 Future<void> LoginUserRemote(
     String username, String password, BuildContext context) async {
   try {
-    await pb.collection('users').authWithPassword(username, password);
+    await pb.collection('users').authWithPassword(
+          username,
+          password,
+          expand: 'notes',
+        );
     RecordModel recordModel;
     recordModel = pb.authStore.model;
     User user = User.fromRecordModel(recordModel);
-    // print(user.username);
-    print(pb.authStore.model);
-    // var usermodel=
-    List tst = [];
-    user.notes.forEach((element) {
-      tst.add(element['notes']);
-    });
-    print('objectobjectobjectobject');
-    print(tst);
-
-    final record = await pb.collection('notes').getOne(
-          "zdtba4sgz82mt2f",
-          expand: 'title,description',
-        );
-
-    print('~~~~~~~~~~~~~~~~~~');
-    print(record);
-
-    print('objectobjecctobjectobjectojectobjectobjectobject');
-    print(user.notes);
-    // print(pb.authStore.model.notes);
+    // print(pb.authStore.model);
+    print('@@@@@@@@@@');
+    print(user.title);
 
     Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) => Home(
-                  username: user.notes.toString(),
+                  title: user.title,
+                  description: user.description.toList(),
                 )));
   } catch (e) {
     print(e);
   }
 }
 
-// Future<void> getnotes() async {
-//   try {
-//     User user=
-//     final record = await pb.collection('notes').getOne(,
-//   expand: 'relField1,relField2.subRelField',
-// );
-//   } catch (e) {
-//     print(e);
-//   }
-// }
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class User {
   String username;
   String email;
-  List notes;
+  dynamic title;
+  dynamic description;
 
   User({
     required this.username,
     required this.email,
-    required this.notes,
+    required this.title,
+    required this.description,
   });
   factory User.fromRecordModel(RecordModel recordModel) {
     Map<String, dynamic> json = recordModel.toJson();
+    List<String> title = [];
+    List<String> description = [];
+
+    if (json['expand']['notes'][0]['title'] != null &&
+        json['expand']['notes'][0] != null) {
+      json['expand']['notes'].forEach((expandItem) {
+        title.add(expandItem['title']);
+        description.add(expandItem['description']);
+        // print(expandItem[0]['title']);
+      });
+    }
     return User(
         username: json['username'] ?? "",
         email: json['email'] ?? "",
-        notes: json['notes'] ?? "");
+        // title: json['expand']['notes'][0]['title'] ?? "",
+        title: title,
+        description: description);
   }
-  Map<String, dynamic> toJson() {
-    return {
-      'username': username,
-      "email": email,
-    };
-  }
-
-  // factory User.fromJson(Map<String, dynamic> json) {
-  //   return User(
-  //     username: json['username'] ?? "",
-  //     email: json['email'] ?? "",
-  //   );
-  // }
 }
