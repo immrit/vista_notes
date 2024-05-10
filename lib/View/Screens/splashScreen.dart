@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vista_notes/PocketBase/remoteService.dart';
+import 'package:vista_notes/View/Screens/Home.dart';
 import 'package:vista_notes/View/Screens/LoginScreen.dart';
 import 'package:vista_notes/View/widgets/widgets.dart';
+
+import '../../Model/Hive Model/userModel.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,13 +17,27 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  var token;
+  var userID;
+  getToken() async {
+    final prefsToken = await SharedPreferences.getInstance();
+    token = prefsToken.getString('token');
+    print('/////////////');
+    print(token);
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    Future.delayed(const Duration(seconds: 1), () {
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => LoginScreen()));
+    getToken();
+    // Future.delayed(const Duration(seconds: 1), () {
+    //   Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(builder: (context) => LoginScreen()));
+    // }
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => token == null ? LoginScreen() : Home()));
     });
   }
 

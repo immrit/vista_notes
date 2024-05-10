@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vista_notes/PocketBase/remoteService.dart';
 import 'package:vista_notes/View/Screens/signupScreen.dart';
 import 'package:vista_notes/View/widgets/widgets.dart';
@@ -14,6 +15,14 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController username = TextEditingController(text: "ahmad");
   TextEditingController password = TextEditingController(text: "12345678");
+  storeToken() async {
+    final prefsToken = await SharedPreferences.getInstance();
+    prefsToken.setString('token', pb.authStore.token);
+    // prefsToken.setString('userID', pb.authStore.model.id);
+    print('Token');
+    print(pb.authStore.token);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ElevatedButton(
             onPressed: () {
               LoginUserRemote(username.text, password.text, context);
+              storeToken();
             },
             child: Text("ورود",
                 style: TextStyle(
@@ -70,18 +80,5 @@ class _LoginScreenState extends State<LoginScreen> {
         )
       ],
     )));
-  }
-}
-
-class Detail extends StatelessWidget {
-  const Detail({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        child: Text("Tsojfkdspioji"),
-      ),
-    );
   }
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:vista_notes/View/Screens/splashScreen.dart';
 
-void main() {
+void main() async {
   runApp(const MyApp());
+  // await Hive.initFlutter();
+  // Hive.registerAdapter(UserModelAdapter());
+  // await Hive.openBox<UserModel>('userBox');
 }
 
 class MyApp extends StatelessWidget {

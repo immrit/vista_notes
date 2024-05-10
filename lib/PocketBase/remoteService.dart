@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../View/Screens/Home.dart';
-import '../View/Screens/LoginScreen.dart';
 
 final pb = PocketBase('http://10.0.2.2:8090');
 
@@ -26,57 +24,85 @@ Future<void> LoginUserRemote(
     await pb.collection('users').authWithPassword(
           username,
           password,
-          expand: 'notes',
         );
-    RecordModel recordModel;
-    recordModel = pb.authStore.model;
-    User user = User.fromRecordModel(recordModel);
-    // print(pb.authStore.model);
-    print('@@@@@@@@@@');
-    print(user.title);
+    // RecordModel recordModel = pb.authStore.model;
+    // User user = User.fromRecordModel(recordModel);
+    // var usermodel = UserModel(
+    //   username: user.username,
+    //   email: user.email,
+    //   token: user.token,
+    // );
+    storeuserID() async {
+      final prefsToken = await SharedPreferences.getInstance();
+      prefsToken.setString('userID', pb.authStore.model.id);
+    }
 
     Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => Home(
-                  title: user.title,
-                  description: user.description.toList(),
-                )));
+        context, MaterialPageRoute(builder: (context) => Home()));
   } catch (e) {
     print(e);
   }
 }
 
+Future<void> addNotes(String title, String description) async {
+  final body = <String, dynamic>{
+    "title": title,
+    "description": description,
+    "user": pb.authStore.model.id,
+  };
+
+  final record = await pb.collection('notes').create(body: body);
+
+  print(record);
+}
+
+// Future<List<RecordModel>?>? getnotes() async {
+//   final notesColl = await pb.collection('notes').getList(
+//         filter: 'user.id="${pb.authStore.model.id}"',
+//         page: 1,
+//         perPage: 50,
+//       );
+//   print(notesColl);
+// }
+
 class User {
   String username;
   String email;
-  dynamic title;
-  dynamic description;
+  String token;
 
   User({
     required this.username,
     required this.email,
-    required this.title,
-    required this.description,
+    required this.token,
   });
   factory User.fromRecordModel(RecordModel recordModel) {
     Map<String, dynamic> json = recordModel.toJson();
-    List<String> title = [];
-    List<String> description = [];
 
-    if (json['expand']['notes'][0]['title'] != null &&
-        json['expand']['notes'][0] != null) {
-      json['expand']['notes'].forEach((expandItem) {
-        title.add(expandItem['title']);
-        description.add(expandItem['description']);
-        // print(expandItem[0]['title']);
-      });
-    }
     return User(
         username: json['username'] ?? "",
         email: json['email'] ?? "",
-        // title: json['expand']['notes'][0]['title'] ?? "",
-        title: title,
-        description: description);
+        token: json['token'] ?? "");
   }
 }
+
+class NoteClass {
+  String title;
+  String description;
+  NoteClass({
+    required this.title,
+    required this.description,
+  });
+
+  factory NoteClass.fromRecordModel(RecordModel noteModel) {
+    Map<String, dynamic> json = noteModel.toJson();
+
+    return NoteClass(
+      title: json['title'] ?? "",
+      description: json['description'] ?? "",
+    );
+  }
+}
+
+// class HiveGetData {
+//   static Box<UserModel> getUserModel() => Hive.box<UserModel>('userBox');
+// }
