@@ -25,17 +25,6 @@ Future<void> LoginUserRemote(
           username,
           password,
         );
-    // RecordModel recordModel = pb.authStore.model;
-    // User user = User.fromRecordModel(recordModel);
-    // var usermodel = UserModel(
-    //   username: user.username,
-    //   email: user.email,
-    //   token: user.token,
-    // );
-    storeuserID() async {
-      final prefsToken = await SharedPreferences.getInstance();
-      prefsToken.setString('userID', pb.authStore.model.id);
-    }
 
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => Home()));
@@ -56,42 +45,30 @@ Future<void> addNotes(String title, String description) async {
   print(record);
 }
 
-// Future<List<RecordModel>?>? getnotes() async {
-//   final notesColl = await pb.collection('notes').getList(
-//         filter: 'user.id="${pb.authStore.model.id}"',
-//         page: 1,
-//         perPage: 50,
-//       );
-//   print(notesColl);
-// }
-
 class User {
   String username;
   String email;
-  String token;
 
   User({
     required this.username,
     required this.email,
-    required this.token,
   });
   factory User.fromRecordModel(RecordModel recordModel) {
     Map<String, dynamic> json = recordModel.toJson();
 
     return User(
-        username: json['username'] ?? "",
-        email: json['email'] ?? "",
-        token: json['token'] ?? "");
+      username: json['username'] ?? "",
+      email: json['email'] ?? "",
+    );
   }
 }
 
 class NoteClass {
   String title;
   String description;
-  NoteClass({
-    required this.title,
-    required this.description,
-  });
+  String userID;
+  NoteClass(
+      {required this.title, required this.description, required this.userID});
 
   factory NoteClass.fromRecordModel(RecordModel noteModel) {
     Map<String, dynamic> json = noteModel.toJson();
@@ -99,6 +76,7 @@ class NoteClass {
     return NoteClass(
       title: json['title'] ?? "",
       description: json['description'] ?? "",
+      userID: json['user'] ?? "",
     );
   }
 }

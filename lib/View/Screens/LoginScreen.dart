@@ -15,11 +15,12 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController username = TextEditingController(text: "ahmad");
   TextEditingController password = TextEditingController(text: "12345678");
+  //save token
   storeToken() async {
     final prefsToken = await SharedPreferences.getInstance();
     prefsToken.setString('token', pb.authStore.token);
     // prefsToken.setString('userID', pb.authStore.model.id);
-    print('Token');
+    print('Token//');
     print(pb.authStore.token);
   }
 

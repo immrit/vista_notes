@@ -108,9 +108,18 @@ class _HomeState extends State<Home> {
   }
 
   getData() async {
+    getuserID() async {
+      var userID;
+
+      final prefsToken = await SharedPreferences.getInstance();
+      userID = prefsToken.getString('userID');
+      print('/////////////');
+      print(userID);
+    }
+
     try {
       Map<String, dynamic> q = {
-        'filter': 'user.id="${pb.authStore.model.id}"',
+        'filter': 'user.id="gztgaj7bvpgjnsx"',
         'sort': '-updated'
       };
       var response = await Dio().get(
@@ -119,19 +128,6 @@ class _HomeState extends State<Home> {
       if (response.statusCode == 200) {
         setState(() {
           jsonList = response.data['items'];
-          //Save Data TO HiveDB
-
-          // RecordModel recordModel = pb.authStore.model;
-          // User user = User.fromRecordModel(recordModel);
-          // var usermodel = UserModel(
-          //     username: user.username,
-          //     email: user.email,
-          //     token: pb.authStore.token);
-          // final box = HiveGetData.getUserModel();
-          // box.put('user', usermodel);
-
-          //END Save
-          // print(response);
         });
       }
       print(jsonList);
