@@ -16,8 +16,10 @@ class Loginuser extends StatefulWidget {
 class _LoginuserState extends State<Loginuser> {
   bool _isLoading = false;
   bool _redirecting = false;
-  late final TextEditingController _emailController = TextEditingController();
-  late final TextEditingController _passController = TextEditingController();
+  late final TextEditingController _emailController =
+      TextEditingController(text: 'ahmad@e.com');
+  late final TextEditingController _passController =
+      TextEditingController(text: '1212');
   late final StreamSubscription<AuthState> _authStateSubscription;
 
   Future<void> _signIn() async {
@@ -30,15 +32,16 @@ class _LoginuserState extends State<Loginuser> {
         password: _passController.text.trim(),
       );
       if (mounted) {
-        context.showSnackBar('Check your email for a login link!');
+        context.showSnackBar('خوش آمدید');
 
         _emailController.clear();
+        _passController.clear();
       }
     } on AuthException catch (error) {
       if (mounted) context.showSnackBar(error.message, isError: true);
     } catch (error) {
       if (mounted) {
-        context.showSnackBar('Unexpected error occurred', isError: true);
+        context.showSnackBar('خطایی پیش آمد', isError: true);
       }
     } finally {
       if (mounted) {
@@ -57,7 +60,7 @@ class _LoginuserState extends State<Loginuser> {
         final session = data.session;
         if (session != null) {
           _redirecting = true;
-          Navigator.pushNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/home');
         }
       },
       onError: (error) {

@@ -5,6 +5,7 @@ import 'package:vista_notes2/view/screen/ouathUser/welcome.dart';
 
 import 'view/screen/homeScreen.dart';
 import 'view/screen/ouathUser/signupUser.dart';
+import 'view/screen/profile.dart';
 
 void main() async {
   await Supabase.initialize(
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignupUser(),
         '/home': (context) => Homescreen(),
         '/login': (context) => Loginuser(),
-        // '/main': (context) => MainPage(),
+        '/profile': (context) => AccountPage(),
         '/welcome': (context) => WelcomePage()
       },
     );
