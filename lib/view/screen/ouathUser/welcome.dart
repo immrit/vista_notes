@@ -16,30 +16,27 @@ class WelcomePage extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: Image.asset('lib/util/images/vistalogo.png'),
           ),
-          Text(
+          const Text(
             '!سلام خیلی خوش اومدی به ویستا',
             style: TextStyle(
                 fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
           ),
-          Text(
+          const Text(
             textAlign: TextAlign.right,
             'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
             style: TextStyle(fontSize: 15, color: Colors.white),
           ),
-          // ElevatedButton(
-          //     onPressed: () {
-          //       Navigator.pushNamed(context, '/login');
-          //     },
-          //     child: Text("child")),
           Padding(
             padding: const EdgeInsets.only(top: 290),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                CustomButton(Colors.white, "ثبت نام", Colors.black, () {
+                CustomButtonWelcomePage(Colors.white, "ثبت نام", Colors.black,
+                    () {
                   Navigator.pushNamed(context, '/signup');
                 }),
-                CustomButton(Colors.white12, "ورود", Colors.white, () {
+                CustomButtonWelcomePage(Colors.white12, "ورود", Colors.white,
+                    () {
                   Navigator.pushNamed(context, '/login');
                 }),
               ],

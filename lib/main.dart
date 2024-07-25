@@ -4,14 +4,13 @@ import 'package:vista_notes2/view/screen/ouathUser/loginUser.dart';
 import 'package:vista_notes2/view/screen/ouathUser/welcome.dart';
 
 import 'view/screen/homeScreen.dart';
-import 'view/screen/mainPage.dart';
 import 'view/screen/ouathUser/signupUser.dart';
 
 void main() async {
   await Supabase.initialize(
-      url: 'https://hmkfgkzhyzvfeyonfoov.supabase.co',
+      url: 'https://dryadhdblerledhitmlk.supabase.co',
       anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhta2Zna3poeXp2ZmV5b25mb292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzNTgzMDAsImV4cCI6MjAzMzkzNDMwMH0.DzIrWS97erolv3ujZGstwESWL2eTZuZCpwzJh8w89X8');
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeWFkaGRibGVybGVkaGl0bWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjE3NDIzMDUsImV4cCI6MjAzNzMxODMwNX0.lSpNra_VNlH8onENAOS4HEcUsJ_SREvPaoV5FBtG26g');
   runApp(const MyApp());
 }
 
@@ -23,19 +22,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Vista',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Homescreen(),
-      initialRoute: '/welcome',
+      home: supabase.auth.currentSession == null
+          ? const WelcomePage()
+          : const Homescreen(),
+      initialRoute: '/',
       routes: {
         '/signup': (context) => SignupUser(),
         '/home': (context) => Homescreen(),
         '/login': (context) => Loginuser(),
-        '/main': (context) => MainPage(),
+        // '/main': (context) => MainPage(),
         '/welcome': (context) => WelcomePage()
       },
     );

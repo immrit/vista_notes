@@ -1,7 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'package:vista_notes2/util/constant.dart';
+import 'package:vista_notes2/util/widgets.dart';
+import '../../../main.dart';
 
 class Loginuser extends StatefulWidget {
   const Loginuser({Key? key}) : super(key: key);
@@ -11,36 +14,69 @@ class Loginuser extends StatefulWidget {
 }
 
 class _LoginuserState extends State<Loginuser> {
-  final TextEditingController username = TextEditingController();
-  final TextEditingController pass = TextEditingController();
-  bool isloading = false;
+  bool _isLoading = false;
+  bool _redirecting = false;
+  late final TextEditingController _emailController = TextEditingController();
+  late final TextEditingController _passController = TextEditingController();
+  late final StreamSubscription<AuthState> _authStateSubscription;
 
-  Future<void> login(final email, final pass) async {
-    setState(() {
-      isloading = true;
-    });
+  Future<void> _signIn() async {
     try {
-      await client.auth.signInWithPassword(password: pass, email: email);
+      setState(() {
+        _isLoading = true;
+      });
+      await supabase.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passController.text.trim(),
+      );
       if (mounted) {
-        Navigator.pushNamed(context, '/home');
+        context.showSnackBar('Check your email for a login link!');
+
+        _emailController.clear();
       }
-    } on AuthException catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("error"),
-      ));
+    } on AuthException catch (error) {
+      if (mounted) context.showSnackBar(error.message, isError: true);
+    } catch (error) {
+      if (mounted) {
+        context.showSnackBar('Unexpected error occurred', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-    setState(() {
-      isloading = false;
-    });
+  }
+
+  @override
+  void initState() {
+    _authStateSubscription = supabase.auth.onAuthStateChange.listen(
+      (data) {
+        if (_redirecting) return;
+        final session = data.session;
+        if (session != null) {
+          _redirecting = true;
+          Navigator.pushNamed(context, '/home');
+        }
+      },
+      onError: (error) {
+        if (error is AuthException) {
+          context.showSnackBar(error.message, isError: true);
+        } else {
+          context.showSnackBar('Unexpected error occurred', isError: true);
+        }
+      },
+    );
+    super.initState();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    _emailController.dispose();
+    _passController.dispose();
+    _authStateSubscription.cancel();
     super.dispose();
-    username.dispose();
-    pass.dispose();
   }
 
   @override
@@ -59,50 +95,47 @@ class _LoginuserState extends State<Loginuser> {
                   text: '!خوش برگشتی',
                 ),
                 const SizedBox(height: 80),
-                customTextField('نام کاربری'),
-                SizedBox(height: 10),
-                customTextField('رمزعبور'),
+                customTextField('نام کاربری', _emailController),
+                const SizedBox(height: 10),
+                customTextField('رمزعبور', _passController),
 
 //button
-
-                Padding(
-                  padding: const EdgeInsets.only(top: 400),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ElevatedButton(
-                        onPressed: () async {
-                          login(username.text, pass.text);
-                        },
-                        child: const Text("login")),
+                const Padding(
+                  padding: EdgeInsets.only(top: 360),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "ثبت نام کنید ",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      Text(
+                        "حساب کاربری ندارید؟",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 65),
+                    padding: EdgeInsets.all(10),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20), // گردی 15 واحد
+                    ),
+                  ),
+                  onPressed: _isLoading ? null : _signIn,
+                  child: Text(
+                    _isLoading ? 'در حال ورود...' : 'ورود',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget customTextField(String hintText) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: TextFormField(
-          controller: username,
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(color: Colors.white60),
-            border: OutlineInputBorder(
-              borderSide: const BorderSide(
-                color: Colors.amber,
-                width: 4,
-              ),
-              borderRadius: BorderRadius.circular(18),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -120,10 +153,10 @@ class topText extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Padding(
-        padding: EdgeInsets.only(right: 15),
+        padding: const EdgeInsets.only(right: 15),
         child: Text(
           '${text}',
-          style: TextStyle(
+          style: const TextStyle(
               fontSize: 35, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),

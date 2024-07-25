@@ -29,7 +29,7 @@ class _HomescreenState extends State<Homescreen> {
                   onPressed: () {
                     client.auth.signOut();
                     Navigator.pushNamedAndRemoveUntil(
-                        context, '/main', (rute) => false);
+                        context, '/welcome', (rute) => false);
                   },
                   child: Text("signout")),
             ],
