@@ -16,7 +16,7 @@ class Homescreen extends StatefulWidget {
 
 class _HomescreenState extends State<Homescreen> {
   List<dynamic> notes = []; // لیست برای ذخیره نت ها
-
+  String username = '';
   var _loading = true;
   final TextEditingController titleController = TextEditingController();
 
@@ -46,7 +46,7 @@ class _HomescreenState extends State<Homescreen> {
     }
   }
 
-  Future<void> _insertPost() async {
+  Future<void> _insertNote() async {
     setState(() {
       _loading = true;
     });
@@ -75,6 +75,20 @@ class _HomescreenState extends State<Homescreen> {
     }
   }
 
+  Future<void> _getprofileData() async {
+    try {
+      final userID = supabase.auth.currentSession!.user.id;
+      final data =
+          await supabase.from('profiles').select().eq('id', userID).single();
+      setState(() {
+        username = data['username'].toString();
+        print(username);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
   initState() {
     super.initState();
     _getNotes();
@@ -89,8 +103,8 @@ class _HomescreenState extends State<Homescreen> {
       endDrawer: Drawer(
         child: ListView(
           children: <Widget>[
-            const UserAccountsDrawerHeader(
-              accountName: Text('نام کاربری'),
+            UserAccountsDrawerHeader(
+              accountName: Text('${username}'),
               accountEmail: Text('ایمیل کاربری'),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.brown,
@@ -145,7 +159,7 @@ class _HomescreenState extends State<Homescreen> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          _insertPost().then((v) => _getNotes());
+                          _insertNote().then((v) => _getNotes());
 
                           Navigator.pop(context);
                         });
