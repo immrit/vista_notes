@@ -10,38 +10,44 @@ class WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
+      body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset('lib/util/images/vistalogo.png'),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset('lib/util/images/vistalogo.png'),
+              ),
+              const Text(
+                '!سلام خیلی خوش اومدی به ویستا',
+                style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                textAlign: TextAlign.right,
+                'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
+                style: TextStyle(fontSize: 15, color: Colors.white),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 290),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    CustomButtonWelcomePage(
+                        Colors.white, "ثبت نام", Colors.black, () {
+                      Navigator.pushNamed(context, '/signup');
+                    }),
+                    CustomButtonWelcomePage(
+                        Colors.white12, "ورود", Colors.white, () {
+                      Navigator.pushNamed(context, '/login');
+                    }),
+                  ],
+                ),
+              )
+            ],
           ),
-          const Text(
-            '!سلام خیلی خوش اومدی به ویستا',
-            style: TextStyle(
-                fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          const Text(
-            textAlign: TextAlign.right,
-            'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
-            style: TextStyle(fontSize: 15, color: Colors.white),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 290),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                CustomButtonWelcomePage(Colors.white, "ثبت نام", Colors.black,
-                    () {
-                  Navigator.pushNamed(context, '/signup');
-                }),
-                CustomButtonWelcomePage(Colors.white12, "ورود", Colors.white,
-                    () {
-                  Navigator.pushNamed(context, '/login');
-                }),
-              ],
-            ),
-          )
         ],
       ),
     );
