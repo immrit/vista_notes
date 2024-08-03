@@ -1,54 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vista_notes2/util/widgets.dart';
-import 'package:vista_notes2/view/screen/ouathUser/loginUser.dart';
-import 'package:vista_notes2/view/screen/ouathUser/signupUser.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.init(
+      context,
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+    );
     return Scaffold(
       backgroundColor: Colors.black,
-      body: ListView(
-        children: [
-          Column(
+      body: Container(
+        width: 1.sw,
+        height: 1.sh,
+        child: Flexible(
+          child: ListView(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Image.asset('lib/util/images/vistalogo.png'),
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20).r,
+                    child: Image.asset('lib/util/images/vistalogo.png'),
+                  ),
+                  Text(
+                    '!سلام خیلی خوش اومدی به ویستا',
+                    style: TextStyle(
+                        fontSize: 20.sp,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    textAlign: TextAlign.right,
+                    'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
+                    style: TextStyle(fontSize: 15.sp, color: Colors.white),
+                  ),
+                  SizedBox(height: 0.2.sh),
+                ],
               ),
-              const Text(
-                '!سلام خیلی خوش اومدی به ویستا',
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                textAlign: TextAlign.right,
-                'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
-                style: TextStyle(fontSize: 15, color: Colors.white),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 290),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    CustomButtonWelcomePage(
-                        Colors.white, "ثبت نام", Colors.black, () {
-                      Navigator.pushNamed(context, '/signup');
-                    }),
-                    CustomButtonWelcomePage(
-                        Colors.white12, "ورود", Colors.white, () {
-                      Navigator.pushNamed(context, '/login');
-                    }),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  CustomButtonWelcomePage(Colors.white, "ثبت نام", Colors.black,
+                      () {
+                    Navigator.pushNamed(context, '/signup');
+                  }),
+                  CustomButtonWelcomePage(Colors.white12, "ورود", Colors.white,
+                      () {
+                    Navigator.pushNamed(context, '/login');
+                  }),
+                ],
               )
             ],
           ),
-        ],
+        ),
       ),
     );
   }

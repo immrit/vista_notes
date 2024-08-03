@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vista_notes2/view/screen/ouathUser/loginUser.dart';
 import 'package:vista_notes2/view/screen/ouathUser/welcome.dart';
@@ -24,25 +25,36 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Vista',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: supabase.auth.currentSession == null
-          ? const WelcomePage()
-          : const HomeScreen(),
-      initialRoute: '/',
-      routes: {
-        '/signup': (context) => const SignupUser(),
-        '/home': (context) => const HomeScreen(),
-        '/login': (context) => const Loginuser(),
-        '/profile': (context) => const AccountPage(),
-        '/prof': (context) => ProfileScreen(),
-        '/welcome': (context) => const WelcomePage()
-      },
-    );
+    return ScreenUtilInit(
+        designSize: const Size(360, 690),
+    minTextAdapt: true,
+    splitScreenMode: true,
+    // Use builder only if you need to use library outside ScreenUtilInit context
+    builder: (_ , child) {
+      return MaterialApp(
+        title: 'Vista',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          textTheme: Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
+
+          useMaterial3: true,
+        ),
+
+        home: supabase.auth.currentSession == null
+            ? const WelcomePage()
+            : const HomeScreen(),
+        initialRoute: '/',
+        routes: {
+          '/signup': (context) => const SignupUser(),
+          '/home': (context) => const HomeScreen(),
+          '/login': (context) => const Loginuser(),
+          '/profile': (context) => const AccountPage(),
+          '/prof': (context) => ProfileScreen(),
+          '/welcome': (context) => const WelcomePage()
+        },
+      );
+    });
   }
 }
+
