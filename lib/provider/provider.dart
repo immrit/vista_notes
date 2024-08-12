@@ -1,13 +1,14 @@
-import 'dart:math';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vista_notes2/main.dart';
-import '../services/supabase_service.dart';
+import '../main.dart';
+import '../model/Notes.dart';
 
+//check user state
 final authStateProvider = StreamProvider<User?>((ref) {
   return supabase.auth.onAuthStateChange.map((event) => event.session?.user);
 });
+
+//fetch user profile
 final profileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final user = ref.watch(authStateProvider).when(
         data: (user) => user,
@@ -26,4 +27,16 @@ final profileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   }
 
   return response;
+});
+
+//fetch notes
+final notesProvider = FutureProvider<List<Note>>((ref) async {
+  final userId = supabase.auth.currentSession!.user.id;
+  final response = await Supabase.instance.client
+      .from('Notes')
+      .select()
+      .eq('user_id', userId);
+
+  final data = response as List<dynamic>;
+  return data.map((e) => Note.fromMap(e as Map<String, dynamic>)).toList();
 });

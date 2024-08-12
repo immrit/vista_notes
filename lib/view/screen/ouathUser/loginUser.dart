@@ -1,13 +1,12 @@
 import 'dart:async';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vista_notes2/util/widgets.dart';
+import 'package:vistaNote/util/widgets.dart';
 import '../../../main.dart';
 
 class Loginuser extends StatefulWidget {
-  const Loginuser({Key? key}) : super(key: key);
+  const Loginuser({super.key});
 
   @override
   _LoginuserState createState() => _LoginuserState();
@@ -60,7 +59,7 @@ class _LoginuserState extends State<Loginuser> {
         final session = data.session;
         if (session != null) {
           _redirecting = true;
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         }
       },
       onError: (error) {
@@ -89,56 +88,55 @@ class _LoginuserState extends State<Loginuser> {
       appBar: AppBar(
         backgroundColor: Colors.grey.shade900,
       ),
-      body: ListView(
-        children: [
-          Container(
-            child: Column(
-              children: [
-                topText(
-                  text: '!خوش برگشتی',
-                ),
-                const SizedBox(height: 80),
-                customTextField('نام کاربری', _emailController),
-                const SizedBox(height: 10),
-                customTextField('رمزعبور', _passController),
+      body: Container(
+        width: 1.sw,
+        height: 1.sh,
+        child: Column(
+          children: [
+            topText(
+              text: '!خوش برگشتی',
+            ),
+            const SizedBox(height: 80),
+            customTextField('نام کاربری', _emailController),
+            const SizedBox(height: 10),
+            customTextField('رمزعبور', _passController),
 
-//button
-                const Padding(
-                  padding: EdgeInsets.only(top: 360),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "ثبت نام کنید ",
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                      Text(
-                        "حساب کاربری ندارید؟",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  ),
+            //button
+            SizedBox(
+              height: .3.sh,
+            ),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "ثبت نام کنید ",
+                  style: TextStyle(color: Colors.blue),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 65),
-                    padding: EdgeInsets.all(10),
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20), // گردی 15 واحد
-                    ),
-                  ),
-                  onPressed: _isLoading ? null : _signIn,
-                  child: Text(
-                    _isLoading ? 'در حال ورود...' : 'ورود',
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
+                Text(
+                  "حساب کاربری ندارید؟",
+                  style: TextStyle(color: Colors.white70),
                 ),
               ],
             ),
-          ),
-        ],
+            SizedBox(height: .01.sh),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 65),
+                padding: const EdgeInsets.all(10),
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20), // گردی 15 واحد
+                ),
+              ),
+              onPressed: _isLoading ? null : _signIn,
+              child: Text(
+                _isLoading ? 'در حال ورود...' : 'ورود',
+                style:
+                    const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

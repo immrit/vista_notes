@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../main.dart';
+import '../provider/provider.dart';
 
 Widget CustomButtonWelcomePage(
     Color backgrundColor, String text, Color colorText, dynamic click) {
@@ -39,7 +42,7 @@ Widget customTextField(String hintText, TextEditingController controller) {
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextFormField(
-        style: TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.white),
         controller: controller,
         decoration: InputDecoration(
           hintText: hintText,
@@ -70,9 +73,72 @@ Widget customButtonSignUpORIn(dynamic ontap, String text) {
         child: Text(
           textAlign: TextAlign.center,
           "${text}",
-          style: TextStyle(fontSize: 28),
+          style: const TextStyle(fontSize: 28),
         ),
       ),
     ),
+  );
+}
+
+class AddNoteWidget extends ConsumerStatefulWidget {
+  @override
+  _AddNoteWidgetState createState() => _AddNoteWidgetState();
+}
+
+class _AddNoteWidgetState extends ConsumerState<AddNoteWidget> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextField(
+          controller: _controller,
+          decoration: const InputDecoration(
+            labelText: 'Enter note title',
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            await addNote();
+            Navigator.pop(context);
+          },
+          child: const Text('Add Note'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> addNote() async {
+    final title = _controller.text;
+
+    // ارسال یادداشت به Supabase
+    await supabase.from('Notes').insert({
+      'title': title,
+      'user_id':
+          supabase.auth.currentSession!.user.id, // اضافه کردن شناسه کاربر
+    });
+
+    // بازخوانی لیست یادداشت‌ها پس از اضافه کردن یادداشت جدید
+    ref.invalidate(notesProvider);
+
+    // پاک کردن فیلد ورودی
+    _controller.clear();
+  }
+}
+
+Future showMyDialog(BuildContext context) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true, // پاپ‌آپ با کلیک بیرون از آن بسته می‌شود
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text(
+          'سریع بنویس...',
+          style: TextStyle(color: Colors.black),
+        ),
+        content: SingleChildScrollView(child: AddNoteWidget()),
+      );
+    },
   );
 }

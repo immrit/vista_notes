@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vista_notes2/util/widgets.dart';
+
+import '../../../util/widgets.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});

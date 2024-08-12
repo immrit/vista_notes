@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../main.dart';
 
 class SignupUser extends StatefulWidget {
-  const SignupUser({Key? key}) : super(key: key);
+  const SignupUser({super.key});
 
   @override
   _SignupUserState createState() => _SignupUserState();
@@ -29,7 +29,7 @@ class _SignupUserState extends State<SignupUser> {
       body: Scaffold(
         body: Container(
           child: ElevatedButton(
-            child: Text("Signup"),
+            child: const Text("Signup"),
             onPressed: () => signup,
           ),
         ),

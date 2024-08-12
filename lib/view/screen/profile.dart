@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vista_notes2/util/widgets.dart';
-import 'package:vista_notes2/view/screen/ouathUser/welcome.dart';
+import 'package:vistaNote/util/widgets.dart';
 
 import '../../main.dart';
+import 'ouathUser/welcome.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -116,7 +116,7 @@ class _AccountPageState extends State<AccountPage> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
-          IconButton(onPressed: () => _signOut, icon: Icon(Icons.logout))
+          IconButton(onPressed: () => _signOut, icon: const Icon(Icons.logout))
         ],
       ),
       body: ListView(
@@ -124,11 +124,13 @@ class _AccountPageState extends State<AccountPage> {
         children: [
           TextFormField(
             controller: _usernameController,
+            style: const TextStyle(color: Colors.black),
             decoration: const InputDecoration(labelText: 'User Name'),
           ),
           const SizedBox(height: 18),
           TextFormField(
             controller: _websiteController,
+            style: const TextStyle(color: Colors.black),
             decoration: const InputDecoration(labelText: 'Website'),
           ),
           const SizedBox(height: 18),
