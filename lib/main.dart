@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vistaNote/view/screen/SplashScreen.dart';
 import 'view/screen/homeScreen.dart';
 import 'view/screen/ouathUser/loginUser.dart';
 import 'view/screen/ouathUser/signupUser.dart';
 import 'view/screen/ouathUser/welcome.dart';
+import 'view/screen/prof.dart';
 import 'view/screen/profile.dart';
 
 void main() async {
@@ -29,27 +31,34 @@ class MyApp extends StatelessWidget {
         splitScreenMode: true,
         // Use builder only if you need to use library outside ScreenUtilInit context
         builder: (_, child) {
-          return MaterialApp(
-            title: 'Vista',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-              textTheme: Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
-              useMaterial3: true,
-            ),
-            home: supabase.auth.currentSession == null
-                ? const WelcomePage()
-                : const HomeScreen(),
-            initialRoute: '/',
-            routes: {
-              '/signup': (context) => const SignupUser(),
-              '/home': (context) => const HomeScreen(),
-              '/login': (context) => const Loginuser(),
-              '/profile': (context) => const AccountPage(),
-              // '/prof': (context) => ProfileScreen(),
-              '/welcome': (context) => const WelcomePage()
-            },
-          );
+          return ScreenUtilInit(
+              designSize: Size(375, 812),
+              minTextAdapt: true,
+              builder: (context, child) {
+                return MaterialApp(
+                  title: 'Vista',
+                  debugShowCheckedModeBanner: false,
+                  theme: ThemeData(
+                    colorScheme:
+                        ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                    textTheme:
+                        Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
+                    useMaterial3: true,
+                  ),
+                  home: supabase.auth.currentSession == null
+                      ? const WelcomePage()
+                      : const HomeScreen(),
+                  initialRoute: '/',
+                  routes: {
+                    '/signup': (context) => const SignupUser(),
+                    '/home': (context) => HomeScreen(),
+                    '/login': (context) => const Loginuser(),
+                    '/profile': (context) => const AccountPage(),
+                    '/prof': (context) => Prof(),
+                    '/welcome': (context) => const WelcomePage()
+                  },
+                );
+              });
         });
   }
 }
