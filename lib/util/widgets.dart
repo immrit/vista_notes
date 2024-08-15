@@ -144,27 +144,30 @@ Future showMyDialog(BuildContext context) async {
   );
 }
 
-Widget ProfileFields(String name, IconData icon) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    child: Container(
-        width: double.infinity,
-        height: 80.h,
-        decoration: BoxDecoration(
-          color: Colors.grey[800],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: ListTile(
-            leading: Icon(
-              icon,
-              color: Colors.white54,
-            ),
-            title: Text(
-              name,
-              style: TextStyle(color: Colors.white, fontSize: 15.sp),
-            ),
+Widget ProfileFields(String name, IconData icon, dynamic onclick) {
+  return GestureDetector(
+    onTap: onclick,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Container(
+          width: double.infinity,
+          height: 80.h,
+          decoration: BoxDecoration(
+            color: Colors.grey[800],
+            borderRadius: BorderRadius.circular(20),
           ),
-        )),
+          child: Center(
+            child: ListTile(
+              leading: Icon(
+                icon,
+                color: Colors.white54,
+              ),
+              title: Text(
+                name,
+                style: TextStyle(color: Colors.white, fontSize: 15.sp),
+              ),
+            ),
+          )),
+    ),
   );
 }

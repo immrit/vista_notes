@@ -7,8 +7,8 @@ import 'view/screen/homeScreen.dart';
 import 'view/screen/ouathUser/loginUser.dart';
 import 'view/screen/ouathUser/signupUser.dart';
 import 'view/screen/ouathUser/welcome.dart';
-import 'view/screen/prof.dart';
 import 'view/screen/profile.dart';
+import 'view/screen/editeProfile.dart';
 
 void main() async {
   await Supabase.initialize(
@@ -53,8 +53,8 @@ class MyApp extends StatelessWidget {
                     '/signup': (context) => const SignupUser(),
                     '/home': (context) => HomeScreen(),
                     '/login': (context) => const Loginuser(),
-                    '/profile': (context) => const AccountPage(),
-                    '/prof': (context) => Prof(),
+                    '/editeProfile': (context) => EditeProfile(),
+                    '/profile': (context) => Profile(),
                     '/welcome': (context) => const WelcomePage()
                   },
                 );

@@ -48,23 +48,12 @@ class HomeScreen extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text(
-                  'پروفایل',
+                  'حساب کاربری',
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
                   // به صفحه پروفایل بروید
                   Navigator.pushNamed(context, '/profile');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text(
-                  'پروفایل',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // به صفحه پروفایل بروید
-                  Navigator.pushNamed(context, '/prof');
                 },
               ),
               ListTile(
@@ -80,10 +69,10 @@ class HomeScreen extends ConsumerWidget {
                 },
               ),
               SizedBox(
-                height: he < 707 ? 355.h : 430.h,
+                height: he < 685 ? 410.h : 480.h,
               ),
               Text(
-                'dev 0.0.1',
+                'dev 0.0.1 ${he.toString()}',
                 style: TextStyle(color: Colors.white60),
               )
             ],
