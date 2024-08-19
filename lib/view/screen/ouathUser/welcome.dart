@@ -8,55 +8,52 @@ class WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ScreenUtil.init(
-      context,
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-    );
+    // ScreenUtil.init(
+    //   context,
+    //   designSize: const Size(375, 812),
+    //   minTextAdapt: true,
+    // );
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Container(
-        width: 1.sw,
-        height: 1.sh,
-        child: Flexible(
-          child: ListView(
-            children: [
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20).r,
-                    child: Image.asset('lib/util/images/vistalogo.png'),
-                  ),
-                  Text(
-                    '!سلام خیلی خوش اومدی به ویستا',
-                    style: TextStyle(
-                        fontSize: 20.sp,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    textAlign: TextAlign.right,
-                    'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
-                    style: TextStyle(fontSize: 15.sp, color: Colors.white),
-                  ),
-                  SizedBox(height: 0.2.sh),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  CustomButtonWelcomePage(Colors.white, "ثبت نام", Colors.black,
-                      () {
-                    Navigator.pushNamed(context, '/signup');
-                  }),
-                  CustomButtonWelcomePage(Colors.white12, "ورود", Colors.white,
-                      () {
-                    Navigator.pushNamed(context, '/login');
-                  }),
-                ],
-              )
-            ],
-          ),
+      body: SizedBox(
+        height: double.infinity,
+        child: ListView(
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20).r,
+                  child: Image.asset('lib/util/images/vistalogo.png'),
+                ),
+                Text(
+                  '!سلام خیلی خوش اومدی به ویستا',
+                  style: TextStyle(
+                      fontSize: 20.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  textAlign: TextAlign.right,
+                  'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
+                  style: TextStyle(fontSize: 15.sp, color: Colors.white),
+                ),
+                SizedBox(height: 0.2.sh),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                CustomButtonWelcomePage(Colors.white, "ثبت نام", Colors.black,
+                    () {
+                  Navigator.pushNamed(context, '/signup');
+                }),
+                CustomButtonWelcomePage(Colors.white12, "ورود", Colors.white,
+                    () {
+                  Navigator.pushNamed(context, '/login');
+                }),
+              ],
+            )
+          ],
         ),
       ),
     );
