@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../main.dart';
 import '../../provider/provider.dart';
 import '../../util/widgets.dart';
+import 'AddNoteScreen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -105,8 +106,12 @@ class HomeScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => Center(child: Text('Error: $err')),
         ),
-        floatingActionButton: FloatingActionButton(onPressed: () {
-          showMyDialog(context);
-        }));
+        floatingActionButton: FloatingActionButton(
+            backgroundColor: Colors.white,
+            child: Icon(Icons.edit),
+            onPressed: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => AddNoteScreen()));
+            }));
   }
 }
