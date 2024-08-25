@@ -108,3 +108,21 @@ Widget ProfileFields(String name, IconData icon, dynamic onclick) {
     ),
   );
 }
+
+Widget addNotesTextFiels(
+    String name, int lines, TextEditingController controller) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    child: Directionality(
+      textDirection: TextDirection.rtl,
+      child: TextField(
+        maxLines: lines,
+        controller: controller,
+        decoration: InputDecoration(
+            hintText: name,
+            border: InputBorder.none,
+            hintStyle: TextStyle(fontSize: 25.sp)),
+      ),
+    ),
+  );
+}

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
+import 'package:vistaNote/util/widgets.dart';
 
 import '../../provider/provider.dart';
 
@@ -22,34 +23,28 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Text('افزودن یادداشت'),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('افزودن یادداشت'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Title',
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _contentController,
-              decoration: InputDecoration(
-                labelText: 'Content',
-              ),
-              maxLines: 5,
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _addNote,
-              child: Text('Save Note'),
-            ),
-          ],
-        ),
+      body: ListView(
+        children: [
+          Column(
+            children: [
+              addNotesTextFiels('موضوع', 1, _titleController),
+              SizedBox(height: 5.h),
+              addNotesTextFiels('هرچه میخواهی بگو...', 5, _contentController),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        label: Text('ذخیره یادداشت'),
+        icon: Icon(Icons.add),
+        onPressed: _addNote,
+        // shape: const CircleBorder(),
+        // isExtended: true,
+        backgroundColor: Colors.white,
       ),
     );
   }

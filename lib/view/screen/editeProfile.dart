@@ -53,6 +53,7 @@ class EditeProfile extends ConsumerWidget {
                     final updatedData = {
                       'username': _usernameController.text,
                     };
+                    ref.invalidate(profileProvider);
                     ref.read(profileUpdateProvider(updatedData)).when(
                           data: (_) {
                             ScaffoldMessenger.of(context).showSnackBar(

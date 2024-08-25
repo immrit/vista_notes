@@ -58,3 +58,14 @@ final notesProvider = FutureProvider<List<Note>>((ref) async {
   final data = response as List<dynamic>;
   return data.map((e) => Note.fromMap(e as Map<String, dynamic>)).toList();
 });
+
+//update pass
+
+final changePasswordProvider =
+    FutureProvider.family<void, String>((ref, newPassword) async {
+  final response = await Supabase.instance.client.auth.updateUser(
+    UserAttributes(password: newPassword),
+  );
+
+  throw Exception(response);
+});

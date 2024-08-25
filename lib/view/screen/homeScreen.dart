@@ -13,6 +13,10 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final getprofile = ref.watch(profileProvider);
     final notesAsyncValue = ref.watch(notesProvider);
+    @override
+    void initState() {
+      ref.refresh(profileProvider);
+    }
 
     final he = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -80,28 +84,33 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         body: notesAsyncValue.when(
-          data: (notes) => GridView.builder(
-            itemCount: notes.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-              childAspectRatio: 1.0,
-            ),
-            itemBuilder: (context, index) {
-              final note = notes[index];
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: ListTile(
-                    title: Text(
-                  note.title,
-                  style: const TextStyle(color: Colors.white),
-                )),
-              );
+          data: (notes) => RefreshIndicator(
+            onRefresh: () async {
+              await ref.refresh(notesProvider);
             },
+            child: GridView.builder(
+              itemCount: notes.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 10.0,
+                mainAxisSpacing: 10.0,
+                childAspectRatio: 1.0,
+              ),
+              itemBuilder: (context, index) {
+                final note = notes[index];
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: ListTile(
+                      title: Text(
+                    note.title,
+                    style: const TextStyle(color: Colors.white),
+                  )),
+                );
+              },
+            ),
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => Center(child: Text('Error: $err')),
