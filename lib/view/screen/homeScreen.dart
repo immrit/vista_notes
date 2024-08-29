@@ -23,7 +23,7 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.grey[900],
         appBar: AppBar(
           backgroundColor: Color(Colors.black12.value),
-          title: Text(
+          title: const Text(
             "Vista Notes",
             style: TextStyle(color: Colors.white),
           ),
@@ -78,7 +78,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               Text(
                 'dev 0.0.1 ${he.toString()}',
-                style: TextStyle(color: Colors.white60),
+                style: const TextStyle(color: Colors.white60),
               )
             ],
           ),
@@ -86,7 +86,7 @@ class HomeScreen extends ConsumerWidget {
         body: notesAsyncValue.when(
           data: (notes) => RefreshIndicator(
             onRefresh: () async {
-              await ref.refresh(notesProvider);
+              ref.refresh(notesProvider);
             },
             child: Padding(
               padding: const EdgeInsets.all(8.0),
@@ -125,10 +125,10 @@ class HomeScreen extends ConsumerWidget {
         ),
         floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.white,
-            child: Icon(Icons.edit),
+            child: const Icon(Icons.edit),
             onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => AddNoteScreen()));
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const AddNoteScreen()));
             }));
   }
 }

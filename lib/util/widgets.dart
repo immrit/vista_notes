@@ -128,7 +128,7 @@ Widget addNotesTextFiels(
 void showCustomBottomSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    shape: RoundedRectangleBorder(
+    shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (BuildContext context) {
@@ -138,8 +138,9 @@ void showCustomBottomSheet(BuildContext context) {
           mainAxisSize: MainAxisSize.min, // اندازه مینیمم برای ستون
           children: [
             ListTile(
-              leading: Icon(Icons.edit, color: Colors.blue), // آیکون ویرایش
-              title: Text('ویرایش'),
+              leading:
+                  const Icon(Icons.edit, color: Colors.blue), // آیکون ویرایش
+              title: const Text('ویرایش'),
               onTap: () {
                 // عملکرد ویرایش
                 Navigator.pop(context);
@@ -147,8 +148,8 @@ void showCustomBottomSheet(BuildContext context) {
               },
             ),
             ListTile(
-              leading: Icon(Icons.delete, color: Colors.red), // آیکون حذف
-              title: Text('حذف'),
+              leading: const Icon(Icons.delete, color: Colors.red), // آیکون حذف
+              title: const Text('حذف'),
               onTap: () {
                 // عملکرد حذف
                 Navigator.pop(context);
