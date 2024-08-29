@@ -88,52 +88,56 @@ class _LoginuserState extends State<Loginuser> {
       appBar: AppBar(
         backgroundColor: Colors.grey.shade900,
       ),
-      body: Container(
+      body: SizedBox(
         width: 1.sw,
         height: 1.sh,
-        child: Column(
+        child: ListView(
           children: [
-            topText(
-              text: '!خوش برگشتی',
-            ),
-            const SizedBox(height: 80),
-            customTextField('نام کاربری', _emailController),
-            const SizedBox(height: 10),
-            customTextField('رمزعبور', _passController),
-
-            //button
-            SizedBox(
-              height: .3.sh,
-            ),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Column(
               children: [
-                Text(
-                  "ثبت نام کنید ",
-                  style: TextStyle(color: Colors.blue),
+                topText(
+                  text: '!خوش برگشتی',
                 ),
-                Text(
-                  "حساب کاربری ندارید؟",
-                  style: TextStyle(color: Colors.white70),
+                const SizedBox(height: 80),
+                customTextField('نام کاربری', _emailController),
+                const SizedBox(height: 10),
+                customTextField('رمزعبور', _passController),
+
+                //button
+                SizedBox(
+                  height: .3.sh,
+                ),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "ثبت نام کنید ",
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                    Text(
+                      "حساب کاربری ندارید؟",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+                SizedBox(height: .01.sh),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 65),
+                    padding: const EdgeInsets.all(10),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20), // گردی 15 واحد
+                    ),
+                  ),
+                  onPressed: _isLoading ? null : _signIn,
+                  child: Text(
+                    _isLoading ? 'در حال ورود...' : 'ورود',
+                    style:
+                        const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
-            ),
-            SizedBox(height: .01.sh),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 65),
-                padding: const EdgeInsets.all(10),
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20), // گردی 15 واحد
-                ),
-              ),
-              onPressed: _isLoading ? null : _signIn,
-              child: Text(
-                _isLoading ? 'در حال ورود...' : 'ورود',
-                style:
-                    const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-              ),
             ),
           ],
         ),
@@ -145,9 +149,9 @@ class _LoginuserState extends State<Loginuser> {
 class topText extends StatelessWidget {
   String text;
   topText({
-    Key? key,
+    super.key,
     required this.text,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +160,7 @@ class topText extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(right: 15),
         child: Text(
-          '${text}',
+          text,
           style: const TextStyle(
               fontSize: 35, fontWeight: FontWeight.bold, color: Colors.white),
         ),

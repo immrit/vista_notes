@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../main.dart';
-import '../provider/provider.dart';
 
 Widget CustomButtonWelcomePage(
     Color backgrundColor, String text, Color colorText, dynamic click) {
@@ -73,7 +70,7 @@ Widget customButtonSignUpORIn(dynamic ontap, String text) {
         alignment: Alignment.center,
         child: Text(
           textAlign: TextAlign.center,
-          "${text}",
+          text,
           style: const TextStyle(fontSize: 28),
         ),
       ),
@@ -124,5 +121,43 @@ Widget addNotesTextFiels(
             hintStyle: TextStyle(fontSize: 25.sp)),
       ),
     ),
+  );
+}
+
+//bottomSheet
+void showCustomBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (BuildContext context) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // اندازه مینیمم برای ستون
+          children: [
+            ListTile(
+              leading: Icon(Icons.edit, color: Colors.blue), // آیکون ویرایش
+              title: Text('ویرایش'),
+              onTap: () {
+                // عملکرد ویرایش
+                Navigator.pop(context);
+                // کد مربوط به ویرایش را اینجا قرار دهید
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete, color: Colors.red), // آیکون حذف
+              title: Text('حذف'),
+              onTap: () {
+                // عملکرد حذف
+                Navigator.pop(context);
+                // کد مربوط به حذف را اینجا قرار دهید
+              },
+            ),
+          ],
+        ),
+      );
+    },
   );
 }

@@ -7,6 +7,8 @@ import '../../provider/provider.dart';
 class EditeProfile extends ConsumerWidget {
   final TextEditingController _usernameController = TextEditingController();
 
+  EditeProfile({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final getprofileData = ref.watch(profileProvider);
@@ -15,9 +17,9 @@ class EditeProfile extends ConsumerWidget {
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Color(Colors.grey[900]!.value),
-        title: Text('ویرایش پروفایل'),
+        title: const Text('ویرایش پروفایل'),
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: getprofileData.when(
         data: (data) {
@@ -27,7 +29,7 @@ class EditeProfile extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   maxRadius: .08.sh,
-                  backgroundImage: AssetImage(
+                  backgroundImage: const AssetImage(
                     'lib/util/images/vistalogo.png',
                   ),
                 ),
@@ -47,7 +49,7 @@ class EditeProfile extends ConsumerWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 ElevatedButton(
                   onPressed: () {
                     final updatedData = {
@@ -57,12 +59,12 @@ class EditeProfile extends ConsumerWidget {
                     ref.read(profileUpdateProvider(updatedData)).when(
                           data: (_) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                   content:
                                       Text('Profile updated successfully')),
                             );
                           },
-                          loading: () => CircularProgressIndicator(),
+                          loading: () => const CircularProgressIndicator(),
                           error: (error, stack) =>
                               ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -71,13 +73,13 @@ class EditeProfile extends ConsumerWidget {
                           ),
                         );
                   },
-                  child: Text('Update Profile'),
+                  child: const Text('Update Profile'),
                 ),
               ],
             ),
           );
         },
-        loading: () => Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );

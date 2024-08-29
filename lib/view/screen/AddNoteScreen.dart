@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vistaNote/main.dart';
 import 'package:vistaNote/util/widgets.dart';
 
 import '../../provider/provider.dart';
 
 class AddNoteScreen extends ConsumerStatefulWidget {
+  const AddNoteScreen({super.key});
+
   @override
   _AddNoteScreenState createState() => _AddNoteScreenState();
 }
@@ -39,8 +40,8 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        label: Text('ذخیره یادداشت'),
-        icon: Icon(Icons.add),
+        label: const Text('ذخیره یادداشت'),
+        icon: const Icon(Icons.add),
         onPressed: _addNote,
         // shape: const CircleBorder(),
         // isExtended: true,

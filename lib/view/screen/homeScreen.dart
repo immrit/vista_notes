@@ -88,28 +88,36 @@ class HomeScreen extends ConsumerWidget {
             onRefresh: () async {
               await ref.refresh(notesProvider);
             },
-            child: GridView.builder(
-              itemCount: notes.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10.0,
-                mainAxisSpacing: 10.0,
-                childAspectRatio: 1.0,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GridView.builder(
+                itemCount: notes.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10.0,
+                  mainAxisSpacing: 10.0,
+                  childAspectRatio: 1.0,
+                ),
+                itemBuilder: (context, index) {
+                  final note = notes[index];
+                  return GestureDetector(
+                    onLongPress: () {
+                      showCustomBottomSheet(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: ListTile(
+                          title: Text(
+                        note.title,
+                        style: const TextStyle(color: Colors.white),
+                      )),
+                    ),
+                  );
+                },
               ),
-              itemBuilder: (context, index) {
-                final note = notes[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: ListTile(
-                      title: Text(
-                    note.title,
-                    style: const TextStyle(color: Colors.white),
-                  )),
-                );
-              },
             ),
           ),
           loading: () => const Center(child: CircularProgressIndicator()),

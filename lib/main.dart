@@ -25,36 +25,32 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  ScreenUtilInit(
-              designSize: Size(375, 812),
-              minTextAdapt: true,
-              splitScreenMode: true,
-
-              builder: (context, child) {
-                return MaterialApp(
-                  title: 'Vista',
-                  debugShowCheckedModeBanner: false,
-                  theme: ThemeData(
-                    colorScheme:
-                        ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-                    textTheme:
-                        Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
-                    useMaterial3: true,
-                  ),
-                  home: supabase.auth.currentSession == null
-                      ? const WelcomePage()
-                      : const HomeScreen(),
-                  initialRoute: '/',
-                  routes: {
-                    '/signup': (context) => const SignupUser(),
-                    '/home': (context) => HomeScreen(),
-                    '/login': (context) => const Loginuser(),
-                    '/editeProfile': (context) => EditeProfile(),
-                    '/profile': (context) => Profile(),
-                    '/welcome': (context) => const WelcomePage()
-                  },
-                );
-              });
-
+    return ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return MaterialApp(
+            title: 'Vista',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              textTheme: Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
+              useMaterial3: true,
+            ),
+            home: supabase.auth.currentSession == null
+                ? const WelcomePage()
+                : const HomeScreen(),
+            initialRoute: '/',
+            routes: {
+              '/signup': (context) => const SignupUser(),
+              '/home': (context) => const HomeScreen(),
+              '/login': (context) => const Loginuser(),
+              '/editeProfile': (context) => EditeProfile(),
+              '/profile': (context) => const Profile(),
+              '/welcome': (context) => const WelcomePage()
+            },
+          );
+        });
   }
 }

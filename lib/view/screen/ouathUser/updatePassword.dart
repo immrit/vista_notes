@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vistaNote/main.dart';
 
 import '../../../provider/provider.dart';
 
@@ -9,6 +8,8 @@ class ChangePasswordWidget extends ConsumerWidget {
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  ChangePasswordWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,10 +19,10 @@ class ChangePasswordWidget extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: Text('ویرایش رمزعبور'),
+        title: const Text('ویرایش رمزعبور'),
         backgroundColor: Colors.grey[900],
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Form(
         key: _formKey,
@@ -29,7 +30,7 @@ class ChangePasswordWidget extends ConsumerWidget {
           children: [
             TextFormField(
               controller: _newPasswordController,
-              decoration: InputDecoration(labelText: 'پسورد جدید'),
+              decoration: const InputDecoration(labelText: 'پسورد جدید'),
               obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -40,7 +41,7 @@ class ChangePasswordWidget extends ConsumerWidget {
             ),
             TextFormField(
               controller: _confirmPasswordController,
-              decoration: InputDecoration(labelText: 'تایید پسورد'),
+              decoration: const InputDecoration(labelText: 'تایید پسورد'),
               obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -60,16 +61,17 @@ class ChangePasswordWidget extends ConsumerWidget {
                           .future)
                       .then((_) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Password updated successfully')),
+                      const SnackBar(
+                          content: Text('Password updated successfully')),
                     );
                   }).catchError((error) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('پسورد جدید ثبت شد')),
+                      const SnackBar(content: Text('پسورد جدید ثبت شد')),
                     );
                   });
                 }
               },
-              child: Text('ویرایش رمز عبور'),
+              child: const Text('ویرایش رمز عبور'),
             ),
           ],
         ),

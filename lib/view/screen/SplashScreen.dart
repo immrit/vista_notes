@@ -18,10 +18,10 @@ class _SplashScreenState extends State<SplashScreen> {
     // Simulate a delay for the splash screen
     Future.delayed(const Duration(seconds: 2), () {
       supabase.auth.currentSession == null
-          ? Navigator.of(context)
-              .pushReplacement(MaterialPageRoute(builder: (c) => WelcomePage()))
-          : Navigator.of(context)
-              .pushReplacement(MaterialPageRoute(builder: (c) => HomeScreen()));
+          ? Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (c) => const WelcomePage()))
+          : Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (c) => const HomeScreen()));
     });
   }
 
