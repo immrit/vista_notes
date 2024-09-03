@@ -102,7 +102,7 @@ class HomeScreen extends ConsumerWidget {
                   final note = notes[index];
                   return GestureDetector(
                     onLongPress: () {
-                      showCustomBottomSheet(context);
+                      showCustomBottomSheet(context, note);
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -121,14 +121,30 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error: $err')),
+          error: (err, stack) => Center(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('دسترسی به اینترنت قطع است :('),
+              IconButton(
+                  iconSize: 50.h,
+                  splashColor: Colors.transparent,
+                  color: Colors.white,
+                  onPressed: () {
+                    ref.refresh(notesProvider);
+                    ref.refresh(profileProvider);
+                  },
+                  icon: Icon(Icons.refresh))
+            ],
+          )),
         ),
         floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.white,
             child: const Icon(Icons.edit),
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const AddNoteScreen()));
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => AddNoteScreen()));
             }));
   }
 }

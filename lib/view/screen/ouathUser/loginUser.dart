@@ -37,7 +37,8 @@ class _LoginuserState extends State<Loginuser> {
         _passController.clear();
       }
     } on AuthException catch (error) {
-      if (mounted) context.showSnackBar(error.message, isError: true);
+      if (mounted)
+        context.showSnackBar('نام کاربری/رمزعبور اشتباه است', isError: true);
     } catch (error) {
       if (mounted) {
         context.showSnackBar('خطایی پیش آمد', isError: true);
@@ -88,59 +89,54 @@ class _LoginuserState extends State<Loginuser> {
       appBar: AppBar(
         backgroundColor: Colors.grey.shade900,
       ),
-      body: SizedBox(
-        width: 1.sw,
-        height: 1.sh,
-        child: ListView(
+      body: Container(
+        // color: Colors.amber,
+        child: Column(
           children: [
-            Column(
-              children: [
-                topText(
-                  text: '!خوش برگشتی',
-                ),
-                const SizedBox(height: 80),
-                customTextField('نام کاربری', _emailController),
-                const SizedBox(height: 10),
-                customTextField('رمزعبور', _passController),
+            topText(
+              text: '!خوش برگشتی',
+            ),
+            const SizedBox(height: 80),
+            customTextField('نام کاربری', _emailController, (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا مقادیر را وارد نمایید';
+              }
+            }, false),
+            const SizedBox(height: 10),
+            customTextField('رمزعبور', _passController, (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا مقادیر را وارد نمایید';
+              }
+            }, true),
 
-                //button
-                SizedBox(
-                  height: .3.sh,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "ثبت نام کنید ",
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                    Text(
-                      "حساب کاربری ندارید؟",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-                SizedBox(height: .01.sh),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 65),
-                    padding: const EdgeInsets.all(10),
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20), // گردی 15 واحد
-                    ),
+            //button
+
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "ثبت نام کنید ",
+                    style: TextStyle(color: Colors.blue),
                   ),
-                  onPressed: _isLoading ? null : _signIn,
-                  child: Text(
-                    _isLoading ? 'در حال ورود...' : 'ورود',
-                    style:
-                        const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  Text(
+                    "حساب کاربری ندارید؟",
+                    style: TextStyle(color: Colors.white70),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            right: 10,
+            left: 10),
+        child: customButton(_isLoading ? null : _signIn,
+            _isLoading ? '...در حال ورود' : 'ورود'),
       ),
     );
   }

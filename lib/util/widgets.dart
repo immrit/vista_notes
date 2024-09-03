@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vistaNote/model/Notes.dart';
+import 'package:vistaNote/view/screen/AddNoteScreen.dart';
 
 Widget CustomButtonWelcomePage(
     Color backgrundColor, String text, Color colorText, dynamic click) {
@@ -34,7 +36,8 @@ extension ContextExtension on BuildContext {
   }
 }
 
-Widget customTextField(String hintText, TextEditingController controller) {
+Widget customTextField(String hintText, TextEditingController controller,
+    dynamic validator, bool obscureText) {
   return Directionality(
     textDirection: TextDirection.rtl,
     child: Padding(
@@ -42,6 +45,8 @@ Widget customTextField(String hintText, TextEditingController controller) {
       child: TextFormField(
         style: const TextStyle(color: Colors.white),
         controller: controller,
+        validator: validator,
+        obscureText: obscureText,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: const TextStyle(color: Colors.white60),
@@ -58,20 +63,20 @@ Widget customTextField(String hintText, TextEditingController controller) {
   );
 }
 
-Widget customButtonSignUpORIn(dynamic ontap, String text) {
+Widget customButton(dynamic ontap, String text) {
   return GestureDetector(
     onTap: ontap,
     child: Container(
       width: 350,
-      height: 65,
+      height: 50,
       decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(30)),
+          color: Colors.white, borderRadius: BorderRadius.circular(15)),
       child: Align(
         alignment: Alignment.center,
         child: Text(
           textAlign: TextAlign.center,
           text,
-          style: const TextStyle(fontSize: 28),
+          style: const TextStyle(fontSize: 20, color: Colors.black),
         ),
       ),
     ),
@@ -125,7 +130,7 @@ Widget addNotesTextFiels(
 }
 
 //bottomSheet
-void showCustomBottomSheet(BuildContext context) {
+void showCustomBottomSheet(BuildContext context, Note note) {
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
@@ -142,8 +147,13 @@ void showCustomBottomSheet(BuildContext context) {
                   const Icon(Icons.edit, color: Colors.blue), // آیکون ویرایش
               title: const Text('ویرایش'),
               onTap: () {
-                // عملکرد ویرایش
                 Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AddNoteScreen(
+                              note: note,
+                            )));
                 // کد مربوط به ویرایش را اینجا قرار دهید
               },
             ),

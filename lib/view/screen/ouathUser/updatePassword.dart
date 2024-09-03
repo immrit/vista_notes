@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vistaNote/util/widgets.dart';
 
 import '../../../provider/provider.dart';
 
@@ -28,33 +29,30 @@ class ChangePasswordWidget extends ConsumerWidget {
         key: _formKey,
         child: Column(
           children: [
-            TextFormField(
-              controller: _newPasswordController,
-              decoration: const InputDecoration(labelText: 'پسورد جدید'),
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a new password';
-                }
-                return null;
-              },
+            customTextField('رمزعبور', _newPasswordController, (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا پسورد جدید را وارد نمایید';
+              }
+              return null;
+            }, true),
+            SizedBox(
+              height: 10.h,
             ),
-            TextFormField(
-              controller: _confirmPasswordController,
-              decoration: const InputDecoration(labelText: 'تایید پسورد'),
-              obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please confirm your password';
-                }
-                if (value != _newPasswordController.text) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
+            customTextField('تایید رمزعبور', _confirmPasswordController,
+                (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا تایید رمزعبور را وارد نمایید';
+              }
+              if (value != _newPasswordController.text) {
+                return 'عدم تطابق رمزعبور';
+              }
+              return null;
+            }, true),
+            SizedBox(
+              height: 10.h,
             ),
-            ElevatedButton(
-              onPressed: () {
+            customButton(
+              () {
                 if (_formKey.currentState!.validate()) {
                   ref
                       .read(changePasswordProvider(_newPasswordController.text)
@@ -71,7 +69,7 @@ class ChangePasswordWidget extends ConsumerWidget {
                   });
                 }
               },
-              child: const Text('ویرایش رمز عبور'),
+              'ویرایش رمز عبور',
             ),
           ],
         ),

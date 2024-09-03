@@ -71,19 +71,18 @@ final changePasswordProvider =
 });
 
 //update Note
+// final editNoteProvider = FutureProvider.family<void, Note>((ref, note) async {
+//   // این متد، یادداشت را ویرایش می‌کند
+//   final response = await supabase
+//       .from('Notes')
+//       .update({
+//         'title': note.title,
+//         'content': note.content,
+//       })
+//       .eq('id', note.id)
+//       .execute();
 
-final updateNoteProvider =
-    FutureProvider.family<void, Map<String, String>>((ref, params) async {
-  final id = params['id']!;
-  final newTitle = params['newTitle']!;
-  final newBody = params['newBody']!;
-
-  final response = await Supabase.instance.client.from('Notes').update({
-    'title': newTitle,
-    'content': newBody,
-  }).eq('id', id);
-
-  if (response.error != null) {
-    throw Exception('Error updating note: ${response.error!.message}');
-  }
-});
+//   if (response.error != null) {
+//     throw Exception('Error updating note: ${response.error!.message}');
+//   }
+// });
