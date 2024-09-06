@@ -47,17 +47,8 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
 
   Future<void> _saveNote() async {
     if (isEditing) {
-      // final updatedData = {
-      //   'id': widget.note!.id,
-      //   'title': titleController.text,
-      //   'content': contentController.text,
-      // };
       await _editeNote(); // ویرایش یادداشت
     } else {
-      // final newNoteData = {
-      //   'title': titleController.text,
-      //   'content': contentController.text,
-      // };
       await _addNote(); // افزودن یادداشت
     }
 
@@ -75,6 +66,16 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
         iconTheme: const IconThemeData(color: Colors.white),
         title: isEditing == true ? Text('ویرایش') : Text('افزودن نوشته جدید'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: _saveNote,
+              child: Text('ذخیره'),
+              style: ElevatedButton.styleFrom(minimumSize: Size(20, 40)),
+            ),
+          )
+        ],
       ),
       body: ListView(
         children: [
@@ -88,14 +89,8 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        label: const Text('ذخیره یادداشت'),
-        icon: const Icon(Icons.add),
-        onPressed: _saveNote,
-        // shape: const CircleBorder(),
-        // isExtended: true,
-        backgroundColor: Colors.white,
-      ),
+
+      // ),
     );
   }
 

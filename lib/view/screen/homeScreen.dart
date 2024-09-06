@@ -102,7 +102,11 @@ class HomeScreen extends ConsumerWidget {
                   final note = notes[index];
                   return GestureDetector(
                     onLongPress: () {
-                      showCustomBottomSheet(context, note);
+                      showCustomBottomSheet(context, note, () {
+                        ref.read(deleteNoteProvider(note.id));
+                        ref.refresh(notesProvider);
+                        Navigator.pop(context);
+                      });
                     },
                     child: Container(
                       decoration: BoxDecoration(

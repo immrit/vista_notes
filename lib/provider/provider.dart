@@ -70,6 +70,18 @@ final changePasswordProvider =
   throw Exception(response);
 });
 
+//delete notes
+
+final deleteNoteProvider =
+    FutureProvider.family<void, dynamic>((ref, noteId) async {
+  final response = await supabase.from('Notes').delete().eq('id', noteId);
+
+  if (response.error != null) {
+    throw Exception('Error deleting note: ${response.error!.message}');
+  }
+});
+
+
 //update Note
 // final editNoteProvider = FutureProvider.family<void, Note>((ref, note) async {
 //   // این متد، یادداشت را ویرایش می‌کند

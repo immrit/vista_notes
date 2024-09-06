@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vistaNote/model/Notes.dart';
 import 'package:vistaNote/view/screen/AddNoteScreen.dart';
 
+import '../main.dart';
+
 Widget CustomButtonWelcomePage(
     Color backgrundColor, String text, Color colorText, dynamic click) {
   return GestureDetector(
@@ -130,7 +132,8 @@ Widget addNotesTextFiels(
 }
 
 //bottomSheet
-void showCustomBottomSheet(BuildContext context, Note note) {
+void showCustomBottomSheet(
+    BuildContext context, Note note, Function ontapFunction) {
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
@@ -158,14 +161,10 @@ void showCustomBottomSheet(BuildContext context, Note note) {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red), // آیکون حذف
-              title: const Text('حذف'),
-              onTap: () {
-                // عملکرد حذف
-                Navigator.pop(context);
-                // کد مربوط به حذف را اینجا قرار دهید
-              },
-            ),
+                leading:
+                    const Icon(Icons.delete, color: Colors.red), // آیکون حذف
+                title: const Text('حذف'),
+                onTap: () => ontapFunction()),
           ],
         ),
       );
