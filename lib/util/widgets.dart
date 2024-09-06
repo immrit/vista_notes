@@ -3,7 +3,28 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vistaNote/model/Notes.dart';
 import 'package:vistaNote/view/screen/AddNoteScreen.dart';
 
-import '../main.dart';
+class topText extends StatelessWidget {
+  String text;
+  topText({
+    super.key,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 15),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontSize: 35, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
 
 Widget CustomButtonWelcomePage(
     Color backgrundColor, String text, Color colorText, dynamic click) {

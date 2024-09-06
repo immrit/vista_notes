@@ -5,9 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../provider/provider.dart';
 
 class EditeProfile extends ConsumerWidget {
-  final TextEditingController _usernameController = TextEditingController();
-
   EditeProfile({super.key});
+
+  final TextEditingController _usernameController = TextEditingController();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

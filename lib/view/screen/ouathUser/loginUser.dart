@@ -141,26 +141,3 @@ class _LoginuserState extends State<Loginuser> {
     );
   }
 }
-
-class topText extends StatelessWidget {
-  String text;
-  topText({
-    super.key,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 15),
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontSize: 35, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
