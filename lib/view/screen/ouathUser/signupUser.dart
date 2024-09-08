@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/SetProfile.dart';
 
@@ -18,8 +20,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _redirecting = false;
   late final TextEditingController _emailController = TextEditingController();
-  late final TextEditingController _passwordController =
-      TextEditingController();
+  late final TextEditingController _passController = TextEditingController();
   late final StreamSubscription<AuthState> _authStateSubscription;
 
   Future<void> _signUp() async {
@@ -27,55 +28,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() {
         _isLoading = true;
       });
-      // ثبت‌نام کاربر با استفاده از ایمیل و رمز عبور
-      final response = await supabase.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      if (response != null) {
-        throw AuthException(response.toString());
-      }
+      await supabase.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passController.text.trim());
       if (mounted) {
-        context.showSnackBar('ثبت‌نام موفقیت‌آمیز بود! لطفاً وارد شوید.');
-        _emailController.clear();
-        _passwordController.clear();
-      }
-    } on AuthException catch (error) {
-      if (mounted) context.showSnackBar(error.message, isError: true);
-    } catch (error) {
-      if (mounted) {
-        context.showSnackBar('Unexpected error occurred', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
+        context.showSnackBar('حساب کاربری شما با موفقیت ایجاد شد :)');
 
-  Future<void> _signIn() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      // ورود کاربر با استفاده از ایمیل و رمز عبور
-      final response = await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      if (response != null) {
-        throw AuthException(response.toString());
-      }
-      if (mounted) {
-        context.showSnackBar('ورود موفقیت‌آمیز!');
+        _emailController.clear();
+        _passController.clear();
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => SetProfileData()));
       }
     } on AuthException catch (error) {
       if (mounted) context.showSnackBar(error.message, isError: true);
     } catch (error) {
       if (mounted) {
-        context.showSnackBar('Unexpected error occurred', isError: true);
+        context.showSnackBar('خطایی رخ داده است', isError: true);
       }
     } finally {
       if (mounted) {
@@ -95,7 +63,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (session != null) {
           _redirecting = true;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const SetProfileData()),
+            MaterialPageRoute(builder: (context) => SetProfileData()),
           );
         }
       },
@@ -113,7 +81,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
+    _passController.dispose();
     _authStateSubscription.cancel();
     super.dispose();
   }
@@ -121,31 +89,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign In / Sign Up')),
+      appBar: AppBar(title: const Text('ایجاد حساب کاربری')),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
         children: [
-          const Text('Sign in or Sign up with your email and password below'),
-          const SizedBox(height: 18),
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(labelText: 'Email'),
           ),
-          const SizedBox(height: 18),
           TextFormField(
-            controller: _passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
-            obscureText: true,
+            controller: _passController,
+            decoration: const InputDecoration(labelText: 'Email'),
           ),
           const SizedBox(height: 18),
           ElevatedButton(
             onPressed: _isLoading ? null : _signUp,
-            child: Text(_isLoading ? 'Signing Up...' : 'Sign Up'),
-          ),
-          const SizedBox(height: 18),
-          ElevatedButton(
-            onPressed: _isLoading ? null : _signIn,
-            child: Text(_isLoading ? 'Signing In...' : 'Sign In'),
+            child: Text(_isLoading ? 'در حال ساخت...' : 'ایجاد!'),
           ),
         ],
       ),

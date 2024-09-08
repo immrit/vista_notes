@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/homeScreen.dart';
-import 'package:vistaNote/view/screen/ouathUser/welcome.dart';
 
 import '../../main.dart';
 
@@ -16,6 +15,7 @@ class SetProfileData extends StatefulWidget {
 
 class _SetProfileDataState extends State<SetProfileData> {
   final _usernameController = TextEditingController();
+  final _websiteController = TextEditingController();
 
   String? _avatarUrl;
   var _loading = true;
@@ -60,9 +60,6 @@ class _SetProfileDataState extends State<SetProfileData> {
     };
     try {
       await supabase.from('profiles').upsert(updates);
-
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
       if (mounted) context.showSnackBar('Successfully updated profile!');
     } on PostgrestException catch (error) {
       if (mounted) context.showSnackBar(error.message, isError: true);
@@ -79,24 +76,6 @@ class _SetProfileDataState extends State<SetProfileData> {
     }
   }
 
-  Future<void> _signOut() async {
-    try {
-      await supabase.auth.signOut();
-    } on AuthException catch (error) {
-      if (mounted) context.showSnackBar(error.message, isError: true);
-    } catch (error) {
-      if (mounted) {
-        context.showSnackBar('Unexpected error occurred', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
-        );
-      }
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -106,6 +85,7 @@ class _SetProfileDataState extends State<SetProfileData> {
   @override
   void dispose() {
     _usernameController.dispose();
+    _websiteController.dispose();
     super.dispose();
   }
 
@@ -121,13 +101,20 @@ class _SetProfileDataState extends State<SetProfileData> {
             decoration: const InputDecoration(labelText: 'User Name'),
           ),
           const SizedBox(height: 18),
+          TextFormField(
+            controller: _websiteController,
+            decoration: const InputDecoration(labelText: 'Website'),
+          ),
           const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: _loading ? null : _updateProfile,
+            onPressed: () {
+              _loading ? null : _updateProfile;
+              Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => HomeScreen()));
+            },
             child: Text(_loading ? 'Saving...' : 'Update'),
           ),
           const SizedBox(height: 18),
-          TextButton(onPressed: _signOut, child: const Text('Sign Out')),
         ],
       ),
     );
