@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vistaNote/util/widgets.dart';
 
 import '../../provider/provider.dart';
 
@@ -23,9 +24,6 @@ class EditeProfile extends ConsumerWidget {
       ),
       body: getprofileData.when(
         data: (data) {
-          if (data != null) {
-            _usernameController.text = data['username'];
-          }
           return Center(
             child: Column(
               children: [
@@ -52,40 +50,40 @@ class EditeProfile extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 15),
-                ElevatedButton(
-                  onPressed: () {
-                    final updatedData = {
-                      'username': _usernameController.text,
-                    };
-                    ref.invalidate(profileProvider);
-                    ref.read(profileUpdateProvider(updatedData)).when(
-                          data: (_) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Profile updated successfully')),
-                            );
-                            // هدایت به صفحه اصلی بعد از ویرایش نام کاربری
-
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stack) =>
-                              ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content:
-                                    Text('Failed to update profile: $error')),
-                          ),
-                        );
-                  },
-                  child: const Text('Update Profile'),
-                ),
               ],
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            right: 10,
+            left: 10),
+        child: customButton(() {
+          final updatedData = {
+            'username': _usernameController.text,
+          };
+          ref.invalidate(profileProvider);
+          ref.read(profileUpdateProvider(updatedData)).when(
+                data: (_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Profile updated successfully')),
+                  );
+                  // هدایت به صفحه اصلی بعد از ویرایش نام کاربری
+
+                  Navigator.pushReplacementNamed(context, '/home');
+                },
+                loading: () => const CircularProgressIndicator(),
+                error: (error, stack) =>
+                    ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update profile: $error')),
+                ),
+              );
+        }, 'ذخیره'),
       ),
     );
   }

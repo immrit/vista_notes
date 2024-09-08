@@ -15,7 +15,6 @@ class SetProfileData extends StatefulWidget {
 
 class _SetProfileDataState extends State<SetProfileData> {
   final _usernameController = TextEditingController();
-  final _websiteController = TextEditingController();
 
   String? _avatarUrl;
   var _loading = true;
@@ -51,6 +50,7 @@ class _SetProfileDataState extends State<SetProfileData> {
     setState(() {
       _loading = true;
     });
+
     final userName = _usernameController.text.trim();
     final user = supabase.auth.currentUser;
     final updates = {
@@ -58,14 +58,50 @@ class _SetProfileDataState extends State<SetProfileData> {
       'username': userName,
       'updated_at': DateTime.now().toIso8601String(),
     };
+
     try {
-      await supabase.from('profiles').upsert(updates);
-      if (mounted) context.showSnackBar('Successfully updated profile!');
+      final response =
+          await supabase.from('profiles').upsert(updates).eq('id', user.id);
+
+      if (response.error != null) {
+        String errorMessage = 'خطایی رخ داد';
+
+        // بررسی انواع خطاها و شخصی‌سازی پیام‌ها
+        if (response.error!.message.contains('duplicate key value')) {
+          errorMessage =
+              'این نام کاربری قبلاً انتخاب شده است. لطفاً یک نام کاربری دیگر وارد کنید.';
+        } else if (response.error!.message.contains('network')) {
+          errorMessage =
+              'مشکلی در ارتباط با شبکه وجود دارد. لطفاً اتصال اینترنت خود را بررسی کنید.';
+        } else if (response.error!.message.contains('invalid input syntax')) {
+          errorMessage = 'ورودی نامعتبر است. لطفاً اطلاعات صحیح وارد کنید.';
+        } else if (response.error!.message.contains('foreign key constraint')) {
+          errorMessage = 'محدودیت در کلید خارجی. داده‌های مرتبط وجود ندارد.';
+        } else {
+          errorMessage = response.error!.message; // پیام پیش‌فرض
+        }
+
+        if (mounted) {
+          context.showSnackBar(errorMessage, isError: true);
+        }
+      } else {
+        if (mounted) {
+          context.showSnackBar('پروفایل با موفقیت به‌روزرسانی شد!');
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        }
+      }
     } on PostgrestException catch (error) {
-      if (mounted) context.showSnackBar(error.message, isError: true);
+      if (mounted) {
+        context.showSnackBar('خطای پایگاه داده: ${error.message}',
+            isError: true); // شخصی‌سازی پیام برای PostgrestException
+      }
     } catch (error) {
       if (mounted) {
-        context.showSnackBar('Unexpected error occurred', isError: true);
+        context.showSnackBar(
+            'خطای غیرمنتظره‌ای رخ داده است. لطفاً دوباره تلاش کنید.',
+            isError: true); // پیام عمومی
       }
     } finally {
       if (mounted) {
@@ -85,7 +121,6 @@ class _SetProfileDataState extends State<SetProfileData> {
   @override
   void dispose() {
     _usernameController.dispose();
-    _websiteController.dispose();
     super.dispose();
   }
 
@@ -101,17 +136,14 @@ class _SetProfileDataState extends State<SetProfileData> {
             decoration: const InputDecoration(labelText: 'User Name'),
           ),
           const SizedBox(height: 18),
-          TextFormField(
-            controller: _websiteController,
-            decoration: const InputDecoration(labelText: 'Website'),
-          ),
           const SizedBox(height: 18),
           ElevatedButton(
-            onPressed: () {
-              _loading ? null : _updateProfile;
-              Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => HomeScreen()));
-            },
+            onPressed: _loading
+                ? null
+                : () async {
+                    final result =
+                        await _updateProfile(); // منتظر نتیجه عملیات باشید
+                  },
             child: Text(_loading ? 'Saving...' : 'Update'),
           ),
           const SizedBox(height: 18),
