@@ -70,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () {
                   supabase.auth.signOut();
 
-                  Navigator.pushReplacementNamed(context, '/login');
+                  Navigator.pushReplacementNamed(context, '/welcome');
                 },
               ),
               SizedBox(
