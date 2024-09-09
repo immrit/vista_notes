@@ -8,7 +8,7 @@ import 'view/screen/ouathUser/loginUser.dart';
 import 'view/screen/ouathUser/signupUser.dart';
 import 'view/screen/ouathUser/welcome.dart';
 import 'view/screen/profile.dart';
-import 'view/screen/editeProfile.dart';
+import 'view/screen/ouathUser/editeProfile.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

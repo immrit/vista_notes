@@ -15,10 +15,8 @@ class Loginuser extends StatefulWidget {
 class _LoginuserState extends State<Loginuser> {
   bool _isLoading = false;
   bool _redirecting = false;
-  late final TextEditingController _emailController =
-      TextEditingController(text: 'ahmad@e.com');
-  late final TextEditingController _passController =
-      TextEditingController(text: '1212');
+  late final TextEditingController _emailController = TextEditingController();
+  late final TextEditingController _passController = TextEditingController();
   late final StreamSubscription<AuthState> _authStateSubscription;
 
   Future<void> _signIn() async {

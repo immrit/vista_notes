@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vistaNote/util/widgets.dart';
 
-import '../../provider/provider.dart';
+import '../../../provider/provider.dart';
 
 class EditeProfile extends ConsumerWidget {
   EditeProfile({super.key});
