@@ -89,41 +89,45 @@ class _LoginuserState extends State<Loginuser> {
       ),
       body: Container(
         // color: Colors.amber,
-        child: Column(
+        child: ListView(
           children: [
-            topText(
-              text: '!خوش برگشتی',
-            ),
-            const SizedBox(height: 80),
-            customTextField('نام کاربری', _emailController, (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفا مقادیر را وارد نمایید';
-              }
-            }, false),
-            const SizedBox(height: 10),
-            customTextField('رمزعبور', _passController, (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفا مقادیر را وارد نمایید';
-              }
-            }, true),
+            Column(
+              children: [
+                topText(
+                  text: '!خوش برگشتی',
+                ),
+                const SizedBox(height: 80),
+                customTextField('نام کاربری', _emailController, (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'لطفا مقادیر را وارد نمایید';
+                  }
+                }, false),
+                const SizedBox(height: 10),
+                customTextField('رمزعبور', _passController, (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'لطفا مقادیر را وارد نمایید';
+                  }
+                }, true),
 
-            //button
+                //button
 
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "ثبت نام کنید ",
-                    style: TextStyle(color: Colors.blue),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "ثبت نام کنید ",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                      Text(
+                        "حساب کاربری ندارید؟",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "حساب کاربری ندارید؟",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

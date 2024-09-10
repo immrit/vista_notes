@@ -57,6 +57,7 @@ class _SetProfileDataState extends State<SetProfileData> {
       'id': user!.id,
       'username': userName,
       'updated_at': DateTime.now().toIso8601String(),
+      'email': user.email
     };
     try {
       await supabase.from('profiles').upsert(updates);

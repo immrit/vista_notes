@@ -24,6 +24,7 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
   TextEditingController titleController = TextEditingController();
   TextEditingController contentController = TextEditingController();
   bool isEditing = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -93,33 +94,20 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
       // ),
 
       floatingActionButton: ElevatedButton(
-        onPressed: _saveNote,
-        child: Text(
-          'ذخیره',
-          style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
-        ),
+        onPressed: isLoading ? null : _saveNote,
+        child: isLoading
+            ? CircularProgressIndicator()
+            : Text(
+                isEditing ? "ویرایش" : "افزودن",
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+              ),
         style: ElevatedButton.styleFrom(
           minimumSize: Size(10, 50),
         ),
       ),
-      // bottomNavigationBar: Padding(
-      //   padding: EdgeInsets.only(
-      //       bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      //       right: 10,
-      //       left: 280),
-      //   child: ElevatedButton(
-      //     onPressed: _saveNote,
-      //     child: Text(
-      //       'ذخیره',
-      //       style: TextStyle(
-      //           fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
-      //     ),
-      //     // style: ElevatedButton.styleFrom(
-      //     //     // minimumSize: Size(15, 40),
-      //     //     ),
-      //   ),
-      // ),
     );
   }
 
@@ -128,7 +116,9 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
   Future<void> _addNote() async {
     final title = titleController.text;
     final content = contentController.text;
-
+    setState(() {
+      isLoading = true;
+    });
     // ارسال یادداشت به Supabase
     await supabase.from('Notes').insert({
       'title': title,
@@ -139,7 +129,11 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
 
     // بازخوانی لیست یادداشت‌ها پس از اضافه کردن یادداشت جدید
     ref.invalidate(notesProvider);
-
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
     // بازگشت به صفحه اصلی
     Navigator.of(context).pop();
   }
@@ -148,7 +142,9 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
   Future<void> _editeNote() async {
     final title = titleController.text;
     final content = contentController.text;
-
+    setState(() {
+      isLoading = true;
+    });
     // ارسال یادداشت به Supabase
     await supabase.from('Notes').update({
       'title': title,
@@ -159,7 +155,11 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
 
     // بازخوانی لیست یادداشت‌ها پس از اضافه کردن یادداشت جدید
     ref.invalidate(notesProvider);
-
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
     // بازگشت به صفحه اصلی
     Navigator.of(context).pop();
   }

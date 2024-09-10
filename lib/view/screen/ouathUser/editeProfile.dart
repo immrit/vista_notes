@@ -25,34 +25,20 @@ class EditeProfile extends ConsumerWidget {
       body: getprofileData.when(
         data: (data) {
           return Center(
-            child: Column(
-              children: [
-                CircleAvatar(
-                  maxRadius: .08.sh,
-                  backgroundImage: const AssetImage(
-                    'lib/util/images/vistalogo.png',
-                  ),
-                ),
-                SizedBox(height: 50.h),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: TextField(
-                      controller: _usernameController,
-                      decoration: InputDecoration(
-                        labelText: 'نام کاربری',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-              ],
+              child: Column(children: [
+            CircleAvatar(
+              maxRadius: .08.sh,
+              backgroundImage: const AssetImage(
+                'lib/util/images/vistalogo.png',
+              ),
             ),
-          );
+            SizedBox(height: 50.h),
+            customTextField('نام کاربری', _usernameController, (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا مقادیر را وارد نمایید';
+              }
+            }, false)
+          ]));
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
@@ -66,7 +52,11 @@ class EditeProfile extends ConsumerWidget {
           final updatedData = {
             'username': _usernameController.text,
           };
-          ref.invalidate(profileProvider);
+          ref.refresh(profileProvider);
+          Navigator.pushReplacementNamed(context, '/home');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('نام شما با موفقیت تغییر کرد')),
+          );
           ref.read(profileUpdateProvider(updatedData)).when(
                 data: (_) {
                   ScaffoldMessenger.of(context).showSnackBar(

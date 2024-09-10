@@ -39,10 +39,11 @@ class MyApp extends StatelessWidget {
             title: 'Vista',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-              textTheme: Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
-              useMaterial3: true,
-            ),
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                textTheme:
+                    Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
+                useMaterial3: true,
+                fontFamily: 'Vazir'),
             home: supabase.auth.currentSession == null
                 ? const WelcomePage()
                 : const HomeScreen(),

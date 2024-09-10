@@ -39,7 +39,12 @@ class HomeScreen extends ConsumerWidget {
                 child: getprofile.when(
                     data: (getprofile) {
                       return UserAccountsDrawerHeader(
-                        decoration: BoxDecoration(color: Colors.grey[800]),
+                        decoration: BoxDecoration(
+                            color: Colors.grey,
+                            image: DecorationImage(
+                                image: AssetImage(
+                                    'lib/util/images/headerBack.jpg'),
+                                fit: BoxFit.cover)),
                         accountName: Text('${getprofile!['username']}'),
                         accountEmail:
                             Text("${supabase.auth.currentUser!.email}"),
@@ -50,16 +55,18 @@ class HomeScreen extends ConsumerWidget {
                     loading: () =>
                         const Center(child: CircularProgressIndicator())),
               ),
-              ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text(
-                  'حساب کاربری',
-                  style: TextStyle(color: Colors.white),
+              Container(
+                child: ListTile(
+                  leading: const Icon(Icons.person),
+                  title: const Text(
+                    'حساب کاربری',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    // به صفحه پروفایل بروید
+                    Navigator.pushNamed(context, '/profile');
+                  },
                 ),
-                onTap: () {
-                  // به صفحه پروفایل بروید
-                  Navigator.pushNamed(context, '/profile');
-                },
               ),
               ListTile(
                 leading: const Icon(Icons.logout),
