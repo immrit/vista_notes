@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vistaNote/model/Notes.dart';
@@ -135,21 +137,38 @@ Widget ProfileFields(String name, IconData icon, dynamic onclick) {
 }
 
 Widget addNotesTextFiels(
-    String name, int lines, TextEditingController controller) {
+    String name,
+    int lines,
+    TextEditingController controller,
+    double fontSize,
+    FontWeight fontWeight,
+    param5,
+    {int? maxLength}) {
   return Container(
     padding: const EdgeInsets.all(20),
     child: Directionality(
       textDirection: TextDirection.rtl,
       child: TextField(
         maxLines: lines,
+        maxLength: maxLength,
         controller: controller,
+        style: TextStyle(fontSize: fontSize, fontWeight: fontWeight),
+        scrollPhysics: NeverScrollableScrollPhysics(),
         decoration: InputDecoration(
             hintText: name,
             border: InputBorder.none,
-            hintStyle: TextStyle(fontSize: 25.sp)),
+            hintStyle: TextStyle(fontSize: 25.sp, color: Colors.white30)),
       ),
     ),
   );
+}
+
+class NoScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildViewportChrome(
+      BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
+  }
 }
 
 //bottomSheet

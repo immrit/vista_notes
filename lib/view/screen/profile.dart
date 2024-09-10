@@ -55,7 +55,7 @@ class Profile extends ConsumerWidget {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => ChangePasswordWidget()));
               }),
-              ProfileFields('حذف حساب کاربری', Icons.delete, () {}),
+              // ProfileFields('حذف حساب کاربری', Icons.delete, () {}),
             ],
           );
         },

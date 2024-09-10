@@ -77,7 +77,7 @@ class HomeScreen extends ConsumerWidget {
                 height: he < 685 ? 410.h : 480.h,
               ),
               Text(
-                'dev 0.0.1 ${he.toString()}',
+                'Version: 1.0.0',
                 style: const TextStyle(color: Colors.white60),
               )
             ],
@@ -108,16 +108,39 @@ class HomeScreen extends ConsumerWidget {
                         Navigator.pop(context);
                       });
                     },
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddNoteScreen(
+                                    note: note,
+                                  )));
+                      // کد مربوط به ویرایش را اینجا قرار دهید
+                    },
                     child: Container(
+                      height: double.infinity,
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(10.0),
                       ),
-                      child: ListTile(
+                      child: Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: ListTile(
                           title: Text(
-                        note.title,
-                        style: const TextStyle(color: Colors.white),
-                      )),
+                            note.title,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            note.content,
+                            softWrap: true,
+                            maxLines: 1,
+                            style: const TextStyle(color: Colors.white54),
+                          ),
+                        ),
+                      ),
                     ),
                   );
                 },

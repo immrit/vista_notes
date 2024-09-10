@@ -38,13 +38,6 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    titleController.dispose();
-    contentController.dispose();
-    super.dispose();
-  }
-
   Future<void> _saveNote() async {
     if (isEditing) {
       await _editeNote(); // ویرایش یادداشت
@@ -58,38 +51,74 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
   }
 
   @override
+  void dispose() {
+    titleController.dispose();
+    contentController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Colors.white),
         title: isEditing == true ? Text('ویرایش') : Text('افزودن نوشته جدید'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: _saveNote,
-              child: Text('ذخیره'),
-              style: ElevatedButton.styleFrom(minimumSize: Size(20, 40)),
-            ),
-          )
-        ],
+        centerTitle: true,
       ),
       body: ListView(
         children: [
           Column(
             children: [
-              addNotesTextFiels('موضوع', 1, titleController),
+              addNotesTextFiels(
+                'موضوع',
+                1,
+                titleController,
+                18,
+                FontWeight.bold,
+                null,
+              ),
               SizedBox(height: 5.h),
-              addNotesTextFiels('هرچه میخواهی بگو...', 5, contentController),
+              addNotesTextFiels('هرچه میخواهی بگو...', 50, contentController,
+                  18, FontWeight.normal, 1000),
               const SizedBox(height: 16),
             ],
           ),
         ],
       ),
 
+      // ),
+
+      floatingActionButton: ElevatedButton(
+        onPressed: _saveNote,
+        child: Text(
+          'ذخیره',
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(10, 50),
+        ),
+      ),
+      // bottomNavigationBar: Padding(
+      //   padding: EdgeInsets.only(
+      //       bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      //       right: 10,
+      //       left: 280),
+      //   child: ElevatedButton(
+      //     onPressed: _saveNote,
+      //     child: Text(
+      //       'ذخیره',
+      //       style: TextStyle(
+      //           fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+      //     ),
+      //     // style: ElevatedButton.styleFrom(
+      //     //     // minimumSize: Size(15, 40),
+      //     //     ),
+      //   ),
       // ),
     );
   }
