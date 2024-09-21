@@ -65,7 +65,7 @@ class _SetProfileDataState extends State<SetProfileData> {
         context.showSnackBar('پروفایل با موفقیت به‌روزرسانی شد!');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
     } on PostgrestException catch (error) {
@@ -117,9 +117,9 @@ class _SetProfileDataState extends State<SetProfileData> {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: Text('نام کاربری خود را مشخص کنید'),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18),
-        iconTheme: IconThemeData(color: Colors.white),
+        title: const Text('نام کاربری خود را مشخص کنید'),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.grey.shade900,
       ),
       body: ListView(

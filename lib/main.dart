@@ -16,9 +16,10 @@ void main() {
     DeviceOrientation.portraitUp, // برای حالت عمودی
   ]).then((_) async {
     await Supabase.initialize(
-        url: 'https://dryadhdblerledhitmlk.supabase.co',
-        anonKey:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRyeWFkaGRibGVybGVkaGl0bWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjE3NDIzMDUsImV4cCI6MjAzNzMxODMwNX0.lSpNra_VNlH8onENAOS4HEcUsJ_SREvPaoV5FBtG26g');
+      url: 'https://mparmkeknhvrxqvdolph.supabase.co',
+      anonKey:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYXJta2Vrbmh2cnhxdmRvbHBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjYwOTU4NzIsImV4cCI6MjA0MTY3MTg3Mn0.NI2bPgfNdQJ1pd7PeYGQ6S6szyIjvcLi4HaKNogSHRY',
+    );
     runApp(const ProviderScope(child: MyApp()));
   });
 }
@@ -49,7 +50,7 @@ class MyApp extends StatelessWidget {
                 : const HomeScreen(),
             initialRoute: '/',
             routes: {
-              '/signup': (context) => SignUpScreen(),
+              '/signup': (context) => const SignUpScreen(),
               '/home': (context) => const HomeScreen(),
               '/login': (context) => const Loginuser(),
               '/editeProfile': (context) => EditeProfile(),

@@ -12,7 +12,8 @@ import '../../provider/provider.dart';
 
 class AddNoteScreen extends ConsumerStatefulWidget {
   final Note? note;
-  AddNoteScreen({
+  const AddNoteScreen({
+    super.key,
     this.note,
   });
 
@@ -46,8 +47,8 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
       await _addNote(); // افزودن یادداشت
     }
 
-    Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()));
     // بازگشت به صفحه قبل
   }
 
@@ -64,10 +65,12 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
             color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Colors.white),
-        title: isEditing == true ? Text('ویرایش') : Text('افزودن نوشته جدید'),
+        title: isEditing == true
+            ? const Text('ویرایش')
+            : const Text('افزودن نوشته جدید'),
         centerTitle: true,
       ),
       body: ListView(
@@ -95,6 +98,9 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
 
       floatingActionButton: ElevatedButton(
         onPressed: isLoading ? null : _saveNote,
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(10, 50),
+        ),
         child: isLoading
             ? CircularProgressIndicator()
             : Text(
@@ -104,9 +110,6 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
                     fontWeight: FontWeight.bold,
                     color: Colors.black),
               ),
-        style: ElevatedButton.styleFrom(
-          minimumSize: Size(10, 50),
-        ),
       ),
     );
   }

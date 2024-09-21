@@ -41,7 +41,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _passController.clear();
         _confirmPasswordController.clear();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => SetProfileData()),
+          MaterialPageRoute(builder: (context) => const SetProfileData()),
         );
       }
     } on AuthException catch (error) {
@@ -91,7 +91,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (session != null) {
           _redirecting = true;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => SetProfileData()),
+            MaterialPageRoute(builder: (context) => const SetProfileData()),
           );
         }
       },

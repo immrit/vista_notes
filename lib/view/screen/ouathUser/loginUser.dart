@@ -34,9 +34,10 @@ class _LoginuserState extends State<Loginuser> {
         _emailController.clear();
         _passController.clear();
       }
-    } on AuthException catch (error) {
-      if (mounted)
+    } on AuthException {
+      if (mounted) {
         context.showSnackBar('نام کاربری/رمزعبور اشتباه است', isError: true);
+      }
     } catch (error) {
       if (mounted) {
         context.showSnackBar('خطایی پیش آمد', isError: true);
@@ -111,9 +112,9 @@ class _LoginuserState extends State<Loginuser> {
 
                 //button
 
-                Align(
+                const Align(
                   alignment: Alignment.bottomCenter,
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(

@@ -39,7 +39,7 @@ class HomeScreen extends ConsumerWidget {
                 child: getprofile.when(
                     data: (getprofile) {
                       return UserAccountsDrawerHeader(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                             color: Colors.grey,
                             image: DecorationImage(
                                 image: AssetImage(
@@ -83,9 +83,9 @@ class HomeScreen extends ConsumerWidget {
               SizedBox(
                 height: he < 685 ? 410.h : 480.h,
               ),
-              Text(
+              const Text(
                 'Version: 1.0.0',
-                style: const TextStyle(color: Colors.white60),
+                style: TextStyle(color: Colors.white60),
               )
             ],
           ),
@@ -160,7 +160,7 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('دسترسی به اینترنت قطع است :('),
+              const Text('دسترسی به اینترنت قطع است :('),
               IconButton(
                   iconSize: 50.h,
                   splashColor: Colors.transparent,
@@ -169,7 +169,7 @@ class HomeScreen extends ConsumerWidget {
                     ref.refresh(notesProvider);
                     ref.refresh(profileProvider);
                   },
-                  icon: Icon(Icons.refresh))
+                  icon: const Icon(Icons.refresh))
             ],
           )),
         ),

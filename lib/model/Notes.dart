@@ -26,7 +26,7 @@ class Note {
     return Note(
       title: title ?? this.title,
       content: content ?? this.content,
-      id: id ?? this.id,
+      id: id ?? id,
     );
   }
 
