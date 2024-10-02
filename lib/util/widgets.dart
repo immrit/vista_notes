@@ -1,9 +1,14 @@
-import 'dart:ffi';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vistaNote/main.dart';
 import 'package:vistaNote/model/Notes.dart';
 import 'package:vistaNote/view/screen/AddNoteScreen.dart';
+
+import 'constant.dart';
 
 class topText extends StatelessWidget {
   String text;
@@ -153,7 +158,7 @@ Widget addNotesTextFiels(
         maxLength: maxLength,
         controller: controller,
         style: TextStyle(fontSize: fontSize, fontWeight: fontWeight),
-        scrollPhysics: NeverScrollableScrollPhysics(),
+        scrollPhysics: const NeverScrollableScrollPhysics(),
         decoration: InputDecoration(
             hintText: name,
             border: InputBorder.none,
@@ -210,4 +215,27 @@ void showCustomBottomSheet(
       );
     },
   );
+}
+
+final picker = ImagePicker();
+
+Future<void> uploadProfilePicture() async {
+  // انتخاب عکس از گالری
+  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+  if (pickedFile != null) {
+    File file = File(pickedFile.path);
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    if (userId != null) {
+      // آپلود عکس به باکت
+      final fileName = 'public/$userId/profile-pic.png';
+      final response = await Supabase.instance.client.storage
+          .from('user-profile-pics')
+          .upload(fileName, file);
+
+      print('خطا در آپلود عکس: ${response}');
+    }
+  }
 }

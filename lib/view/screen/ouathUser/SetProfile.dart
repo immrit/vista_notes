@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/homeScreen.dart';
 
@@ -15,9 +16,11 @@ class SetProfileData extends StatefulWidget {
 
 class _SetProfileDataState extends State<SetProfileData> {
   final _usernameController = TextEditingController();
+  File? _imageFile;
+  final picker = ImagePicker();
   var _loading = true;
 
-  /// Called once a user id is received within `onAuthenticated()`
+  /// واکشی پروفایل
   Future<void> _getProfile() async {
     setState(() {
       _loading = true;
@@ -28,14 +31,17 @@ class _SetProfileDataState extends State<SetProfileData> {
       final data =
           await supabase.from('profiles').select().eq('id', userId).single();
       _usernameController.text = (data['username'] ?? '') as String;
-    } on PostgrestException catch (error) {
-      if (mounted) {
-        context.showSnackBar('خطا در بازیابی پروفایل: ${error.message}',
-            isError: true);
+      final avatarUrl = data['avatar_url'] as String?;
+      if (avatarUrl != null && avatarUrl.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _imageFile = File(avatarUrl);
+          });
+        }
       }
     } catch (error) {
       if (mounted) {
-        context.showSnackBar('خطای غیرمنتظره‌ای رخ داد.', isError: true);
+        context.showSnackBar('خطا در بازیابی پروفایل', isError: true);
       }
     } finally {
       if (mounted) {
@@ -46,7 +52,56 @@ class _SetProfileDataState extends State<SetProfileData> {
     }
   }
 
-  /// Called when user taps `Update` button
+  /// انتخاب تصویر
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      if (mounted) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+
+      // آپلود تصویر به Supabase
+      await _uploadImage(_imageFile!);
+    }
+  }
+
+  /// آپلود تصویر به فضای ذخیره‌سازی Supabase
+  Future<void> _uploadImage(File imageFile) async {
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser!.id;
+      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // آپلود به فضای ذخیره‌سازی
+      final storageResponse =
+          await supabase.storage.from('avatars').upload(fileName, imageFile);
+
+      // دریافت URL عمومی
+      final publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      // ذخیره URL تصویر در جدول profiles
+      await supabase
+          .from('profiles')
+          .update({'avatar_url': publicUrl}).eq('id', userId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تصویر با موفقیت آپلود شد')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در آپلود تصویر: $e')),
+        );
+      }
+    }
+  }
+
+  /// به‌روزرسانی پروفایل
   Future<void> _updateProfile() async {
     setState(() {
       _loading = true;
@@ -68,28 +123,11 @@ class _SetProfileDataState extends State<SetProfileData> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
-    } on PostgrestException catch (error) {
-      String errorMessage = 'خطا در بروزرسانی پروفایل: ${error.message}';
-
-      // شخصی‌سازی پیام‌های خطا
-      if (error.message.contains('duplicate key value')) {
-        errorMessage =
-            'این نام کاربری قبلاً استفاده شده است. لطفاً یک نام کاربری دیگر وارد کنید.';
-      } else if (error.message.contains('network')) {
-        errorMessage =
-            'مشکلی در ارتباط با شبکه رخ داده است. لطفاً اتصال خود را بررسی کنید.';
-      } else if (error.message.contains('invalid input syntax')) {
-        errorMessage = 'ورودی نامعتبر است. لطفاً اطلاعات صحیح وارد کنید.';
-      }
-
-      if (mounted) {
-        context.showSnackBar(errorMessage, isError: true);
-      }
     } catch (error) {
       if (mounted) {
-        context.showSnackBar(
-            'خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.',
-            isError: true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در بروزرسانی پروفایل: $error')),
+        );
       }
     } finally {
       if (mounted) {
@@ -125,6 +163,24 @@ class _SetProfileDataState extends State<SetProfileData> {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
         children: [
+          GestureDetector(
+            onTap: _pickImage,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: _imageFile != null
+                      ? FileImage(_imageFile!)
+                      : const AssetImage('lib/util/images/vistalogo.png')
+                          as ImageProvider,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
           customTextField('نام کاربری', _usernameController, (value) {
             if (value == null || value.isEmpty) {
               return 'لطفا مقادیر را وارد نمایید';

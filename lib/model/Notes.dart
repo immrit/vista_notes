@@ -4,19 +4,23 @@ class Note {
   final dynamic id;
   final String title;
   final String content;
+  final DateTime createdAt;
 
   Note({
     required this.id,
     required this.title,
     required this.content,
+    required this.createdAt,
   });
 
   factory Note.fromMap(Map<String, dynamic> map) {
     return Note(
-      id: map['id'] ?? '',
-      title: map['title'] ?? '',
-      content: map['content'] ?? '',
-    );
+        id: map['id'] ?? '',
+        title: map['title'] ?? '',
+        content: map['content'] ?? '',
+        createdAt: DateTime.parse(
+          map['created_at'] ?? '',
+        ));
   }
 
   Note copyWith({
@@ -27,6 +31,7 @@ class Note {
       title: title ?? this.title,
       content: content ?? this.content,
       id: id ?? id,
+      createdAt: this.createdAt,
     );
   }
 
@@ -34,6 +39,7 @@ class Note {
     return {
       'title': title,
       'content': content,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 

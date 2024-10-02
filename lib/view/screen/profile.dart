@@ -16,7 +16,7 @@ class Profile extends ConsumerWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.grey[900],
         title: const Text(
-          'Profile',
+          'پروفایل',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -26,11 +26,10 @@ class Profile extends ConsumerWidget {
           return Column(
             children: [
               ListTile(
-                leading: const CircleAvatar(
+                leading: CircleAvatar(
                   radius: 30,
-                  backgroundImage: AssetImage(
-                    'lib/util/images/vistalogo.png',
-                  ),
+                  backgroundImage:
+                      NetworkImage(getprofile!['avatar_url'].toString()),
                 ),
                 title: Text(
                   "${getprofile!['username']}",

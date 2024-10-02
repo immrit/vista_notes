@@ -35,6 +35,8 @@ dependencies:
   supabase_flutter: ^2.5.11
   flutter_screenutil: ^5.9.3
   flutter_launcher_icons: ^0.13.1
+  image_picker: ^1.1.2
+  shamsi_date: ^1.0.4
 
 flutter_launcher_icons:
     android: "launcher_icon"
