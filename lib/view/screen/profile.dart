@@ -32,7 +32,7 @@ class Profile extends ConsumerWidget {
                       NetworkImage(getprofile!['avatar_url'].toString()),
                 ),
                 title: Text(
-                  "${getprofile!['username']}",
+                  "${getprofile['username']}",
                   style: const TextStyle(color: Colors.white),
                 ),
                 subtitle: Text(

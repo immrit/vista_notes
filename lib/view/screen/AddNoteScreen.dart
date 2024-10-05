@@ -101,7 +101,7 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
             right: 10,
             left: 10),
-        child: Container(
+        child: SizedBox(
           height: 50,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -110,7 +110,10 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
               isEditing
                   ? Align(
                       alignment: Alignment.bottomLeft,
-                      child: Text("آخرین ویرایش :  ${lastEditedDate ?? '---'}"),
+                      child: Text(
+                        "آخرین ویرایش :  ${lastEditedDate ?? '---'}",
+                        style: const TextStyle(fontFamily: 'Vazir'),
+                      ),
                     )
                   : Container(),
               Align(
@@ -127,6 +130,7 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'Vazir',
                               color: Colors.black),
                         ),
                 ),

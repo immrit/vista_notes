@@ -31,7 +31,7 @@ class Note {
       title: title ?? this.title,
       content: content ?? this.content,
       id: id ?? id,
-      createdAt: this.createdAt,
+      createdAt: createdAt,
     );
   }
 

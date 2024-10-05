@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vistaNote/view/screen/support.dart';
 import '../../main.dart';
 import '../../provider/provider.dart';
 import '../../util/widgets.dart';
@@ -50,9 +51,9 @@ class HomeScreen extends ConsumerWidget {
                         backgroundImage:
                             NetworkImage(getprofile!['avatar_url'].toString()),
                       ),
-                      margin: EdgeInsets.only(bottom: 0),
-                      currentAccountPictureSize: Size(65, 65),
-                      accountName: Text('${getprofile!['username']}'),
+                      margin: const EdgeInsets.only(bottom: 0),
+                      currentAccountPictureSize: const Size(65, 65),
+                      accountName: Text('${getprofile['username']}'),
                       accountEmail: Text("${supabase.auth.currentUser!.email}"),
                     );
                   },
@@ -82,7 +83,8 @@ class HomeScreen extends ConsumerWidget {
               onTap: () {
                 //   supabase.auth.signOut();
                 //
-                //   Navigator.pushReplacementNamed(context, '/welcome');
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => SupportPage()));
               },
             ),
             ListTile(
@@ -144,6 +146,7 @@ class HomeScreen extends ConsumerWidget {
                   child: Container(
                     height: double.infinity,
                     width: double.infinity,
+                    padding: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
                       color: Colors.grey[800],
                       borderRadius: BorderRadius.circular(10.0),
@@ -153,14 +156,18 @@ class HomeScreen extends ConsumerWidget {
                       child: ListTile(
                         title: Text(
                           note.title,
+                          softWrap: true,
                           style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Vazir'),
                         ),
                         subtitle: Text(
                           note.content,
                           softWrap: true,
                           maxLines: 1,
-                          style: const TextStyle(color: Colors.white54),
+                          style: const TextStyle(
+                              color: Colors.white54, fontFamily: 'Vazir'),
                         ),
                       ),
                     ),
