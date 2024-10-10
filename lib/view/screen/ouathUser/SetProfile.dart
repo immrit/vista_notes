@@ -173,7 +173,7 @@ class _SetProfileDataState extends State<SetProfileData> {
                 image: DecorationImage(
                   image: _imageFile != null
                       ? FileImage(_imageFile!)
-                      : const AssetImage('lib/util/images/vistalogo.png')
+                      : const AssetImage('lib/util/images/default-avatar.jpg')
                           as ImageProvider,
                   fit: BoxFit.cover,
                 ),

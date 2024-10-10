@@ -1,12 +1,10 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/util/widgets.dart';
-
 import '../../../provider/provider.dart';
 
 class EditProfile extends ConsumerStatefulWidget {
@@ -39,15 +37,28 @@ class _EditProfileState extends ConsumerState<EditProfile> {
       final supabase = Supabase.instance.client;
       final userId = supabase.auth.currentUser!.id;
 
-      // نام فایل برای ذخیره
+      // دریافت URL عکس پروفایل فعلی از پروفایل کاربر
+      final profileResponse = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', userId)
+          .single();
+
+      final previousAvatarUrl = profileResponse['avatar_url'];
+
+      // حذف عکس قبلی از باکت اگر وجود داشته باشد
+      if (previousAvatarUrl != null && previousAvatarUrl.isNotEmpty) {
+        final fileNameToDelete = previousAvatarUrl.split('/').last;
+        await supabase.storage.from('avatars').remove([fileNameToDelete]);
+      }
+
+      // نام فایل جدید برای ذخیره
       final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      // آپلود تصویر به فضای ذخیره‌سازی
+      // آپلود تصویر به فضای ذخیره‌سازی Supabase
       final storageResponse = await supabase.storage
-          .from('avatars') // نام باکت (bucket)
+          .from('avatars') // نام باکت
           .upload(fileName, imageFile);
-
-      // throw storageResponse;
 
       // دریافت URL عمومی فایل آپلود شده
       final publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName);
@@ -57,17 +68,23 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           .from('profiles')
           .update({'avatar_url': publicUrl}).eq('id', userId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تصویر با موفقیت آپلود شد')),
-      );
+      // بررسی اینکه ویجت هنوز mounted است
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تصویر با موفقیت آپلود شد')),
+        );
 
-      // به‌روزرسانی UI برای نمایش تصویر جدید
-      setState(() {});
+        // به‌روزرسانی UI برای نمایش تصویر جدید
+        setState(() {});
+      }
     } catch (e) {
+      // بررسی اینکه ویجت هنوز mounted است
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در آپلود تصویر: $e')),
+        );
+      }
       print('Error uploading image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطا در آپلود تصویر: $e')),
-      );
     }
   }
 
@@ -109,7 +126,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                                     .isNotEmpty) // بررسی اینکه avatarUrl خالی یا null نباشد
                             ? NetworkImage(avatarUrl) as ImageProvider
                             : const AssetImage(
-                                'lib/util/images/vistalogo.png'), // نمایش تصویر پیش‌فرض
+                                'lib/util/images/default-avatar.jpg'), // نمایش تصویر پیش‌فرض
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -134,7 +151,6 @@ class _EditProfileState extends ConsumerState<EditProfile> {
         child: customButton(() {
           final updatedData = {
             'username': _usernameController.text,
-            // 'avatar_url': _avatarUrlController.text
           };
           ref.refresh(profileProvider);
           Navigator.pushReplacementNamed(context, '/home');

@@ -50,10 +50,29 @@ class _LoginuserState extends State<Loginuser> {
     }
   }
 
+  // متد جدید برای ارسال درخواست بازیابی رمز عبور
+  Future<void> _resetPassword() async {
+    if (_emailController.text.isEmpty) {
+      context.showSnackBar('لطفاً ایمیل خود را وارد کنید', isError: true);
+      return;
+    }
+
+    try {
+      await supabase.auth.resetPasswordForEmail(_emailController.text.trim());
+      if (mounted) {
+        context.showSnackBar('ایمیل بازیابی رمز عبور ارسال شد');
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('خطایی رخ داد، دوباره تلاش کنید', isError: true);
+      }
+    }
+  }
+
   @override
   void initState() {
     _authStateSubscription = supabase.auth.onAuthStateChange.listen(
-      (data) {
+          (data) {
         if (_redirecting) return;
         final session = data.session;
         if (session != null) {
@@ -88,7 +107,6 @@ class _LoginuserState extends State<Loginuser> {
         backgroundColor: Colors.grey.shade900,
       ),
       body: Container(
-        // color: Colors.amber,
         child: ListView(
           children: [
             Column(
@@ -109,7 +127,14 @@ class _LoginuserState extends State<Loginuser> {
                   }
                 }, true),
 
-                //button
+                // لینک فراموشی رمز عبور
+                TextButton(
+                  onPressed: _resetPassword,
+                  child: const Text(
+                    'فراموشی رمز عبور؟',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
 
                 const Align(
                   alignment: Alignment.bottomCenter,

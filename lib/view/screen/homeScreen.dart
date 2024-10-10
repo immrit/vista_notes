@@ -14,12 +14,9 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final getprofile = ref.watch(profileProvider);
     final notesAsyncValue = ref.watch(notesProvider);
-    @override
-    void initState() {
-      ref.refresh(profileProvider);
-    }
 
     final he = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
@@ -48,8 +45,9 @@ class HomeScreen extends ConsumerWidget {
                               fit: BoxFit.cover)),
                       currentAccountPicture: CircleAvatar(
                         radius: 30,
-                        backgroundImage:
-                            NetworkImage(getprofile!['avatar_url'].toString()),
+                        backgroundImage: getprofile!['avatar_url'] != null
+                            ? NetworkImage(getprofile!['avatar_url'].toString())
+                            : AssetImage('lib/util/images/default-avatar.jpg'),
                       ),
                       margin: const EdgeInsets.only(bottom: 0),
                       currentAccountPictureSize: const Size(65, 65),
@@ -61,18 +59,15 @@ class HomeScreen extends ConsumerWidget {
                   loading: () =>
                       const Center(child: CircularProgressIndicator())),
             ),
-            Container(
-              child: ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text(
-                  'حساب کاربری',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // به صفحه پروفایل بروید
-                  Navigator.pushNamed(context, '/profile');
-                },
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text(
+                'حساب کاربری',
+                style: TextStyle(color: Colors.white),
               ),
+              onTap: () {
+                Navigator.pushNamed(context, '/profile');
+              },
             ),
             ListTile(
               leading: const Icon(Icons.support_agent),
@@ -81,10 +76,10 @@ class HomeScreen extends ConsumerWidget {
                 style: TextStyle(color: Colors.white),
               ),
               onTap: () {
-                //   supabase.auth.signOut();
-                //
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => SupportPage()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SupportPage()));
               },
             ),
             ListTile(
@@ -95,12 +90,11 @@ class HomeScreen extends ConsumerWidget {
               ),
               onTap: () {
                 supabase.auth.signOut();
-
                 Navigator.pushReplacementNamed(context, '/welcome');
               },
             ),
             SizedBox(
-              height: he < 685 ? 350.h : 400.h,
+              height: he < 685 ? 220 : 398,
             ),
             const Text(
               'Version: 1.1.0',
@@ -109,92 +103,68 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
-      body: notesAsyncValue.when(
-        data: (notes) => RefreshIndicator(
-          onRefresh: () async {
-            ref.refresh(notesProvider);
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GridView.builder(
-              itemCount: notes.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10.0,
-                mainAxisSpacing: 10.0,
-                childAspectRatio: 1.0,
-              ),
-              itemBuilder: (context, index) {
-                final note = notes[index];
-                return GestureDetector(
-                  onLongPress: () {
-                    showCustomBottomSheet(context, note, () {
-                      ref.read(deleteNoteProvider(note.id));
-                      ref.refresh(notesProvider);
-                      Navigator.pop(context);
-                    });
-                  },
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AddNoteScreen(
-                                  note: note,
-                                )));
-                    // کد مربوط به ویرایش را اینجا قرار دهید
-                  },
-                  child: Container(
-                    height: double.infinity,
-                    width: double.infinity,
-                    padding: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: ListTile(
-                        title: Text(
-                          note.title,
-                          softWrap: true,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Vazir'),
-                        ),
-                        subtitle: Text(
-                          note.content,
-                          softWrap: true,
-                          maxLines: 1,
-                          style: const TextStyle(
-                              color: Colors.white54, fontFamily: 'Vazir'),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: notesAsyncValue.when(
+          data: (notes) {
+            final pinnedNotes = notes.where((note) => note.isPinned).toList();
+            final otherNotes = notes.where((note) => !note.isPinned).toList();
+
+            pinnedNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            otherNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.refresh(notesProvider);
+                ref.refresh(profileProvider);
               },
-            ),
-          ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView(
+                  children: [
+                    if (pinnedNotes.isNotEmpty) ...[
+                      const Text(
+                        'پین شده ها:',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                      NoteGridWidget(notes: pinnedNotes, ref: ref),
+                    ],
+                    const SizedBox(height: 20),
+                    const Text(
+                      'سایر یادداشت‌ها:',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                    NoteGridWidget(notes: otherNotes, ref: ref),
+                  ],
+                ),
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('دسترسی به اینترنت قطع است :('),
+              IconButton(
+                  iconSize: 50.h,
+                  splashColor: Colors.transparent,
+                  color: Colors.white,
+                  onPressed: () {
+                    ref.refresh(notesProvider);
+                    ref.refresh(profileProvider);
+                  },
+                  icon: const Icon(Icons.refresh))
+            ],
+          )),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('دسترسی به اینترنت قطع است :('),
-            IconButton(
-                iconSize: 50.h,
-                splashColor: Colors.transparent,
-                color: Colors.white,
-                onPressed: () {
-                  ref.refresh(notesProvider);
-                  ref.refresh(profileProvider);
-                },
-                icon: const Icon(Icons.refresh))
-          ],
-        )),
       ),
       floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.white,

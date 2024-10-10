@@ -1,14 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
 import 'package:vistaNote/model/Notes.dart';
 import 'package:vistaNote/view/screen/AddNoteScreen.dart';
 
-import 'constant.dart';
+import '../provider/provider.dart';
 
 class topText extends StatelessWidget {
   String text;
@@ -168,14 +170,6 @@ Widget addNotesTextFiels(
   );
 }
 
-class NoScrollBehavior extends ScrollBehavior {
-  @override
-  Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
-    return child;
-  }
-}
-
 //bottomSheet
 void showCustomBottomSheet(
     BuildContext context, Note note, Function ontapFunction) {
@@ -188,28 +182,57 @@ void showCustomBottomSheet(
       return Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // اندازه مینیمم برای ستون
+          mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading:
-                  const Icon(Icons.edit, color: Colors.blue), // آیکون ویرایش
+              leading: const Icon(Icons.edit, color: Colors.blue),
               title: const Text('ویرایش'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => AddNoteScreen(
-                              note: note,
-                            )));
-                // کد مربوط به ویرایش را اینجا قرار دهید
+                        builder: (context) => AddNoteScreen(note: note)));
               },
             ),
             ListTile(
-                leading:
-                    const Icon(Icons.delete, color: Colors.red), // آیکون حذف
-                title: const Text('حذف'),
-                onTap: () => ontapFunction()),
+              leading: Icon(
+                note.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                color: note.isPinned ? Colors.orange : Colors.grey,
+              ),
+              title: Text(note.isPinned ? 'برداشتن پین' : 'پین کردن'),
+              onTap: () async {
+                Navigator.pop(context); // بستن BottomSheet
+
+                // تغییر وضعیت پین در مدل
+                final updatedNote = note.copyWith(isPinned: !note.isPinned);
+
+                // بررسی وجود یادداشت در پایگاه داده
+                final response =
+                    await supabase.from('Notes').select().eq('id', note.id);
+
+                if (response.isEmpty) {
+                  print('Note not found in database');
+                  return;
+                }
+
+                // به‌روزرسانی وضعیت پین در Supabase
+                final updateResponse = await supabase.from('Notes').update(
+                    {'is_pinned': updatedNote.isPinned}).eq('id', note.id);
+
+                if (updateResponse.error != null) {
+                  print(
+                      'Error updating pin status: ${updateResponse.error.message}, Code: ${updateResponse.error!.code}');
+                } else {
+                  print('Pin status updated successfully.');
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('حذف'),
+              onTap: () => ontapFunction(),
+            ),
           ],
         ),
       );
@@ -235,7 +258,75 @@ Future<void> uploadProfilePicture() async {
           .from('user-profile-pics')
           .upload(fileName, file);
 
-      print('خطا در آپلود عکس: ${response}');
+      print('خطا در آپلود عکس: $response');
     }
+  }
+}
+
+class NoteGridWidget extends StatelessWidget {
+  final List<Note> notes;
+  final WidgetRef ref;
+
+  const NoteGridWidget({super.key, required this.notes, required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    return MasonryGridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+      ),
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      itemCount: notes.length,
+      itemBuilder: (context, index) {
+        final note = notes[index];
+        return GestureDetector(
+          onLongPress: () {
+            showCustomBottomSheet(context, note, () {
+              ref.read(deleteNoteProvider(note.id));
+              ref.refresh(notesProvider);
+              Navigator.pop(context);
+            });
+          },
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddNoteScreen(
+                          note: note,
+                        )));
+          },
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  note.title,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Vazir'),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  note.content,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      color: Colors.white54, fontFamily: 'Vazir'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
