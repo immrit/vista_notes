@@ -6,7 +6,7 @@ import '../../../main.dart';
 class ResetPasswordPage extends StatefulWidget {
   final String token;
 
-  const ResetPasswordPage({Key? key, required this.token}) : super(key: key);
+  const ResetPasswordPage({super.key, required this.token});
 
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
@@ -19,8 +19,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   Future<void> _resetPassword() async {
     final newPassword = _newPasswordController.text.trim();
     if (newPassword.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('لطفاً رمز عبور جدید را وارد کنید')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لطفاً رمز عبور جدید را وارد کنید')));
       return;
     }
 
@@ -33,8 +33,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       await supabase.auth.updateUser(
         UserAttributes(password: newPassword),
       );
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('رمز عبور با موفقیت تغییر یافت')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('رمز عبور با موفقیت تغییر یافت')));
       Navigator.pushReplacementNamed(context, '/login');
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(

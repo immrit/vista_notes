@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/util/widgets.dart';
+import 'package:vistaNote/view/screen/ouathUser/signupUser.dart';
 import '../../../main.dart';
 
 class Loginuser extends StatefulWidget {
@@ -72,7 +73,7 @@ class _LoginuserState extends State<Loginuser> {
   @override
   void initState() {
     _authStateSubscription = supabase.auth.onAuthStateChange.listen(
-          (data) {
+      (data) {
         if (_redirecting) return;
         final session = data.session;
         if (session != null) {
@@ -136,16 +137,24 @@ class _LoginuserState extends State<Loginuser> {
                   ),
                 ),
 
-                const Align(
+                Align(
                   alignment: Alignment.bottomCenter,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "ثبت نام کنید ",
-                        style: TextStyle(color: Colors.blue),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SignUpScreen()));
+                        },
+                        child: const Text(
+                          "ثبت نام کنید ",
+                          style: TextStyle(color: Colors.blue),
+                        ),
                       ),
-                      Text(
+                      const Text(
                         "حساب کاربری ندارید؟",
                         style: TextStyle(color: Colors.white70),
                       ),

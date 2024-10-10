@@ -46,8 +46,9 @@ class HomeScreen extends ConsumerWidget {
                       currentAccountPicture: CircleAvatar(
                         radius: 30,
                         backgroundImage: getprofile!['avatar_url'] != null
-                            ? NetworkImage(getprofile!['avatar_url'].toString())
-                            : AssetImage('lib/util/images/default-avatar.jpg'),
+                            ? NetworkImage(getprofile['avatar_url'].toString())
+                            : const AssetImage(
+                                'lib/util/images/default-avatar.jpg'),
                       ),
                       margin: const EdgeInsets.only(bottom: 0),
                       currentAccountPictureSize: const Size(65, 65),

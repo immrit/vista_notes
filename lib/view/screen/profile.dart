@@ -30,7 +30,8 @@ class Profile extends ConsumerWidget {
                     radius: 30,
                     backgroundImage: getprofile!['avatar_url'] != null
                         ? NetworkImage(getprofile['avatar_url'].toString())
-                        : AssetImage('lib/util/images/default-avatar.jpg')),
+                        : const AssetImage(
+                            'lib/util/images/default-avatar.jpg')),
                 title: Text(
                   "${getprofile['username']}",
                   style: const TextStyle(color: Colors.white),
