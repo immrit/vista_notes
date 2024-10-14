@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:uni_links/uni_links.dart'; // افزودن بسته uni_links
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'view/screen/homeScreen.dart';
 import 'view/screen/ouathUser/loginUser.dart';
@@ -21,7 +20,7 @@ void main() {
     await Supabase.initialize(
       url: 'https://mparmkeknhvrxqvdolph.supabase.co',
       anonKey:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYXJta2Vrbmh2cnhxdmRvbHBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjYwOTU4NzIsImV4cCI6MjA0MTY3MTg3Mn0.NI2bPgfNdQJ1pd7PeYGQ6S6szyIjvcLi4HaKNogSHRY',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYXJta2Vrbmh2cnhxdmRvbHBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjYwOTU4NzIsImV4cCI6MjA0MTY3MTg3Mn0.NI2bPgfNdQJ1pd7PeYGQ6S6szyIjvcLi4HaKNogSHRY',
     );
     runApp(const ProviderScope(child: MyApp()));
   });
@@ -38,31 +37,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   StreamSubscription? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    _handleIncomingLinks();
-  }
-
-  // متد برای مدیریت دیپ‌لینک‌ها
-  Future<void> _handleIncomingLinks() async {
-    // گوش دادن به جریان دیپ‌لینک‌ها
-    _sub = uriLinkStream.listen((Uri? uri) {
-      if (uri != null && uri.path == '/reset-password') {
-        final token = uri.queryParameters['token'];
-        if (token != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ResetPasswordPage(token: token)),
-          );
-        }
-      }
-    }, onError: (err) {
-      print('خطا در دریافت دیپ‌لینک: $err');
-    });
-  }
 
   @override
   void dispose() {
