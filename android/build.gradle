@@ -1,5 +1,5 @@
 allprojects {
-    
+    ext.kotlin_version = '1.8.0'  // این مقدار رو با آخرین نسخه جایگزین کن
     repositories {
         google()
         mavenCentral()

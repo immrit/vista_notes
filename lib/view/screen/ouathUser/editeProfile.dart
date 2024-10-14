@@ -137,7 +137,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
               if (value == null || value.isEmpty) {
                 return 'لطفا مقادیر را وارد نمایید';
               }
-            }, false)
+            }, false, TextInputType.text)
           ]));
         },
         loading: () => const Center(child: CircularProgressIndicator()),

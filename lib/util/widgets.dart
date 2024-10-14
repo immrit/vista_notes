@@ -11,6 +11,7 @@ import 'package:vistaNote/model/Notes.dart';
 import 'package:vistaNote/view/screen/AddNoteScreen.dart';
 
 import '../provider/provider.dart';
+import '../view/screen/searchPage.dart';
 
 class topText extends StatelessWidget {
   String text;
@@ -69,7 +70,7 @@ extension ContextExtension on BuildContext {
 }
 
 Widget customTextField(String hintText, TextEditingController controller,
-    dynamic validator, bool obscureText) {
+    dynamic validator, bool obscureText, TextInputType keyboardType) {
   return Directionality(
     textDirection: TextDirection.rtl,
     child: Padding(
@@ -79,13 +80,23 @@ Widget customTextField(String hintText, TextEditingController controller,
         controller: controller,
         validator: validator,
         obscureText: obscureText,
+        cursorColor: Colors.white,
+        keyboardType: keyboardType,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: const TextStyle(color: Colors.white60),
-          border: OutlineInputBorder(
+          focusColor: Colors.white,
+          enabledBorder: OutlineInputBorder(
             borderSide: const BorderSide(
-              color: Colors.white,
-              width: 4,
+              color: Colors.white, // رنگ بوردر در حالت غیرفعال (enabled)
+              width: .7,
+            ),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(
+              color: Colors.white, // رنگ بوردر در حالت فوکوس (focused)
+              width: 1.5,
             ),
             borderRadius: BorderRadius.circular(18),
           ),
@@ -329,4 +340,30 @@ class NoteGridWidget extends StatelessWidget {
       },
     );
   }
+}
+
+Route createSearchPageRoute() {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => const SearchPage(),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // تنظیم انیمیشن حرکت از راست به چپ
+      const begin = Offset(1.0, 0.0); // شروع از خارج صفحه سمت راست
+      const end = Offset.zero; // پایان در وسط صفحه
+      const curve = Curves.easeInOut; // منحنی برای روان بودن انیمیشن
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+      // تنظیم انیمیشن برای تغییر شفافیت
+      var opacityTween =
+          Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: FadeTransition(
+          opacity: animation.drive(opacityTween),
+          child: child,
+        ),
+      );
+    },
+  );
 }

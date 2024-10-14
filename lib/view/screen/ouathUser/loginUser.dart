@@ -106,6 +106,7 @@ class _LoginuserState extends State<Loginuser> {
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Colors.grey.shade900,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
         child: ListView(
@@ -116,17 +117,17 @@ class _LoginuserState extends State<Loginuser> {
                   text: '!خوش برگشتی',
                 ),
                 const SizedBox(height: 80),
-                customTextField('نام کاربری', _emailController, (value) {
+                customTextField('ایمیل', _emailController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'لطفا مقادیر را وارد نمایید';
                   }
-                }, false),
+                }, false, TextInputType.emailAddress),
                 const SizedBox(height: 10),
                 customTextField('رمزعبور', _passController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'لطفا مقادیر را وارد نمایید';
                   }
-                }, true),
+                }, true, TextInputType.visiblePassword),
 
                 // لینک فراموشی رمز عبور
                 TextButton(
@@ -147,7 +148,7 @@ class _LoginuserState extends State<Loginuser> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => SignUpScreen()));
+                                  builder: (context) => const SignUpScreen()));
                         },
                         child: const Text(
                           "ثبت نام کنید ",

@@ -21,9 +21,17 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Color(Colors.black12.value),
+        iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
           "Vista Notes",
           style: TextStyle(color: Colors.white),
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).push(createSearchPageRoute());
+          },
+          icon: const Icon(Icons.search),
+          color: Colors.white70,
         ),
       ),
       endDrawer: Drawer(

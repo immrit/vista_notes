@@ -120,6 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Colors.grey.shade900,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
@@ -130,13 +131,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             if (value == null || value.isEmpty) {
               return 'لطفا مقادیر را وارد نمایید';
             }
-          }, false),
+          }, false, TextInputType.emailAddress),
           const SizedBox(height: 10),
           customTextField('رمزعبور', _passController, (value) {
             if (value == null || value.isEmpty) {
               return 'لطفا مقادیر را وارد نمایید';
             }
-          }, true),
+          }, true, TextInputType.visiblePassword),
           const SizedBox(height: 10),
           customTextField('تایید رمزعبور', _confirmPasswordController, (value) {
             if (value == null || value.isEmpty) {
@@ -146,12 +147,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               return 'عدم تطابق رمزعبور';
             }
             return null;
-          }, true),
+          }, true, TextInputType.visiblePassword),
           Align(
               alignment: Alignment.center,
               child: TextButton(
                 onPressed: () => showPrivicyDialog(context),
-                child: Text("سیاست حفظ حریم خصوصی",
+                child: const Text("سیاست حفظ حریم خصوصی",
                     style: TextStyle(color: Colors.blue)),
               ))
         ],
@@ -174,10 +175,10 @@ void showPrivicyDialog(BuildContext context) {
     builder: (BuildContext context) {
       return AlertDialog(
         backgroundColor: Colors.grey[700],
-        title: Directionality(
+        title: const Directionality(
             textDirection: TextDirection.rtl,
             child: Text('سیاست نامه حفظ حریم خصوصی ویستا')),
-        content: Directionality(
+        content: const Directionality(
           textDirection: TextDirection.rtl,
           child: Text(
               'به ویستا خوش اومدید... \n اینجا میتونید همه یادداشت هاتون رو ذخیره کنید و همیشه و توی همه دستگاهاتون بهشون دسترسی داشته باشید\n ضمن اینکه این سرویس بصورت سینک شده در اختیار کاربر قرار میگیرد ملزم به ثبت نام از طریق ایمیل میباشد \n ویستا امنیت داده های شمارا همواره تضمین میکند و ما دائما در حال تلاش برای بهبود زیرساخت و امنیت ویستا هستیم \n ما امکان در اختیار گذاشتن داده های هیچ یک از کاربران را نداریم و داده ها بصورت ایمن در سرورهای ما محفوظ خواهد ماند  \n از حضور شما بسیار خرسندیم :)'),
@@ -188,7 +189,7 @@ void showPrivicyDialog(BuildContext context) {
               // کاری که بعد از تایید انجام می‌دی
               Navigator.of(context).pop();
             },
-            child: Text(
+            child: const Text(
               'تایید',
               style: TextStyle(color: Colors.white),
             ),

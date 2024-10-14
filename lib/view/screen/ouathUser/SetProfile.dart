@@ -185,7 +185,7 @@ class _SetProfileDataState extends State<SetProfileData> {
             if (value == null || value.isEmpty) {
               return 'لطفا مقادیر را وارد نمایید';
             }
-          }, false),
+          }, false, TextInputType.text),
           const SizedBox(height: 18),
         ],
       ),

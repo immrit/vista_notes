@@ -34,7 +34,7 @@ class ChangePasswordWidget extends ConsumerWidget {
                 return 'لطفا پسورد جدید را وارد نمایید';
               }
               return null;
-            }, true),
+            }, true, TextInputType.visiblePassword),
             SizedBox(
               height: 10.h,
             ),
@@ -47,7 +47,7 @@ class ChangePasswordWidget extends ConsumerWidget {
                 return 'عدم تطابق رمزعبور';
               }
               return null;
-            }, true),
+            }, true, TextInputType.visiblePassword),
             SizedBox(
               height: 10.h,
             ),
