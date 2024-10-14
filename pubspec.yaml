@@ -34,29 +34,31 @@ dependencies:
   flutter_riverpod: ^2.5.3
   supabase_flutter: ^2.8.0
   flutter_screenutil: ^5.9.3
-  flutter_launcher_icons: ^0.14.1
+  flutter_launcher_icons: ^0.13.1
   image_picker: ^1.1.2
   shamsi_date: ^1.0.4
   url_launcher: ^6.3.1
   flutter_staggered_grid_view: ^0.7.0
 
 flutter_launcher_icons:
-    android: "launcher_icon"
-    ios: true
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "lib/util/images/vistalogo.png"
+  min_sdk_android: 19 # android min sdk min:16, default 21
+  web:
+    generate: true
     image_path: "lib/util/images/vistalogo.png"
-    min_sdk_android: 21 # android min sdk min:16, default 21
-    web:
-      generate: true
-      image_path: "lib/util/images/vistalogo.png"
-      background_color: "#hexcode"
-      theme_color: "#hexcode"
-    windows:
-      generate: true
-      image_path: "lib/util/images/vistalogo.png"
-      icon_size: 48 # min:48, max:256, default: 48
-    macos:
-      generate: true
-      image_path: "lib/util/images/vistalogo.png"
+    background_color: "#FFFFFF"  # رنگ پس‌زمینه واقعی
+    theme_color: "#000000"       # رنگ تم واقعی
+  windows:
+    generate: true
+    image_path: "lib/util/images/vistalogo.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "lib/util/images/vistalogo.png"
+
 
 dev_dependencies:
 
