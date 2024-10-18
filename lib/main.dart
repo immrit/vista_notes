@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_links/app_links.dart'; // اضافه کردن app_links
 import 'view/screen/homeScreen.dart';
 import 'view/screen/ouathUser/loginUser.dart';
 import 'view/screen/ouathUser/resetPassword.dart';
@@ -37,6 +38,30 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   StreamSubscription? _sub;
+  late final AppLinks _appLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    _appLinks = AppLinks(); // ایجاد یک instance از AppLinks
+    _handleIncomingLinks(); // هندل کردن دیپ لینک‌ها
+  }
+
+  // مدیریت دیپ لینک‌ها
+  void _handleIncomingLinks() {
+    _sub = _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null &&
+          uri.scheme == 'vistaNote' &&
+          uri.host == 'reset-password') {
+        String? accessToken = uri.queryParameters['access_token'];
+        if (accessToken != null) {
+          // هدایت به صفحه بازیابی رمز عبور با توکن
+          Navigator.pushNamed(context, '/reset-password',
+              arguments: accessToken);
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -71,7 +96,9 @@ class _MyAppState extends State<MyApp> {
             '/editeProfile': (context) => const EditProfile(),
             '/profile': (context) => const Profile(),
             '/welcome': (context) => const WelcomePage(),
-            '/reset-password': (context) => const ResetPasswordPage(token: ''),
+            '/reset-password': (context) => ResetPasswordPage(
+                  token: ModalRoute.of(context)?.settings.arguments as String,
+                ),
           },
         );
       },

@@ -106,7 +106,7 @@ class HomeScreen extends ConsumerWidget {
               height: he < 685 ? 220 : 398,
             ),
             const Text(
-              'Version: 1.1.0',
+              'Version: 1.2.0+3',
               style: TextStyle(color: Colors.white60),
             )
           ],
