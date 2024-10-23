@@ -7,9 +7,7 @@ class SupportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        backgroundColor: Colors.grey[900],
         titleTextStyle: const TextStyle(
             color: Colors.white, fontSize: 18, fontFamily: 'Vazir'),
         title: const Text('پشتیبانی'),

@@ -153,7 +153,6 @@ class _SetProfileDataState extends State<SetProfileData> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
       appBar: AppBar(
         title: const Text('نام کاربری خود را مشخص کنید'),
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18),

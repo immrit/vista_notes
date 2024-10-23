@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import '../model/Notes.dart';
+import '../util/themes.dart';
 
 //check user state
 final authStateProvider = StreamProvider<User?>((ref) {
@@ -81,20 +83,7 @@ final deleteNoteProvider =
   }
 });
 
-
-//update Note
-// final editNoteProvider = FutureProvider.family<void, Note>((ref, note) async {
-//   // این متد، یادداشت را ویرایش می‌کند
-//   final response = await supabase
-//       .from('Notes')
-//       .update({
-//         'title': note.title,
-//         'content': note.content,
-//       })
-//       .eq('id', note.id)
-//       .execute();
-
-//   if (response.error != null) {
-//     throw Exception('Error updating note: ${response.error!.message}');
-//   }
-// });
+// حالت مدیریت تم
+final themeProvider = StateProvider<ThemeData>((ref) {
+  return lightTheme; // به صورت پیش‌فرض تم روشن
+});

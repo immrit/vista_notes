@@ -18,10 +18,8 @@ class ChangePasswordWidget extends ConsumerWidget {
         ref.watch(changePasswordProvider(_newPasswordController.text));
 
     return Scaffold(
-      backgroundColor: Colors.grey[900],
       appBar: AppBar(
         title: const Text('ویرایش رمزعبور'),
-        backgroundColor: Colors.grey[900],
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
         iconTheme: const IconThemeData(color: Colors.white),
       ),

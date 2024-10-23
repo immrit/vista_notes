@@ -25,7 +25,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final notesAsyncValue = ref.watch(notesProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Colors.black12,
         title: const Text(

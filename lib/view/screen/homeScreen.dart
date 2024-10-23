@@ -18,24 +18,18 @@ class HomeScreen extends ConsumerWidget {
     final he = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        backgroundColor: Color(Colors.black12.value),
-        iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
           "Vista Notes",
-          style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).push(createSearchPageRoute());
           },
           icon: const Icon(Icons.search),
-          color: Colors.white70,
         ),
       ),
       endDrawer: Drawer(
-        backgroundColor: Color(Colors.grey[900]!.value),
         width: 0.6.sw,
         child: Column(
           children: <Widget>[
@@ -72,17 +66,24 @@ class HomeScreen extends ConsumerWidget {
               leading: const Icon(Icons.person),
               title: const Text(
                 'حساب کاربری',
-                style: TextStyle(color: Colors.white),
               ),
               onTap: () {
                 Navigator.pushNamed(context, '/profile');
               },
             ),
             ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text(
+                'تنظیمات',
+              ),
+              onTap: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.support_agent),
               title: const Text(
                 'پشتیبانی',
-                style: TextStyle(color: Colors.white),
               ),
               onTap: () {
                 Navigator.push(
@@ -95,20 +96,19 @@ class HomeScreen extends ConsumerWidget {
               leading: const Icon(Icons.logout),
               title: const Text(
                 'خروج',
-                style: TextStyle(color: Colors.white),
               ),
               onTap: () {
                 supabase.auth.signOut();
                 Navigator.pushReplacementNamed(context, '/welcome');
               },
             ),
-            SizedBox(
-              height: he < 685 ? 220 : 398,
-            ),
-            const Text(
-              'Version: 1.2.0+3',
-              style: TextStyle(color: Colors.white60),
-            )
+            // SizedBox(
+            //   height: he < 685 ? 220 : 398,
+            // ),
+            // const Text(
+            //   'Version: 1.2.0+3',
+            //   style: TextStyle(color: Colors.white60),
+            // )
           ],
         ),
       ),
@@ -135,19 +135,15 @@ class HomeScreen extends ConsumerWidget {
                       const Text(
                         'پین شده ها:',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       NoteGridWidget(notes: pinnedNotes, ref: ref),
                     ],
                     const SizedBox(height: 20),
                     const Text(
                       'سایر یادداشت‌ها:',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     NoteGridWidget(notes: otherNotes, ref: ref),
                   ],

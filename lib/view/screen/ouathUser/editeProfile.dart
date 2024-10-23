@@ -93,7 +93,6 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     final getProfileData = ref.watch(profileProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[900],
       appBar: AppBar(
         backgroundColor: Color(Colors.grey[900]!.value),
         title: const Text('ویرایش پروفایل'),

@@ -12,6 +12,7 @@ import 'package:vistaNote/view/screen/AddNoteScreen.dart';
 
 import '../provider/provider.dart';
 import '../view/screen/searchPage.dart';
+import 'themes.dart';
 
 class topText extends StatelessWidget {
   String text;
@@ -274,14 +275,16 @@ Future<void> uploadProfilePicture() async {
   }
 }
 
-class NoteGridWidget extends StatelessWidget {
+class NoteGridWidget extends ConsumerWidget {
   final List<Note> notes;
   final WidgetRef ref;
 
   const NoteGridWidget({super.key, required this.notes, required this.ref});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentTheme = ref.watch(themeProvider); // دریافت تم جاری
+
     return MasonryGridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -293,6 +296,28 @@ class NoteGridWidget extends StatelessWidget {
       itemCount: notes.length,
       itemBuilder: (context, index) {
         final note = notes[index];
+
+        // استایل‌ها بر اساس تم جاری
+        final containerDecoration = BoxDecoration(
+          color: currentTheme.brightness == Brightness.dark
+              ? Colors.grey[800] // رنگ پس‌زمینه برای تم تاریک
+              : Colors.grey[300], // رنگ پس‌زمینه برای تم روشن
+          borderRadius: BorderRadius.circular(
+            currentTheme == customTheme
+                ? 20.0
+                : 10.0, // شکل متفاوت برای تم سفارشی
+          ),
+          boxShadow: currentTheme == customTheme
+              ? [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  )
+                ]
+              : [],
+        );
+
         return GestureDetector(
           onLongPress: () {
             showCustomBottomSheet(context, note, () {
@@ -311,27 +336,31 @@ class NoteGridWidget extends StatelessWidget {
           },
           child: Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(10.0),
-            ),
+            decoration: containerDecoration, // استفاده از استایل داینامیک
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   note.title,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Vazir'),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Vazir',
+                    color: currentTheme.brightness == Brightness.dark
+                        ? Colors.white // رنگ متن برای تم تاریک
+                        : Colors.black, // رنگ متن برای تم روشن
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   note.content,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      color: Colors.white54, fontFamily: 'Vazir'),
+                  style: TextStyle(
+                    fontFamily: 'Vazir',
+                    color: currentTheme.brightness == Brightness.dark
+                        ? Colors.white54
+                        : Colors.black54, // رنگ متن با توجه به تم
+                  ),
                 ),
               ],
             ),

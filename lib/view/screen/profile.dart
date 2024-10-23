@@ -14,13 +14,11 @@ class Profile extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.grey[900],
         title: const Text(
           'پروفایل',
           style: TextStyle(color: Colors.white),
         ),
       ),
-      backgroundColor: Colors.grey[900],
       body: getprofile.when(
         data: (getprofile) {
           return Column(
