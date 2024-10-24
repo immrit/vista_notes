@@ -170,7 +170,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                   SnackBar(content: Text('Failed to update profile: $error')),
                 ),
               );
-        }, 'ذخیره'),
+        }, 'ذخیره', ref),
       ),
     );
   }

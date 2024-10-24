@@ -71,12 +71,14 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    _appLinks = AppLinks(); // ایجاد یک instance از AppLinks
-    _handleIncomingLinks(); // هندل کردن دیپ لینک‌ها
+    _appLinks = AppLinks();
+    _handleIncomingLinks();
 
-    // تنظیم تم اولیه از Hive
-    final themeNotifier = ref.read(themeProvider.notifier);
-    themeNotifier.state = widget.initialTheme;
+    // بررسی اینکه مقدار تم اولیه به درستی تنظیم می‌شود
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final themeNotifier = ref.read(themeProvider.notifier);
+      themeNotifier.state = widget.initialTheme;
+    });
   }
 
   // مدیریت دیپ لینک‌ها

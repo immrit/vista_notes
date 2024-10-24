@@ -1,112 +1,66 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../provider/provider.dart';
 import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/ouathUser/signupUser.dart';
-import '../../../main.dart';
 
-class Loginuser extends StatefulWidget {
+class Loginuser extends ConsumerWidget {
   const Loginuser({super.key});
 
   @override
-  _LoginuserState createState() => _LoginuserState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final emailController = TextEditingController();
+    final passController = TextEditingController();
 
-class _LoginuserState extends State<Loginuser> {
-  bool _isLoading = false;
-  bool _redirecting = false;
-  late final TextEditingController _emailController = TextEditingController();
-  late final TextEditingController _passController = TextEditingController();
-  late final StreamSubscription<AuthState> _authStateSubscription;
+    final isLoading = ref.watch(isLoadingProvider);
+    final redirecting = ref.watch(isRedirectingProvider);
 
-  Future<void> _signIn() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passController.text.trim(),
-      );
-      if (mounted) {
+    Future<void> signIn() async {
+      ref.read(isLoadingProvider.notifier).state = true;
+
+      try {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: emailController.text.trim(),
+          password: passController.text.trim(),
+        );
         context.showSnackBar('خوش آمدید');
-
-        _emailController.clear();
-        _passController.clear();
-      }
-    } on AuthException {
-      if (mounted) {
+        emailController.clear();
+        passController.clear();
+      } on AuthException {
         context.showSnackBar('نام کاربری/رمزعبور اشتباه است', isError: true);
-      }
-    } catch (error) {
-      if (mounted) {
+      } catch (error) {
         context.showSnackBar('خطایی پیش آمد', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      } finally {
+        ref.read(isLoadingProvider.notifier).state = false;
       }
     }
-  }
 
-  // متد جدید برای ارسال درخواست بازیابی رمز عبور
-  Future<void> _resetPassword() async {
-    if (_emailController.text.isEmpty) {
-      context.showSnackBar('لطفاً ایمیل خود را وارد کنید', isError: true);
-      return;
-    }
+    Future<void> resetPassword() async {
+      if (emailController.text.isEmpty) {
+        context.showSnackBar('لطفاً ایمیل خود را وارد کنید', isError: true);
+        return;
+      }
 
-    try {
-      await supabase.auth.resetPasswordForEmail(_emailController.text.trim());
-      if (mounted) {
+      try {
+        await Supabase.instance.client.auth
+            .resetPasswordForEmail(emailController.text.trim());
         context.showSnackBar('ایمیل بازیابی رمز عبور ارسال شد');
-      }
-    } catch (e) {
-      if (mounted) {
+      } catch (e) {
         context.showSnackBar('خطایی رخ داد، دوباره تلاش کنید', isError: true);
       }
     }
-  }
 
-  @override
-  void initState() {
-    _authStateSubscription = supabase.auth.onAuthStateChange.listen(
-      (data) {
-        if (_redirecting) return;
-        final session = data.session;
-        if (session != null) {
-          _redirecting = true;
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-        }
-      },
-      onError: (error) {
-        if (error is AuthException) {
-          context.showSnackBar(error.message, isError: true);
-        } else {
-          context.showSnackBar('Unexpected error occurred', isError: true);
-        }
-      },
-    );
-    super.initState();
-  }
+    // استفاده صحیح از ref.listen
+    ref.listen<AsyncValue<User?>>(authStateProvider, (previous, next) {
+      if (next.value != null && !redirecting) {
+        ref.read(isRedirectingProvider.notifier).state = true;
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
+    });
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passController.dispose();
-    _authStateSubscription.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.grey.shade900,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+      appBar: AppBar(),
       body: Container(
         child: ListView(
           children: [
@@ -116,27 +70,24 @@ class _LoginuserState extends State<Loginuser> {
                   text: '!خوش برگشتی',
                 ),
                 const SizedBox(height: 80),
-                customTextField('ایمیل', _emailController, (value) {
+                customTextField('ایمیل', emailController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'لطفا مقادیر را وارد نمایید';
                   }
                 }, false, TextInputType.emailAddress),
                 const SizedBox(height: 10),
-                customTextField('رمزعبور', _passController, (value) {
+                customTextField('رمزعبور', passController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'لطفا مقادیر را وارد نمایید';
                   }
                 }, true, TextInputType.visiblePassword),
-
-                // لینک فراموشی رمز عبور
                 TextButton(
-                  onPressed: _resetPassword,
+                  onPressed: resetPassword,
                   child: const Text(
                     'فراموشی رمز عبور؟',
                     style: TextStyle(color: Colors.blue),
                   ),
                 ),
-
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Row(
@@ -156,7 +107,6 @@ class _LoginuserState extends State<Loginuser> {
                       ),
                       const Text(
                         "حساب کاربری ندارید؟",
-                        style: TextStyle(color: Colors.white70),
                       ),
                     ],
                   ),
@@ -171,8 +121,8 @@ class _LoginuserState extends State<Loginuser> {
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
             right: 10,
             left: 10),
-        child: customButton(_isLoading ? null : _signIn,
-            _isLoading ? '...در حال ورود' : 'ورود'),
+        child: customButton(isLoading ? null : signIn,
+            isLoading ? '...در حال ورود' : 'ورود', ref),
       ),
     );
   }

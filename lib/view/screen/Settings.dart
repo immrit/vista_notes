@@ -78,7 +78,7 @@ class ThemeItems extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeNotifier =
-        ref.read(themeProvider.notifier); // دسترسی به notifier تم
+        ref.watch(themeProvider.notifier); // دسترسی به notifier تم
 
     return Scaffold(
       appBar: AppBar(
@@ -147,7 +147,7 @@ class ThemeItems extends ConsumerWidget {
   }
 
   // تابع برای ذخیره تم انتخاب شده در Hive
-  void _saveThemeToHive(String theme) {
+  void _saveThemeToHive(String theme) async {
     var box = Hive.box('settings');
     box.put('selectedTheme', theme); // ذخیره تم در Hive
   }

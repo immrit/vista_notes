@@ -49,26 +49,23 @@ class ChangePasswordWidget extends ConsumerWidget {
             SizedBox(
               height: 10.h,
             ),
-            customButton(
-              () {
-                if (_formKey.currentState!.validate()) {
-                  ref
-                      .read(changePasswordProvider(_newPasswordController.text)
-                          .future)
-                      .then((_) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Password updated successfully')),
-                    );
-                  }).catchError((error) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('پسورد جدید ثبت شد')),
-                    );
-                  });
-                }
-              },
-              'ویرایش رمز عبور',
-            ),
+            customButton(() {
+              if (_formKey.currentState!.validate()) {
+                ref
+                    .read(changePasswordProvider(_newPasswordController.text)
+                        .future)
+                    .then((_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Password updated successfully')),
+                  );
+                }).catchError((error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('پسورد جدید ثبت شد')),
+                  );
+                });
+              }
+            }, 'ویرایش رمز عبور', ref),
           ],
         ),
       ),

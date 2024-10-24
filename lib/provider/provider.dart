@@ -87,3 +87,6 @@ final deleteNoteProvider =
 final themeProvider = StateProvider<ThemeData>((ref) {
   return lightTheme; // به صورت پیش‌فرض تم روشن
 });
+
+final isLoadingProvider = StateProvider<bool>((ref) => false);
+final isRedirectingProvider = StateProvider<bool>((ref) => false);

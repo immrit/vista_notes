@@ -29,8 +29,7 @@ class topText extends StatelessWidget {
         padding: const EdgeInsets.only(right: 15),
         child: Text(
           text,
-          style: const TextStyle(
-              fontSize: 35, fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -77,26 +76,20 @@ Widget customTextField(String hintText, TextEditingController controller,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextFormField(
-        style: const TextStyle(color: Colors.white),
         controller: controller,
         validator: validator,
         obscureText: obscureText,
-        cursorColor: Colors.white,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.white60),
-          focusColor: Colors.white,
           enabledBorder: OutlineInputBorder(
             borderSide: const BorderSide(
-              color: Colors.white, // رنگ بوردر در حالت غیرفعال (enabled)
               width: .7,
             ),
             borderRadius: BorderRadius.circular(18),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: const BorderSide(
-              color: Colors.white, // رنگ بوردر در حالت فوکوس (focused)
               width: 1.5,
             ),
             borderRadius: BorderRadius.circular(18),
@@ -107,20 +100,30 @@ Widget customTextField(String hintText, TextEditingController controller,
   );
 }
 
-Widget customButton(dynamic ontap, String text) {
+Widget customButton(dynamic ontap, String text, final WidgetRef ref) {
+  final currentTheme = ref.watch(themeProvider); // دریافت تم جاری
+
   return GestureDetector(
     onTap: ontap,
     child: Container(
       width: 350,
       height: 50,
       decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(15)),
+          color: currentTheme.brightness == Brightness.dark
+              ? Colors.white
+              : Colors.grey[800],
+          borderRadius: BorderRadius.circular(15)),
       child: Align(
         alignment: Alignment.center,
         child: Text(
           textAlign: TextAlign.center,
           text,
-          style: const TextStyle(fontSize: 20, color: Colors.black),
+          style: TextStyle(
+            fontSize: 20,
+            color: currentTheme.brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
+          ),
         ),
       ),
     ),
