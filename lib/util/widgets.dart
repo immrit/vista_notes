@@ -5,11 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
 import 'package:vistaNote/model/Notes.dart';
 import 'package:vistaNote/view/screen/AddNoteScreen.dart';
-
 import '../provider/provider.dart';
 import '../view/screen/searchPage.dart';
 import 'themes.dart';
@@ -133,27 +133,21 @@ Widget customButton(dynamic ontap, String text, final WidgetRef ref) {
 Widget ProfileFields(String name, IconData icon, dynamic onclick) {
   return GestureDetector(
     onTap: onclick,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Container(
-          width: double.infinity,
-          height: 80.h,
-          decoration: BoxDecoration(
-            color: Colors.grey[800],
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
+    child: Column(
+      children: [
+        SizedBox(
+            width: double.infinity,
+            height: 50.h,
             child: ListTile(
               leading: Icon(
                 icon,
-                color: Colors.white54,
               ),
               title: Text(
                 name,
-                style: TextStyle(color: Colors.white, fontSize: 15.sp),
               ),
-            ),
-          )),
+            )),
+        const Divider(endIndent: 0, indent: 59),
+      ],
     ),
   );
 }
@@ -179,7 +173,7 @@ Widget addNotesTextFiels(
         decoration: InputDecoration(
             hintText: name,
             border: InputBorder.none,
-            hintStyle: TextStyle(fontSize: 25.sp, color: Colors.white30)),
+            hintStyle: TextStyle(fontSize: 25.sp)),
       ),
     ),
   );
@@ -398,4 +392,30 @@ Route createSearchPageRoute() {
       );
     },
   );
+}
+
+//invite frends
+
+class ShareInviteFriends extends StatelessWidget {
+  final String inviteText =
+      'دوست عزیز سلام! شما دعوت شده‌اید تا برنامه ما را امتحان کنید.';
+
+  const ShareInviteFriends({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('اشتراک‌گذاری دعوت‌نامه'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Share.share(inviteText);
+          },
+          child: const Text('اشتراک‌گذاری دعوت‌نامه'),
+        ),
+      ),
+    );
+  }
 }

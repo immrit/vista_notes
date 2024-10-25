@@ -26,10 +26,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black12,
         title: const Text(
           'جستجوی یادداشت',
-          style: TextStyle(color: Colors.white),
         ),
       ),
       body: Directionality(
@@ -45,14 +43,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     searchQuery = value;
                   });
                 },
-                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'جستجو...',
-                  hintStyle: const TextStyle(color: Colors.white60),
-                  prefixIcon: const Icon(Icons.search, color: Colors.white),
+                  prefixIcon: const Icon(Icons.search),
                   suffixIcon: searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.white),
+                          icon: const Icon(Icons.clear),
                           onPressed: () {
                             setState(() {
                               searchQuery = '';
@@ -61,9 +57,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           },
                         )
                       : null,
-                  enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
+                  enabledBorder: const OutlineInputBorder(),
                   focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.blue),
                   ),
@@ -99,7 +93,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 4.0),
                         child: Card(
-                          color: Colors.grey[850],
                           elevation: 4,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -107,9 +100,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                           child: ListTile(
                             title: Text(
                               note.title,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 8.0),
@@ -117,7 +109,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 note.content,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white70),
                               ),
                             ),
                             onTap: () {

@@ -10,15 +10,14 @@ import 'ouathUser/updatePassword.dart';
 
 class Settings extends ConsumerWidget {
   const Settings({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final getprofile = ref.watch(profileProvider);
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'تنظیمات',
-          style: TextStyle(color: Colors.white),
         ),
       ),
       body: getprofile.when(
@@ -34,16 +33,13 @@ class Settings extends ConsumerWidget {
                             'lib/util/images/default-avatar.jpg')),
                 title: Text(
                   "${getprofile['username']}",
-                  style: const TextStyle(color: Colors.white),
                 ),
                 subtitle: Text(
                   '${supabase.auth.currentUser!.email}',
-                  style: const TextStyle(color: Colors.white38),
                 ),
               ),
               const SizedBox(height: 20),
               const Divider(
-                color: Colors.white38,
                 endIndent: 20,
                 indent: 20,
               ),
@@ -75,6 +71,12 @@ class Settings extends ConsumerWidget {
 class ThemeItems extends ConsumerWidget {
   const ThemeItems({super.key});
 
+  // تابع برای ذخیره تم انتخاب شده در Hive
+  void _saveThemeToHive(String theme) async {
+    var box = Hive.box('settings');
+    box.put('selectedTheme', theme); // ذخیره تم در Hive
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeNotifier =
@@ -87,11 +89,17 @@ class ThemeItems extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          const Directionality(
-            textDirection: TextDirection.rtl,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text("استایل ها:"),
+          const Padding(
+            padding: EdgeInsets.only(right: 10, bottom: 15),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  "استایل ها:",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
             ),
           ),
           Row(
@@ -136,7 +144,7 @@ class ThemeItems extends ConsumerWidget {
                 child: const CircleAvatar(
                   backgroundColor: Colors.red, // رنگ دکمه: قرمز برای تم سفارشی
                   radius: 30,
-                  child: Icon(Icons.palette, color: Colors.white),
+                  child: Icon(Icons.color_lens, color: Colors.white),
                 ),
               ),
             ],
@@ -144,11 +152,5 @@ class ThemeItems extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  // تابع برای ذخیره تم انتخاب شده در Hive
-  void _saveThemeToHive(String theme) async {
-    var box = Hive.box('settings');
-    box.put('selectedTheme', theme); // ذخیره تم در Hive
   }
 }

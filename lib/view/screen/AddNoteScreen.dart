@@ -66,9 +66,6 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleTextStyle: const TextStyle(
-            color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-        iconTheme: const IconThemeData(color: Colors.white),
         title: isEditing == true
             ? const Text('ویرایش')
             : const Text('افزودن نوشته جدید'),
@@ -110,7 +107,6 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
                       alignment: Alignment.bottomLeft,
                       child: Text(
                         "آخرین ویرایش :  ${lastEditedDate ?? '---'}",
-                        style: const TextStyle(fontFamily: 'Vazir'),
                       ),
                     )
                   : Container(),

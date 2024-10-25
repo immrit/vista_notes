@@ -8,10 +8,7 @@ class SupportPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleTextStyle: const TextStyle(
-            color: Colors.white, fontSize: 18, fontFamily: 'Vazir'),
         title: const Text('پشتیبانی'),
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Center(
         child: SizedBox(

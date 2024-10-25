@@ -14,6 +14,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final getprofile = ref.watch(profileProvider);
     final notesAsyncValue = ref.watch(notesProvider);
+    final currentcolor = ref.watch(themeProvider);
 
     final he = MediaQuery.of(context).size.height;
 
@@ -39,12 +40,8 @@ class HomeScreen extends ConsumerWidget {
               child: getprofile.when(
                   data: (getprofile) {
                     return UserAccountsDrawerHeader(
-                      decoration: const BoxDecoration(
-                          color: Colors.grey,
-                          image: DecorationImage(
-                              image:
-                                  AssetImage('lib/util/images/headerBack.jpg'),
-                              fit: BoxFit.cover)),
+                      decoration: BoxDecoration(
+                          color: currentcolor.appBarTheme.backgroundColor),
                       currentAccountPicture: CircleAvatar(
                         radius: 30,
                         backgroundImage: getprofile!['avatar_url'] != null
@@ -54,8 +51,18 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       margin: const EdgeInsets.only(bottom: 0),
                       currentAccountPictureSize: const Size(65, 65),
-                      accountName: Text('${getprofile['username']}'),
-                      accountEmail: Text("${supabase.auth.currentUser!.email}"),
+                      accountName: Text(
+                        '${getprofile['username']}',
+                        style: TextStyle(
+                            color: currentcolor.brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black),
+                      ),
+                      accountEmail: Text("${supabase.auth.currentUser!.email}",
+                          style: TextStyle(
+                              color: currentcolor.brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black)),
                     );
                   },
                   error: (error, stack) => Center(child: Text('Error: $error')),
@@ -90,6 +97,18 @@ class HomeScreen extends ConsumerWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const SupportPage()));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text(
+                'دعوت از دوستان',
+              ),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ShareInviteFriends()));
               },
             ),
             ListTile(
@@ -172,7 +191,8 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.white,
+          backgroundColor:
+              currentcolor.floatingActionButtonTheme.backgroundColor,
           child: const Icon(Icons.edit),
           onPressed: () {
             Navigator.of(context).push(
