@@ -19,6 +19,74 @@ class _EditProfileState extends ConsumerState<EditProfile> {
   File? _imageFile;
   final picker = ImagePicker();
 
+  // متد برای نمایش دیالوگ
+  void _showImageOptions() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('گزینه‌ها'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // بستن دیالوگ
+                await _pickImage(); // انتخاب تصویر جدید
+              },
+              child: const Text('افزودن تصویر جدید'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // بستن دیالوگ
+                await _deleteImage(); // حذف تصویر پروفایل
+              },
+              child: const Text('حذف عکس پروفایل'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteImage() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser!.id;
+
+      // دریافت URL عکس پروفایل فعلی از پروفایل کاربر
+      final profileResponse = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', userId)
+          .single();
+
+      final previousAvatarUrl = profileResponse['avatar_url'];
+
+      // حذف عکس از باکت اگر وجود داشته باشد
+      if (previousAvatarUrl != null && previousAvatarUrl.isNotEmpty) {
+        final fileNameToDelete = previousAvatarUrl.split('/').last;
+        await supabase.storage.from('avatars').remove([fileNameToDelete]);
+
+        // به‌روزرسانی URL تصویر پروفایل به null
+        await supabase
+            .from('profiles')
+            .update({'avatar_url': null}).eq('id', userId);
+
+        // نمایش پیام موفقیت
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('عکس پروفایل حذف شد')),
+        );
+
+        // به‌روزرسانی UI
+        setState(() {});
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطا در حذف تصویر: $e')),
+      );
+      print('Error deleting image: $e');
+    }
+  }
+
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
@@ -94,10 +162,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(Colors.grey[900]!.value),
         title: const Text('ویرایش پروفایل'),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.sp),
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: getProfileData.when(
         data: (data) {
@@ -107,46 +172,50 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                 data['username'] ?? ""; // دریافت نام کاربری فعلی
           }
 
-          return Center(
-              child: Column(children: [
-            GestureDetector(
-              onTap: _pickImage, // انتخاب تصویر با کلیک روی آن
-              child: Container(
-                width: .16.sh,
-                height: .16.sh,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: _imageFile != null
-                        ? FileImage(
-                            _imageFile!) // نمایش تصویر انتخاب شده از دستگاه
-                        : (avatarUrl != null &&
-                                avatarUrl
-                                    .isNotEmpty) // بررسی اینکه avatarUrl خالی یا null نباشد
-                            ? NetworkImage(avatarUrl) as ImageProvider
-                            : const AssetImage(
-                                'lib/util/images/default-avatar.jpg'), // نمایش تصویر پیش‌فرض
-                    fit: BoxFit.cover,
+          return Padding(
+            padding: const EdgeInsets.only(top: 50),
+            child: Center(
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: _showImageOptions, // نمایش دیالوگ با گزینه‌ها
+                    child: Container(
+                      width: .16.sh,
+                      height: .16.sh,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: _imageFile != null
+                              ? FileImage(_imageFile!)
+                              : (avatarUrl != null && avatarUrl.isNotEmpty)
+                                  ? NetworkImage(avatarUrl)
+                                  : const AssetImage(
+                                      'lib/util/images/default-avatar.jpg'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(height: 50.h),
+                  customTextField('نام کاربری', _usernameController, (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'لطفا مقادیر را وارد نمایید';
+                    }
+                  }, false, TextInputType.text)
+                ],
               ),
             ),
-            SizedBox(height: 50.h),
-            customTextField('نام کاربری', _usernameController, (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفا مقادیر را وارد نمایید';
-              }
-            }, false, TextInputType.text)
-          ]));
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            right: 10,
-            left: 10),
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          right: 10,
+          left: 10,
+        ),
         child: customButton(() {
           final updatedData = {
             'username': _usernameController.text,
@@ -159,15 +228,15 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           ref.read(profileUpdateProvider(updatedData)).when(
                 data: (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Profile updated successfully')),
+                    const SnackBar(content: Text('تصویر پروفایل بروزرسانی شد')),
                   );
                   Navigator.pushReplacementNamed(context, '/home');
                 },
                 loading: () => const CircularProgressIndicator(),
                 error: (error, stack) =>
                     ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to update profile: $error')),
+                  SnackBar(
+                      content: Text('خطا در بروزرسانی تصویر پروفایل: $error')),
                 ),
               );
         }, 'ذخیره', ref),

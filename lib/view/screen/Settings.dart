@@ -15,56 +15,59 @@ class Settings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final getprofile = ref.watch(profileProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'تنظیمات',
+        appBar: AppBar(
+          title: const Text(
+            'تنظیمات',
+          ),
         ),
-      ),
-      body: getprofile.when(
-        data: (getprofile) {
-          return Column(
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                    radius: 30,
-                    backgroundImage: getprofile!['avatar_url'] != null
-                        ? NetworkImage(getprofile['avatar_url'].toString())
-                        : const AssetImage(
-                            'lib/util/images/default-avatar.jpg')),
-                title: Text(
-                  "${getprofile['username']}",
+        body: getprofile.when(
+          data: (getprofile) {
+            return Column(
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                      radius: 30,
+                      backgroundImage: getprofile!['avatar_url'] != null
+                          ? NetworkImage(getprofile['avatar_url'].toString())
+                          : const AssetImage(
+                              'lib/util/images/default-avatar.jpg')),
+                  title: Text(
+                    "${getprofile['username']}",
+                  ),
+                  subtitle: Text(
+                    '${supabase.auth.currentUser!.email}',
+                  ),
                 ),
-                subtitle: Text(
-                  '${supabase.auth.currentUser!.email}',
+                const SizedBox(height: 20),
+                const Divider(
+                  endIndent: 20,
+                  indent: 20,
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Divider(
-                endIndent: 20,
-                indent: 20,
-              ),
-              const SizedBox(height: 10),
-              ProfileFields('ویرایش پروفایل', Icons.person, () {
-                Navigator.pushNamed(context, '/editeProfile');
-              }),
-              ProfileFields('تغییر رمز عبور', Icons.lock, () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ChangePasswordWidget()));
-              }),
-              ProfileFields('تم و استایل', Icons.color_lens, () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ThemeItems()));
-              }),
-              // ProfileFields('حذف حساب کاربری', Icons.delete, () {}),
-            ],
-          );
-        },
-        error: (error, stack) => Center(child: Text('Error: $error')),
-        loading: () => const Center(child: CircularProgressIndicator()),
-      ),
-    );
+                const SizedBox(height: 10),
+                ProfileFields('ویرایش پروفایل', Icons.person, () {
+                  Navigator.pushNamed(context, '/editeProfile');
+                }),
+                ProfileFields('تغییر رمز عبور', Icons.lock, () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => ChangePasswordWidget()));
+                }),
+                ProfileFields('تم و استایل', Icons.color_lens, () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ThemeItems()));
+                }),
+                // ProfileFields('حذف حساب کاربری', Icons.delete, () {}),
+              ],
+            );
+          },
+          error: (error, stack) => Center(child: Text('Error: $error')),
+          loading: () => const Center(child: CircularProgressIndicator()),
+        ),
+        bottomNavigationBar: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: Align(alignment: Alignment.center, child: VersionNumber())));
   }
 }
 

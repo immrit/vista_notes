@@ -14,6 +14,10 @@ import '../provider/provider.dart';
 import '../view/screen/searchPage.dart';
 import 'themes.dart';
 
+Text VersionNumber() {
+  return const Text('نسخه: 1.2.0+3');
+}
+
 class topText extends StatelessWidget {
   String text;
   topText({
@@ -138,15 +142,18 @@ Widget ProfileFields(String name, IconData icon, dynamic onclick) {
         SizedBox(
             width: double.infinity,
             height: 50.h,
-            child: ListTile(
-              leading: Icon(
-                icon,
-              ),
-              title: Text(
-                name,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: ListTile(
+                leading: Icon(
+                  icon,
+                ),
+                title: Text(
+                  name,
+                ),
               ),
             )),
-        const Divider(endIndent: 0, indent: 59),
+        const Divider(indent: 0, endIndent: 59),
       ],
     ),
   );

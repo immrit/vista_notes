@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:vistaNote/view/screen/support.dart';
 import '../../main.dart';
 import '../../provider/provider.dart';
@@ -69,15 +70,15 @@ class HomeScreen extends ConsumerWidget {
                   loading: () =>
                       const Center(child: CircularProgressIndicator())),
             ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text(
-                'حساب کاربری',
-              ),
-              onTap: () {
-                Navigator.pushNamed(context, '/profile');
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.person),
+            //   title: const Text(
+            //     'حساب کاربری',
+            //   ),
+            //   onTap: () {
+            //     Navigator.pushNamed(context, '/profile');
+            //   },
+            // ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text(
@@ -105,10 +106,9 @@ class HomeScreen extends ConsumerWidget {
                 'دعوت از دوستان',
               ),
               onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ShareInviteFriends()));
+                const String inviteText =
+                    'دوست عزیز سلام! من از ویستا نوت برای ذخیره یادداشت هام استفاده میکنم! \n امکانات این نرم افزار بی نظیره میتونی از این لینک از طریق مایکت دانلودش کنی:  https://myket.ir/app/com.example.vista_notes2 ';
+                Share.share(inviteText);
               },
             ),
             ListTile(

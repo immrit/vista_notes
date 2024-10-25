@@ -14,7 +14,6 @@ import 'view/screen/ouathUser/loginUser.dart';
 import 'view/screen/ouathUser/resetPassword.dart';
 import 'view/screen/ouathUser/signupUser.dart';
 import 'view/screen/ouathUser/welcome.dart';
-import 'view/screen/profile.dart';
 import 'view/screen/ouathUser/editeProfile.dart';
 
 void main() async {
@@ -127,7 +126,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                 '/home': (context) => const HomeScreen(),
                 '/login': (context) => const Loginuser(),
                 '/editeProfile': (context) => const EditProfile(),
-                '/profile': (context) => const Profile(),
+                // '/profile': (context) => const Profile(),
                 '/welcome': (context) => const WelcomePage(),
                 '/settings': (context) => const Settings(),
                 '/reset-password': (context) => ResetPasswordPage(
