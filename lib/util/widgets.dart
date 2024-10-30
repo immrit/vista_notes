@@ -15,7 +15,7 @@ import '../view/screen/searchPage.dart';
 import 'themes.dart';
 
 Text VersionNumber() {
-  return const Text('نسخه: 1.2.0+3');
+  return const Text('نسخه: 1.3.0+4');
 }
 
 class topText extends StatelessWidget {
@@ -141,7 +141,7 @@ Widget ProfileFields(String name, IconData icon, dynamic onclick) {
       children: [
         SizedBox(
             width: double.infinity,
-            height: 50.h,
+            height: 45,
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: ListTile(

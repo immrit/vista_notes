@@ -21,27 +21,35 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
   // متد برای نمایش دیالوگ
   void _showImageOptions() async {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('گزینه‌ها'),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // بستن دیالوگ
-                await _pickImage(); // انتخاب تصویر جدید
-              },
-              child: const Text('افزودن تصویر جدید'),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // بستن دیالوگ
-                await _deleteImage(); // حذف تصویر پروفایل
-              },
-              child: const Text('حذف عکس پروفایل'),
-            ),
-          ],
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.add_a_photo),
+                title: const Text('افزودن تصویر جدید'),
+                onTap: () async {
+                  Navigator.of(context).pop(); // بستن باتم شیت
+                  await _pickImage(); // انتخاب تصویر جدید
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('حذف عکس پروفایل'),
+                onTap: () async {
+                  Navigator.of(context).pop(); // بستن باتم شیت
+                  await _deleteImage(); // حذف تصویر پروفایل
+                },
+              ),
+            ],
+          ),
         );
       },
     );

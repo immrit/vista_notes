@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../provider/provider.dart';
 import 'package:vistaNote/util/widgets.dart';
-import 'package:vistaNote/view/screen/ouathUser/signupUser.dart';
 
-class Loginuser extends ConsumerWidget {
+import '../../../provider/provider.dart';
+import 'signupUser.dart';
+
+class Loginuser extends ConsumerStatefulWidget {
   const Loginuser({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final emailController = TextEditingController();
-    final passController = TextEditingController();
+  _LoginuserState createState() => _LoginuserState();
+}
 
+class _LoginuserState extends ConsumerState<Loginuser> {
+  final emailController = TextEditingController();
+  final passController = TextEditingController();
+
+  @override
+  void dispose() {
+    // اطمینان از آزادسازی کنترلرها
+    emailController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isLoading = ref.watch(isLoadingProvider);
     final redirecting = ref.watch(isRedirectingProvider);
 
@@ -51,7 +65,6 @@ class Loginuser extends ConsumerWidget {
       }
     }
 
-    // استفاده صحیح از ref.listen
     ref.listen<AsyncValue<User?>>(authStateProvider, (previous, next) {
       if (next.value != null && !redirecting) {
         ref.read(isRedirectingProvider.notifier).state = true;

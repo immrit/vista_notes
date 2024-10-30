@@ -61,9 +61,10 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
     contentController.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
+    final currentcolor = ref.watch(themeProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: isEditing == true
@@ -116,16 +117,19 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
                   onPressed: isLoading ? null : _saveNote,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(10, 50),
+                    backgroundColor: currentcolor.brightness==Brightness.dark?Colors.white:Colors.black
                   ),
                   child: isLoading
                       ? const CircularProgressIndicator()
                       : Text(
                           isEditing ? "ویرایش" : "افزودن",
-                          style: const TextStyle(
+                          style:  TextStyle(
+                            color: currentcolor.brightness==Brightness.dark?Colors.black:Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Vazir',
-                              color: Colors.black),
+                              fontFamily: 'Vazir'
+
+                             ),
                         ),
                 ),
               ),
