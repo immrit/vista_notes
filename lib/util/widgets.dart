@@ -15,6 +15,7 @@ import '../view/screen/searchPage.dart';
 import 'themes.dart';
 
 Text VersionNumber() {
+  //ورژن یکی عقبه
   return const Text('نسخه: 1.3.0+4');
 }
 
