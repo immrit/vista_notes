@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/provider.dart';
-import 'AddNoteScreen.dart';
+import 'Notes/AddNoteScreen.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});

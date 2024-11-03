@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vistaNote/model/publicPostModel.dart';
 import '../main.dart';
 import '../model/Notes.dart';
 import '../util/themes.dart';
@@ -47,7 +48,7 @@ final profileUpdateProvider =
   final response =
       await supabase.from('profiles').update(updatedData).eq('id', user.id);
 
-  if (response.error != null) {
+  if (response != null) {
     throw Exception('Failed to update profile');
   }
 });
@@ -78,8 +79,8 @@ final deleteNoteProvider =
     FutureProvider.family<void, dynamic>((ref, noteId) async {
   final response = await supabase.from('Notes').delete().eq('id', noteId);
 
-  if (response.error != null) {
-    throw Exception('Error deleting note: ${response.error!.message}');
+  if (response != null) {
+    throw Exception('Error deleting note: ${response!}');
   }
 });
 
@@ -90,3 +91,22 @@ final themeProvider = StateProvider<ThemeData>((ref) {
 
 final isLoadingProvider = StateProvider<bool>((ref) => false);
 final isRedirectingProvider = StateProvider<bool>((ref) => false);
+
+//preview public posts
+
+final publicPostsProvider = FutureProvider<List<PublicPost>>((ref) async {
+  try {
+    final response = await supabase
+        .from('public_posts')
+        .select('*, profiles(username, avatar_url)')
+        .order('created_at', ascending: false);
+
+    final postsData = response as List<dynamic>;
+    return postsData
+        .map((e) => PublicPost.fromMap(e as Map<String, dynamic>))
+        .toList();
+  } catch (e) {
+    print("Exception in fetching public posts: $e");
+    throw Exception("Exception in fetching public posts: $e");
+  }
+});

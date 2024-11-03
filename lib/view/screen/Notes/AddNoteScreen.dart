@@ -6,8 +6,8 @@ import 'package:shamsi_date/shamsi_date.dart'; // اضافه شده
 import 'package:vistaNote/main.dart';
 import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/homeScreen.dart';
-import '../../model/Notes.dart';
-import '../../provider/provider.dart';
+import '../../../model/Notes.dart';
+import '../../../provider/provider.dart';
 
 class AddNoteScreen extends ConsumerStatefulWidget {
   final Note? note;
@@ -61,6 +61,7 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
     contentController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final currentcolor = ref.watch(themeProvider);
@@ -116,20 +117,22 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
                 child: ElevatedButton(
                   onPressed: isLoading ? null : _saveNote,
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(10, 50),
-                    backgroundColor: currentcolor.brightness==Brightness.dark?Colors.white:Colors.black
-                  ),
+                      minimumSize: const Size(10, 50),
+                      backgroundColor:
+                          currentcolor.brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black),
                   child: isLoading
                       ? const CircularProgressIndicator()
                       : Text(
                           isEditing ? "ویرایش" : "افزودن",
-                          style:  TextStyle(
-                            color: currentcolor.brightness==Brightness.dark?Colors.black:Colors.white,
+                          style: TextStyle(
+                              color: currentcolor.brightness == Brightness.dark
+                                  ? Colors.black
+                                  : Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Vazir'
-
-                             ),
+                              fontFamily: 'Vazir'),
                         ),
                 ),
               ),

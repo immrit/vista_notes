@@ -2,28 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:vistaNote/view/screen/Notes/NotesPage.dart';
 import 'package:vistaNote/view/screen/support.dart';
 import '../../main.dart';
-import '../../provider/provider.dart';
 import '../../util/widgets.dart';
-import 'AddNoteScreen.dart';
+import 'PublicPosts/publicPosts.dart';
+import '../../provider/provider.dart'; // پرووایدرها
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final getprofile = ref.watch(profileProvider);
-    final notesAsyncValue = ref.watch(notesProvider);
-    final currentcolor = ref.watch(themeProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
 
-    final he = MediaQuery.of(context).size.height;
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final notesAsyncValue = ref.watch(notesProvider);
+    final publicPostsAsyncValue =
+        ref.watch(publicPostsProvider); // پرووایدر پست‌ها
+    final getprofile = ref.watch(profileProvider);
+    final currentcolor = ref.watch(themeProvider);
+    // صفحات برای هر تب
+    final List<Widget> tabs = [
+      const NotesScreen(), // صفحه یادداشت‌ها
+      const PublicPostsScreen(), // صفحه پست‌های عمومی
+    ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Vista Notes",
-        ),
+        title: const Text("Vista Notes"),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).push(createSearchPageRoute());
@@ -70,15 +87,6 @@ class HomeScreen extends ConsumerWidget {
                   loading: () =>
                       const Center(child: CircularProgressIndicator())),
             ),
-            // ListTile(
-            //   leading: const Icon(Icons.person),
-            //   title: const Text(
-            //     'حساب کاربری',
-            //   ),
-            //   onTap: () {
-            //     Navigator.pushNamed(context, '/profile');
-            //   },
-            // ),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text(
@@ -121,83 +129,24 @@ class HomeScreen extends ConsumerWidget {
                 Navigator.pushReplacementNamed(context, '/welcome');
               },
             ),
-            // SizedBox(
-            //   height: he < 685 ? 220 : 398,
-            // ),
-            // const Text(
-            //   'Version: 1.2.0+3',
-            //   style: TextStyle(color: Colors.white60),
-            // )
           ],
         ),
       ),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: notesAsyncValue.when(
-          data: (notes) {
-            final pinnedNotes = notes.where((note) => note.isPinned).toList();
-            final otherNotes = notes.where((note) => !note.isPinned).toList();
-
-            pinnedNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-            otherNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                ref.refresh(notesProvider);
-                ref.refresh(profileProvider);
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ListView(
-                  children: [
-                    if (pinnedNotes.isNotEmpty) ...[
-                      const Text(
-                        'پین شده ها:',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      NoteGridWidget(notes: pinnedNotes, ref: ref),
-                    ],
-                    const SizedBox(height: 20),
-                    const Text(
-                      'سایر یادداشت‌ها:',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    NoteGridWidget(notes: otherNotes, ref: ref),
-                  ],
-                ),
-              ),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(
-              child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('دسترسی به اینترنت قطع است :('),
-              IconButton(
-                  iconSize: 50.h,
-                  splashColor: Colors.transparent,
-                  color: Colors.white,
-                  onPressed: () {
-                    ref.refresh(notesProvider);
-                    ref.refresh(profileProvider);
-                  },
-                  icon: const Icon(Icons.refresh))
-            ],
-          )),
-        ),
+      body: tabs[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notes),
+            label: 'یادداشت‌ها',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.public),
+            label: 'کافه ویستا',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
-      floatingActionButton: FloatingActionButton(
-          backgroundColor:
-              currentcolor.floatingActionButtonTheme.backgroundColor,
-          child: const Icon(Icons.edit),
-          onPressed: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const AddNoteScreen()));
-          }),
     );
   }
 }

@@ -9,7 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
 import 'package:vistaNote/model/Notes.dart';
-import 'package:vistaNote/view/screen/AddNoteScreen.dart';
+import 'package:vistaNote/view/screen/Notes/AddNoteScreen.dart';
 import '../provider/provider.dart';
 import '../view/screen/searchPage.dart';
 import 'themes.dart';
