@@ -46,7 +46,7 @@ class Settings extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               ProfileFields('ویرایش پروفایل', Icons.person, () {
-                Navigator.pushNamed(context, '/editProfile');
+                Navigator.pushNamed(context, '/editeProfile');
               }),
               ProfileFields('تغییر رمز عبور', Icons.lock, () {
                 Navigator.of(context).push(MaterialPageRoute(
@@ -209,7 +209,7 @@ class VersionNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'نسخه 1.0.0', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
+      '1.4.6+7 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
       style: const TextStyle(fontSize: 16),
     );
   }

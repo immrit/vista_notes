@@ -134,7 +134,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                 '/signup': (context) => const SignUpScreen(),
                 '/home': (context) => const HomeScreen(),
                 '/login': (context) => const Loginuser(),
-                '/editeProfile': (context) => const EditProfile(),
+                '/editeProfile': (context) => EditProfile(),
                 // '/profile': (context) => const Profile(),
                 '/welcome': (context) => const WelcomePage(),
                 '/settings': (context) => const Settings(),

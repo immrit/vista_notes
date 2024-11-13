@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shamsi_date/shamsi_date.dart';
+import 'package:flutter/services.dart'; // برای کپی کردن به کلیپ‌بورد
 import 'package:share_plus/share_plus.dart';
-import 'package:vistaNote/util/const.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
 import 'AddPost.dart';
-import 'notificationScreen.dart';
 
 class PublicPostsScreen extends ConsumerWidget {
   PublicPostsScreen({super.key});
@@ -69,6 +68,39 @@ class PublicPostsScreen extends ConsumerWidget {
                               formattedDate,
                               style: const TextStyle(fontSize: 12.0),
                             ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) {
+                                switch (value) {
+                                  case 'report':
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          ReportDialog(post: post),
+                                    );
+                                    break;
+                                  case 'copy':
+                                    Clipboard.setData(
+                                        ClipboardData(text: post.content));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('متن کپی شد!')),
+                                    );
+                                    break;
+                                  // سایر گزینه‌ها
+                                }
+                              },
+                              itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry<String>>[
+                                const PopupMenuItem<String>(
+                                  value: 'report',
+                                  child: Text('گزارش کردن'),
+                                ),
+                                const PopupMenuItem<String>(
+                                  value: 'copy',
+                                  child: Text('کپی کردن'),
+                                ),
+                                // سایر آیتم‌های منو
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 8.0),
                           Text(post.content),
@@ -103,7 +135,6 @@ class PublicPostsScreen extends ConsumerWidget {
                                 icon: const Icon(Icons.share),
                                 onPressed: () {
                                   // تعامل به اشتراک‌گذاری
-
                                   String sharePost =
                                       'کاربر ${post.username} به شما ارسال کرد: \n\n${post.content}';
                                   Share.share(sharePost);

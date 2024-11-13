@@ -251,6 +251,32 @@ class SupabaseService {
       rethrow;
     }
   }
+
+  Future<void> insertReport(
+      {required String postId,
+      required String reportedUserId,
+      required String reason,
+      String? additionalDetails}) async {
+    try {
+      // بررسی اینکه کاربر لاگین کرده باشد
+      if (supabase.auth.currentUser == null) {
+        throw Exception('کاربر لاگین نشده است');
+      }
+
+      await supabase.from('reports').insert({
+        'post_id': postId,
+        'reported_user_id': reportedUserId,
+        'reporter_id': supabase.auth.currentUser!.id,
+        'reason': reason,
+        'additional_details': additionalDetails,
+        'created_at': DateTime.now().toIso8601String(),
+        'status': 'pending'
+      });
+    } catch (e) {
+      print('خطا در ثبت گزارش: $e');
+      rethrow;
+    }
+  }
 }
 // تعریف پروایدر Supabase
 
@@ -289,3 +315,39 @@ final notificationsProvider =
         (ref) {
   return NotificationsNotifier()..fetchNotifications();
 });
+
+// سرویس Supabase برای گزارش پست‌ها
+
+// تعریف پازنده برای SupabaseClient
+final supabaseClientProvider = Provider<SupabaseClient>((ref) {
+  return Supabase.instance.client;
+});
+
+// تعریف پرووایدر سرویس گزارش
+final reportServiceProvider = Provider<ReportService>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return ReportService(client);
+});
+
+class ReportService {
+  final SupabaseClient client;
+
+  ReportService(this.client);
+
+  Future<void> reportPost({
+    required String postId,
+    required String userId,
+    required String reportReason,
+  }) async {
+    final response = await client.from('reports').insert({
+      'post_id': postId,
+      'user_id': userId,
+      'reason': reportReason,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    if (response.error != null) {
+      throw Exception('Error reporting post: ${response.error!.message}');
+    }
+  }
+}

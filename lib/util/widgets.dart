@@ -11,6 +11,7 @@ import 'package:vistaNote/main.dart';
 import 'package:vistaNote/model/NotesModel.dart';
 import 'package:vistaNote/view/screen/Notes/AddNoteScreen.dart';
 import '../model/notificationModel.dart';
+import '../model/publicPostModel.dart';
 import '../provider/provider.dart';
 import '../view/screen/searchPage.dart';
 import '../view/screen/support.dart';
@@ -512,4 +513,107 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
       ],
     ),
   );
+}
+
+//report function
+
+class ReportDialog extends ConsumerStatefulWidget {
+  final PublicPostModel post;
+
+  const ReportDialog({Key? key, required this.post}) : super(key: key);
+
+  @override
+  ConsumerState<ReportDialog> createState() => _ReportDialogState();
+}
+
+class _ReportDialogState extends ConsumerState<ReportDialog> {
+  String selectedReason = '';
+  final List<String> reportReasons = [
+    'محتوای نامناسب',
+    'هرزنگاری',
+    'توهین آمیز',
+    'اسپم',
+    'محتوای تبلیغاتی',
+    'سایر موارد'
+  ];
+
+  TextEditingController additionalDetailsController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('گزارش پست'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('دلیل گزارش پست را انتخاب کنید:'),
+            ...reportReasons.map((reason) => RadioListTile<String>(
+                  title: Text(reason),
+                  value: reason,
+                  groupValue: selectedReason,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedReason = value!;
+                    });
+                  },
+                )),
+            if (selectedReason == 'سایر موارد')
+              TextField(
+                controller: additionalDetailsController,
+                decoration: InputDecoration(
+                  hintText: 'جزئیات بیشتر را وارد کنید',
+                ),
+                maxLines: 3,
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('انصراف'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (selectedReason.isNotEmpty) {
+              _submitReport();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('لطفاً دلیل گزارش را انتخاب کنید')),
+              );
+            }
+          },
+          child: Text('ثبت گزارش'),
+        ),
+      ],
+    );
+  }
+
+  void _submitReport() async {
+    try {
+      // ذخیره گزارش در سوپابیس
+      final supabase = ref.read(supabaseServiceProvider);
+
+      await supabase.insertReport(
+          postId: widget.post.id,
+          reportedUserId: widget.post.userId,
+          reason: selectedReason,
+          additionalDetails: selectedReason == 'سایر موارد'
+              ? additionalDetailsController.text
+              : null);
+
+      // نمایش پیام موفقیت
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('گزارش شما ثبت شد')),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      // نمایش خطا
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطا در ثبت گزارش: $e')),
+      );
+    }
+  }
 }
