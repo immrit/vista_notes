@@ -10,17 +10,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
 import 'package:vistaNote/model/NotesModel.dart';
 import 'package:vistaNote/view/screen/Notes/AddNoteScreen.dart';
-import '../model/notificationModel.dart';
 import '../model/publicPostModel.dart';
 import '../provider/provider.dart';
 import '../view/screen/searchPage.dart';
 import '../view/screen/support.dart';
 import 'themes.dart';
-
-Text VersionNumber() {
-  //ورژن یکی عقبه
-  return const Text('نسخه: 1.4.5+6');
-}
 
 class topText extends StatelessWidget {
   String text;
@@ -527,7 +521,7 @@ class ReportDialog extends ConsumerStatefulWidget {
 }
 
 class _ReportDialogState extends ConsumerState<ReportDialog> {
-  String selectedReason = '';
+  // لیست دلایل گزارش
   final List<String> reportReasons = [
     'محتوای نامناسب',
     'هرزنگاری',
@@ -537,83 +531,142 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
     'سایر موارد'
   ];
 
-  TextEditingController additionalDetailsController = TextEditingController();
+  // متغیرهای حالت
+  String _selectedReason = '';
+  late TextEditingController _additionalDetailsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _additionalDetailsController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _additionalDetailsController.dispose();
+    super.dispose();
+  }
+
+  // متد ارسال گزارش
+  void _submitReport() async {
+    try {
+      // دریافت سرویس سوپابیس از پرووایدر
+      final supabaseService = ref.read(supabaseServiceProvider);
+
+      // بررسی انتخاب دلیل
+      if (_selectedReason.isEmpty) {
+        _showSnackBar('لطفاً دلیل گزارش را انتخاب کنید', isError: true);
+        return;
+      }
+
+      // ارسال گزارش
+      await supabaseService.insertReport(
+        postId: widget.post.id,
+        reportedUserId: widget.post.userId,
+        reason: _selectedReason,
+        additionalDetails: _selectedReason == 'سایر موارد'
+            ? _additionalDetailsController.text.trim()
+            : null,
+      );
+
+      // بستن دیالوگ و نمایش پیام موفقیت
+      if (mounted) {
+        Navigator.pop(context);
+        _showSnackBar('گزارش شما با موفقیت ثبت شد');
+      }
+    } catch (e) {
+      // نمایش خطا
+      if (mounted) {
+        _showSnackBar('خطا در ثبت گزارش: $e', isError: true);
+      }
+    }
+  }
+
+  // متد نمایش اسنک بار
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return AlertDialog(
-      title: Text('گزارش پست'),
+      title: Text(
+        'گزارش پست',
+        style: theme.textTheme.titleMedium,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('دلیل گزارش پست را انتخاب کنید:'),
-            ...reportReasons.map((reason) => RadioListTile<String>(
-                  title: Text(reason),
-                  value: reason,
-                  groupValue: selectedReason,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedReason = value!;
-                    });
-                  },
-                )),
-            if (selectedReason == 'سایر موارد')
-              TextField(
-                controller: additionalDetailsController,
-                decoration: InputDecoration(
-                  hintText: 'جزئیات بیشتر را وارد کنید',
+            Text(
+              'دلیل گزارش پست را انتخاب کنید:',
+              style: theme.textTheme.bodyMedium,
+            ),
+            // لیست رادیویی دلایل گزارش
+            ...reportReasons
+                .map((reason) => RadioListTile<String>(
+                      title: Text(
+                        reason,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      value: reason,
+                      groupValue: _selectedReason,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedReason = value!;
+                        });
+                      },
+                      activeColor: theme.colorScheme.secondary,
+                    ))
+                .toList(),
+
+            // فیلد توضیحات اضافی برای 'سایر موارد'
+            if (_selectedReason == 'سایر موارد')
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: TextField(
+                  controller: _additionalDetailsController,
+                  decoration: InputDecoration(
+                    hintText: 'جزئیات بیشتر را وارد کنید',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  maxLines: 3,
+                  style: theme.textTheme.bodyMedium,
                 ),
-                maxLines: 3,
               ),
           ],
         ),
       ),
       actions: [
+        // دکمه انصراف
         TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: theme.textTheme.bodyLarge?.color,
+          ),
           onPressed: () => Navigator.pop(context),
           child: Text('انصراف'),
         ),
+
+        // دکمه ارسال گزارش
         ElevatedButton(
-          onPressed: () {
-            if (selectedReason.isNotEmpty) {
-              _submitReport();
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('لطفاً دلیل گزارش را انتخاب کنید')),
-              );
-            }
-          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.secondary,
+            foregroundColor: theme.colorScheme.onSecondary,
+          ),
+          onPressed: _selectedReason.isNotEmpty ? _submitReport : null,
           child: Text('ثبت گزارش'),
         ),
       ],
     );
-  }
-
-  void _submitReport() async {
-    try {
-      // ذخیره گزارش در سوپابیس
-      final supabase = ref.read(supabaseServiceProvider);
-
-      await supabase.insertReport(
-          postId: widget.post.id,
-          reportedUserId: widget.post.userId,
-          reason: selectedReason,
-          additionalDetails: selectedReason == 'سایر موارد'
-              ? additionalDetailsController.text
-              : null);
-
-      // نمایش پیام موفقیت
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('گزارش شما ثبت شد')),
-      );
-
-      Navigator.pop(context);
-    } catch (e) {
-      // نمایش خطا
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطا در ثبت گزارش: $e')),
-      );
-    }
   }
 }

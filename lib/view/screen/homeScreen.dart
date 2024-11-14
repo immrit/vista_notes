@@ -4,8 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vistaNote/view/screen/Notes/NotesPage.dart';
 import 'package:vistaNote/view/screen/support.dart';
-import '../../main.dart';
-import '../../util/widgets.dart';
 import 'PublicPosts/notificationScreen.dart';
 import 'PublicPosts/publicPosts.dart';
 import '../../provider/provider.dart'; // پرووایدرها

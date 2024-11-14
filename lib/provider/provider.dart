@@ -4,7 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/model/notificationModel.dart';
 import 'package:vistaNote/model/publicPostModel.dart';
 import '../main.dart';
+import '../model/CommentModel.dart';
 import '../model/NotesModel.dart';
+import '../model/UserModel.dart';
 import '../util/themes.dart';
 
 //check user state
@@ -101,18 +103,19 @@ final fetchPublicPosts = FutureProvider<List<PublicPostModel>>((ref) async {
   try {
     final response = await supabase
         .from('public_posts')
-        .select('*, profiles(username, avatar_url), post_likes(user_id)')
+        .select(
+            '*, profiles(username, avatar_url, is_verified), post_likes(user_id)')
         .order('created_at', ascending: false);
 
-    final postsData = response as List<dynamic>;
+    final postsData = response as List<dynamic>; // از فیلد data استفاده کنید
 
     return postsData.map((e) {
       // اطمینان از نوع صحیح فیلدها با استفاده از عملگرهای اختیاری و مقادیر پیش‌فرض
       final profile = e['profiles'] as Map<String, dynamic>? ?? {};
-      final avatarUrl =
-          profile['avatar_url'] as String? ?? ''; // استفاده از یک رشته پیش‌فرض
-      final username =
-          profile['username'] as String? ?? 'Unknown'; // بررسی وجود نام کاربری
+      final avatarUrl = profile['avatar_url'] as String? ?? '';
+      final username = profile['username'] as String? ?? 'Unknown';
+      final isVerified =
+          profile['is_verified'] as bool? ?? false; // بررسی وضعیت تایید
 
       final likes = e['post_likes'] as List<dynamic>? ?? [];
       final likeCount = likes.length;
@@ -124,6 +127,7 @@ final fetchPublicPosts = FutureProvider<List<PublicPostModel>>((ref) async {
         'is_liked': isLiked,
         'username': username,
         'avatar_url': avatarUrl,
+        'is_verified': isVerified, // اضافه کردن isVerified به Map
       });
     }).toList();
   } catch (e) {
@@ -348,6 +352,204 @@ class ReportService {
 
     if (response.error != null) {
       throw Exception('Error reporting post: ${response.error!.message}');
+    }
+  }
+}
+
+// provider for profiles
+
+class ProfileService {
+  final _supabase = Supabase.instance.client;
+
+  // دریافت پروفایل کاربر فعلی
+  Future<ProfileModel?> getCurrentUserProfile() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return null;
+
+      final response = await _supabase
+          .from('profiles') // نام جدول پروفایل
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+      return ProfileModel.fromMap(response);
+    } catch (e) {
+      print('Error fetching current user profile: $e');
+      return null;
+    }
+  }
+
+  // دریافت پروفایل با شناسه
+  Future<ProfileModel?> getProfileById(String userId) async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+      return ProfileModel.fromMap(response);
+    } catch (e) {
+      print('Error fetching profile: $e');
+      return null;
+    }
+  }
+}
+
+// Provider برای سرویس پروفایل
+final profileServiceProvider = Provider<ProfileService>((ref) {
+  return ProfileService();
+});
+
+// Provider برای پروفایل کاربر فعلی
+final currentUserProfileProvider = FutureProvider<ProfileModel?>((ref) {
+  final profileService = ref.watch(profileServiceProvider);
+  return profileService.getCurrentUserProfile();
+});
+
+// Provider برای پروفایل با شناسه خاص
+final profileByIdProvider =
+    FutureProvider.family<ProfileModel?, String>((ref, userId) {
+  final profileService = ref.watch(profileServiceProvider);
+  return profileService.getProfileById(userId);
+});
+
+// مثال استفاده در ویجت
+class ProfileWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // دریافت پروفایل کاربر فعلی
+    final currentProfileAsync = ref.watch(currentUserProfileProvider);
+
+    return currentProfileAsync.when(
+      loading: () => CircularProgressIndicator(),
+      error: (error, stack) => Text('خطا در بارگذاری پروفایل'),
+      data: (profile) {
+        if (profile == null) {
+          return Text('کاربر وارد نشده است');
+        }
+        return Column(
+          children: [
+            Text(profile.username),
+            if (profile.isVerified) Icon(Icons.verified, color: Colors.blue)
+          ],
+        );
+      },
+    );
+  }
+}
+
+// مثال دریافت پروفایل با شناسه خاص
+class OtherProfileWidget extends ConsumerWidget {
+  final String userId;
+
+  OtherProfileWidget({required this.userId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileByIdProvider(userId));
+
+    return profileAsync.when(
+      loading: () => CircularProgressIndicator(),
+      error: (error, stack) => Text('خطا در بارگذاری پروفایل'),
+      data: (profile) {
+        if (profile == null) {
+          return Text('پروفایل یافت نشد');
+        }
+        return Column(
+          children: [
+            Text(profile.username),
+            if (profile.isVerified) Icon(Icons.verified, color: Colors.blue)
+          ],
+        );
+      },
+    );
+  }
+}
+
+//fetch comments
+//Comment StateNotifier
+
+class CommentService {
+  final supabase = Supabase.instance.client;
+
+  Future<CommentModel> addComment(
+      {required String postId,
+      required String userId,
+      required String content}) async {
+    try {
+      if (content.trim().isEmpty) {
+        throw Exception('محتوای کامنت نمی‌تواند خالی باشد');
+      }
+
+      final response = await supabase
+          .from('comments')
+          .insert({
+            'post_id': postId,
+            'user_id': userId,
+            'content': content,
+            'created_at': DateTime.now().toIso8601String(),
+          })
+          .select('*, profiles(username, avatar_url, is_verified)')
+          .single();
+
+      return CommentModel.fromMap(response);
+    } catch (e) {
+      print('خطا در ارسال کامنت: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<CommentModel>> fetchComments(String postId) async {
+    try {
+      final response = await supabase
+          .from('comments')
+          .select('*, profiles(username, avatar_url, is_verified)')
+          .eq('post_id', postId)
+          .order('created_at');
+
+      return (response as List)
+          .map((item) => CommentModel.fromMap(item))
+          .toList();
+    } catch (e) {
+      print('خطا در واکشی کامنت‌ها: $e');
+      return [];
+    }
+  }
+}
+
+// Provider برای واکشی کامنت‌ها از دیتابیس
+final commentServiceProvider = Provider((ref) => CommentService());
+
+final commentsProvider =
+    FutureProvider.family<List<CommentModel>, String>((ref, postId) {
+  final commentService = ref.read(commentServiceProvider);
+  return commentService.fetchComments(postId);
+});
+
+// comment_notifier.dart
+class CommentNotifier extends StateNotifier<AsyncValue<void>> {
+  final CommentService _commentService;
+  final TextEditingController contentController = TextEditingController();
+
+  CommentNotifier(this._commentService) : super(AsyncValue.data(null));
+
+  Future<void> addComment(
+      {required String postId, required String userId}) async {
+    if (contentController.text.trim().isEmpty) return;
+
+    state = AsyncValue.loading();
+    try {
+      await _commentService.addComment(
+          postId: postId,
+          userId: userId,
+          content: contentController.text.trim());
+
+      contentController.clear();
+      state = AsyncValue.data(null);
+    } catch (error) {
+      state = AsyncValue.error(error, StackTrace.current);
     }
   }
 }

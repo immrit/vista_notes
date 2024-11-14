@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart'; // برای کپی کردن به کلیپ‌بورد
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import '../../../provider/provider.dart';
@@ -58,11 +58,22 @@ class PublicPostsScreen extends ConsumerWidget {
                                       'lib/util/images/default-avatar.jpg')
                                   : NetworkImage(post.avatarUrl),
                             ),
-                            title: Text(
-                              post.username,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            title: Row(
+                              children: [
+                                Text(
+                                  post.username,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 1),
+                                if (post.isVerified)
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: Colors.blue,
+                                    size: 16.0,
+                                  ),
+                              ],
                             ),
                             subtitle: Text(
                               formattedDate,
@@ -141,6 +152,14 @@ class PublicPostsScreen extends ConsumerWidget {
                                 },
                               ),
                               const SizedBox(width: 16.0),
+                              IconButton(
+                                icon: const Icon(Icons.comment),
+                                onPressed: () {
+                                  // نمایش کامنت‌ها در bottom sheet
+                                  _showCommentsBottomSheet(
+                                      context, ref, post.id, post.userId);
+                                },
+                              ),
                             ],
                           ),
                         ],
@@ -181,6 +200,135 @@ class PublicPostsScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  // نمایش Bottom Sheet برای نمایش کامنت‌ها
+  void _showCommentsBottomSheet(
+      BuildContext context, WidgetRef ref, String postId, String userId) {
+    final TextEditingController commentController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.7,
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          final commentsAsyncValue =
+                              ref.watch(commentsProvider(postId));
+
+                          return commentsAsyncValue.when(
+                            data: (comments) => comments.isEmpty
+                                ? Center(child: Text('هنوز کامنتی وجود ندارد'))
+                                : ListView.builder(
+                                    reverse: true,
+                                    itemCount: comments.length,
+                                    itemBuilder: (context, index) {
+                                      final comment = comments[index];
+                                      return ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundImage: comment
+                                                  .avatarUrl.isEmpty
+                                              ? AssetImage(
+                                                  'lib/util/images/default-avatar.jpg')
+                                              : NetworkImage(comment.avatarUrl),
+                                        ),
+                                        title: Row(
+                                          children: [
+                                            Text(
+                                              comment.username,
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            SizedBox(width: 4),
+                                            if (comment.isVerified)
+                                              Icon(
+                                                Icons.check_circle,
+                                                color: Colors.blue,
+                                                size: 16.0,
+                                              ),
+                                          ],
+                                        ),
+                                        subtitle: Text(comment.content),
+                                      );
+                                    },
+                                  ),
+                            loading: () =>
+                                Center(child: CircularProgressIndicator()),
+                            error: (err, stack) => Center(
+                              child: Text(
+                                  'مشکلی در بارگذاری کامنت‌ها به وجود آمده است'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Divider(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: commentController,
+                            decoration: InputDecoration(
+                              hintText: 'کامنت خود را وارد کنید...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(Icons.send),
+                          onPressed: () async {
+                            final commentText = commentController.text.trim();
+                            if (commentText.isNotEmpty) {
+                              try {
+                                // استفاده از CommentNotifier برای ارسال کامنت
+                                await ref
+                                    .read(commentServiceProvider)
+                                    .addComment(
+                                      postId: postId,
+                                      content: commentText,
+                                      userId: userId,
+                                    );
+
+                                // پاک کردن تکست فیلد
+                                commentController.clear();
+
+                                // رفرش کامنت‌ها
+                                ref.invalidate(commentsProvider(postId));
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('ارسال کامنت با خطا مواجه شد')),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

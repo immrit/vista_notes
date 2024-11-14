@@ -1,14 +1,19 @@
 import 'dart:convert';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
+// Enum برای نوع تایید
+enum VerificationType { none, blueTick, official }
+
+@immutable
 class ProfileModel extends Equatable {
   final String id;
   final String username;
   final String? avatarUrl;
   final String? email;
   final DateTime? createdAt;
+  final bool isVerified;
+  final VerificationType verificationType; // اضافه کردن verificationType
 
   const ProfileModel({
     required this.id,
@@ -16,11 +21,13 @@ class ProfileModel extends Equatable {
     this.avatarUrl,
     this.email,
     this.createdAt,
+    this.isVerified = false,
+    this.verificationType = VerificationType.none, // مقدار پیش‌فرض none
   });
 
   // سازنده از JSON
   factory ProfileModel.fromJson(String source) =>
-      ProfileModel.fromMap(json.decode(source));
+      ProfileModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   // سازنده از Map با هندلینگ پیشرفته
   factory ProfileModel.fromMap(Map<String, dynamic> map) {
@@ -32,6 +39,13 @@ class ProfileModel extends Equatable {
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString())
           : null,
+      isVerified: map['is_verified'] ?? false,
+      verificationType: map['verification_type'] != null
+          ? VerificationType.values.firstWhere(
+              (type) => type.name == map['verification_type'],
+              orElse: () => VerificationType.none,
+            )
+          : VerificationType.none, // پارسینگ verification_type
     );
   }
 
@@ -42,6 +56,9 @@ class ProfileModel extends Equatable {
         'avatar_url': avatarUrl,
         'email': email,
         'created_at': createdAt?.toIso8601String(),
+        'is_verified': isVerified,
+        'verification_type':
+            verificationType.name, // اضافه کردن verification_type
       };
 
   // تبدیل به JSON
@@ -54,6 +71,8 @@ class ProfileModel extends Equatable {
     String? avatarUrl,
     String? email,
     DateTime? createdAt,
+    bool? isVerified,
+    VerificationType? verificationType, // اضافه کردن verificationType
   }) {
     return ProfileModel(
       id: id ?? this.id,
@@ -61,6 +80,9 @@ class ProfileModel extends Equatable {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       email: email ?? this.email,
       createdAt: createdAt ?? this.createdAt,
+      isVerified: isVerified ?? this.isVerified,
+      verificationType: verificationType ??
+          this.verificationType, // پیاده‌سازی verificationType
     );
   }
 
@@ -70,63 +92,70 @@ class ProfileModel extends Equatable {
     Profile(
       id: $id, 
       username: $username, 
-      email: $email
+      email: $email,
+      isVerified: $isVerified,
+      verificationType: $verificationType
     )''';
 
   // Equatable برای مقایسه‌های دقیق
   @override
-  List<Object?> get props => [id, username, avatarUrl, email];
+  List<Object?> get props =>
+      [id, username, avatarUrl, email, isVerified, verificationType];
 
   // متدهای اضافی برای بررسی وضعیت
   bool get hasAvatar => avatarUrl != null && avatarUrl!.isNotEmpty;
   bool get hasEmail => email != null && email!.isNotEmpty;
 }
+  
+
+
+
 
 // Provider مدیریت پروفایل
-class ProfileNotifier extends StateNotifier<ProfileModel?> {
-  final Ref ref;
+// class ProfileNotifier extends StateNotifier<ProfileModel?> {
+//   final Ref ref;
 
-  ProfileNotifier(this.ref) : super(null);
+//   ProfileNotifier(this.ref) : super(null);
 
-  Future<void> fetchProfile() async {
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        final userData = await Supabase.instance.client
-            .from('profiles')
-            .select()
-            .eq('id', user.id)
-            .single();
+//   Future<void> fetchProfile() async {
+//     try {
+//       final user = Supabase.instance.client.auth.currentUser;
+//       if (user != null) {
+//         final userData = await Supabase.instance.client
+//             .from('profiles')
+//             .select()
+//             .eq('id', user.id)
+//             .single();
 
-        state = ProfileModel.fromMap(
-            {'id': user.id, 'email': user.email, ...userData});
-      }
-    } catch (e) {
-      state = null;
-      print('خطا در دریافت پروفایل: $e');
-    }
-  }
+//         state = ProfileModel.fromMap(
+//             {'id': user.id, 'email': user.email, ...userData});
+//       }
+//     } catch (e) {
+//       state = null;
+//       print('خطا در دریافت پروفایل: $e');
+//     }
+//   }
 
-  Future<void> updateProfile(ProfileModel updatedProfile) async {
-    try {
-      await Supabase.instance.client
-          .from('profiles')
-          .update(updatedProfile.toMap())
-          .eq('id', updatedProfile.id);
+//   Future<void> updateProfile(ProfileModel updatedProfile) async {
+//     try {
+//       await Supabase.instance.client
+//           .from('profiles')
+//           .update(updatedProfile.toMap())
+//           .eq('id', updatedProfile.id);
 
-      state = updatedProfile;
-    } catch (e) {
-      print('خطا در بروزرسانی پروفایل: $e');
-    }
-  }
+//       state = updatedProfile;
+//     } catch (e) {
+//       print('خطا در بروزرسانی پروفایل: $e');
+//     }
+//   }
 
-  void clearProfile() {
-    state = null;
-  }
-}
+//   void clearProfile() {
+//     state = null;
+//   }
+// }
 
-// Provider نهایی
-final profileProvider =
-    StateNotifierProvider<ProfileNotifier, ProfileModel?>((ref) {
-  return ProfileNotifier(ref);
-});
+// // Provider نهایی
+// final profileProvider =
+//     StateNotifierProvider<ProfileNotifier, ProfileModel?>((ref) {
+//   return ProfileNotifier(ref);
+// });

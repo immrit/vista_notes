@@ -6,7 +6,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../main.dart';
 import '../../provider/provider.dart';
 import '../../util/themes.dart';
-import '../../util/widgets.dart';
 import 'ouathUser/updatePassword.dart';
 
 class Settings extends ConsumerWidget {
@@ -32,8 +31,18 @@ class Settings extends ConsumerWidget {
                       : const AssetImage('lib/util/images/default-avatar.jpg')
                           as ImageProvider,
                 ),
-                title: Text(
-                  "${getprofile['username']}",
+                title: Row(
+                  children: [
+                    Text(
+                      "${getprofile['username']}",
+                    ),
+                    if (getprofile['is_verified'])
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.blue,
+                        size: 16.0,
+                      ),
+                  ],
                 ),
                 subtitle: Text(
                   '${supabase.auth.currentUser!.email}',
@@ -209,7 +218,7 @@ class VersionNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '1.4.6+7 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
+      '1.4.7+7.5 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
       style: const TextStyle(fontSize: 16),
     );
   }

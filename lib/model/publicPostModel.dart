@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:vistaNote/util/const.dart';
 
+// تعریف مدل پست عمومی
 class PublicPostModel {
   final String id;
   final String userId;
@@ -11,6 +12,7 @@ class PublicPostModel {
   final String avatarUrl;
   int likeCount; // تعداد لایک‌ها
   bool isLiked; // آیا کاربر فعلی لایک کرده است؟
+  bool isVerified; // اضافه کردن فیلد isVerified
 
   PublicPostModel({
     required this.id,
@@ -21,8 +23,10 @@ class PublicPostModel {
     this.avatarUrl = '', // مقدار پیش‌فرض برای avatarUrl
     this.likeCount = 0,
     this.isLiked = false,
+    this.isVerified = false, // مقدار پیش‌فرض برای isVerified
   });
 
+  // متد سازنده از Map
   factory PublicPostModel.fromMap(Map<String, dynamic> map) {
     return PublicPostModel(
       id: map['id'] as String,
@@ -34,9 +38,12 @@ class PublicPostModel {
           map['profiles']['avatar_url'] as String? ?? '', // بررسی مقدار null
       likeCount: map['like_count'] as int? ?? 0,
       isLiked: map['is_liked'] as bool? ?? false,
+      isVerified:
+          map['profiles']['is_verified'] ?? false, // اضافه کردن isVerified
     );
   }
 
+  // متد تبدیل به Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -46,18 +53,21 @@ class PublicPostModel {
       'profiles': {
         'username': username,
         'avatar_url': avatarUrl,
+        'is_verified': isVerified, // اضافه کردن isVerified به Map
       },
       'like_count': likeCount,
       'is_liked': isLiked,
     };
   }
 
+  // متد تبدیل به JSON
   String toJson() => json.encode(toMap());
 
+  // متد سازنده از JSON
   factory PublicPostModel.fromJson(String source) =>
       PublicPostModel.fromMap(json.decode(source));
 
   @override
   String toString() =>
-      'PublicPost(id: $id, userId: $userId, content: $content, createdAt: $createdAt, username: $username, avatarUrl: $avatarUrl, likeCount: $likeCount, isLiked: $isLiked)';
+      'PublicPost(id: $id, userId: $userId, content: $content, createdAt: $createdAt, username: $username, avatarUrl: $avatarUrl, likeCount: $likeCount, isLiked: $isLiked, isVerified: $isVerified)';
 }
