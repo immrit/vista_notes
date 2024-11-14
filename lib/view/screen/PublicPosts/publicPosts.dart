@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+import 'package:vistaNote/main.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
 import 'AddPost.dart';
@@ -302,7 +303,7 @@ class PublicPostsScreen extends ConsumerWidget {
                                     .addComment(
                                       postId: postId,
                                       content: commentText,
-                                      userId: userId,
+                                      userId: supabase.auth.currentUser!.id,
                                     );
 
                                 // پاک کردن تکست فیلد
