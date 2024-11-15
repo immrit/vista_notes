@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mentions/flutter_mentions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
@@ -16,6 +18,8 @@ class PublicPostsScreen extends ConsumerWidget {
     final postsAsyncValue = ref.watch(fetchPublicPosts);
     final getprofile = ref.watch(profileProvider);
     final currentcolor = ref.watch(themeProvider);
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('کافه ویستا'),
@@ -81,7 +85,7 @@ class PublicPostsScreen extends ConsumerWidget {
                               style: const TextStyle(fontSize: 12.0),
                             ),
                             trailing: PopupMenuButton<String>(
-                              onSelected: (value) {
+                              onSelected: (value) async {
                                 switch (value) {
                                   case 'report':
                                     showDialog(
@@ -97,21 +101,81 @@ class PublicPostsScreen extends ConsumerWidget {
                                       SnackBar(content: Text('متن کپی شد!')),
                                     );
                                     break;
-                                  // سایر گزینه‌ها
+                                  case 'delete':
+                                    bool confirmDelete = await showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('حذف پست'),
+                                        content: Text(
+                                            'آیا از حذف این پست اطمینان دارید؟'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: theme
+                                                  .textTheme.bodyLarge?.color,
+                                            ),
+                                            onPressed: () =>
+                                                Navigator.of(context)
+                                                    .pop(false),
+                                            child: Text('خیر'),
+                                          ),
+                                          TextButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  theme.colorScheme.secondary,
+                                              foregroundColor:
+                                                  theme.colorScheme.onSecondary,
+                                            ),
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(true),
+                                            child: Text('بله'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmDelete ?? false) {
+                                      final supabaseService =
+                                          ref.read(supabaseServiceProvider);
+                                      try {
+                                        await supabaseService.deletePost(
+                                            ref, post.id);
+                                        print(post.id);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text('پست حذف شد!')),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text('خطا در حذف پست!')),
+                                        );
+                                      }
+                                    }
+                                    break;
                                 }
                               },
-                              itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<String>>[
-                                const PopupMenuItem<String>(
-                                  value: 'report',
-                                  child: Text('گزارش کردن'),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'copy',
-                                  child: Text('کپی کردن'),
-                                ),
-                                // سایر آیتم‌های منو
-                              ],
+                              itemBuilder: (BuildContext context) {
+                                final currentUserId = Supabase
+                                    .instance.client.auth.currentUser?.id;
+                                return <PopupMenuEntry<String>>[
+                                  const PopupMenuItem<String>(
+                                    value: 'report',
+                                    child: Text('گزارش کردن'),
+                                  ),
+                                  const PopupMenuItem<String>(
+                                    value: 'copy',
+                                    child: Text('کپی کردن'),
+                                  ),
+                                  if (post.userId ==
+                                      currentUserId) // فقط برای مالک
+                                    const PopupMenuItem<String>(
+                                      value: 'delete',
+                                      child: Text('حذف'),
+                                    ),
+                                ];
+                              },
                             ),
                           ),
                           const SizedBox(height: 8.0),
@@ -144,21 +208,21 @@ class PublicPostsScreen extends ConsumerWidget {
                               Text('${post.likeCount}'),
                               const SizedBox(width: 16.0),
                               IconButton(
+                                icon: const Icon(Icons.comment),
+                                onPressed: () {
+                                  // نمایش کامنت‌ها در bottom sheet
+                                  _showCommentsBottomSheet(
+                                      context, ref, post.id, post.userId);
+                                },
+                              ),
+                              const SizedBox(width: 16.0),
+                              IconButton(
                                 icon: const Icon(Icons.share),
                                 onPressed: () {
                                   // تعامل به اشتراک‌گذاری
                                   String sharePost =
                                       'کاربر ${post.username} به شما ارسال کرد: \n\n${post.content}';
                                   Share.share(sharePost);
-                                },
-                              ),
-                              const SizedBox(width: 16.0),
-                              IconButton(
-                                icon: const Icon(Icons.comment),
-                                onPressed: () {
-                                  // نمایش کامنت‌ها در bottom sheet
-                                  _showCommentsBottomSheet(
-                                      context, ref, post.id, post.userId);
                                 },
                               ),
                             ],
@@ -204,10 +268,33 @@ class PublicPostsScreen extends ConsumerWidget {
     );
   }
 
-  // نمایش Bottom Sheet برای نمایش کامنت‌ها
   void _showCommentsBottomSheet(
       BuildContext context, WidgetRef ref, String postId, String userId) {
-    final TextEditingController commentController = TextEditingController();
+    final GlobalKey<FlutterMentionsState> key =
+        GlobalKey<FlutterMentionsState>();
+    List<Map<String, dynamic>> userList = [];
+
+    Future<void> loadUserList() async {
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('id, username, avatar_url');
+
+      if (response != null) {
+        print("Error fetching user list: ${response}");
+      } else {
+        final data = response as List;
+        userList = data
+            .map<Map<String, dynamic>>((user) => {
+                  'id': user['id'],
+                  'display': user['username'],
+                  'avatarUrl': user['avatar_url'] ?? '',
+                })
+            .toList();
+
+        // صرفا برای دیباگ می‌توانید کاربران واکشی شده را مشاهده کنید
+        print("Fetched user list: $userList");
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -215,105 +302,128 @@ class PublicPostsScreen extends ConsumerWidget {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
+            loadUserList();
+
+            final commentsAsyncValue = ref.watch(commentsProvider(postId));
+
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.7,
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     Expanded(
-                      child: Consumer(
-                        builder: (context, ref, _) {
-                          final commentsAsyncValue =
-                              ref.watch(commentsProvider(postId));
-
-                          return commentsAsyncValue.when(
-                            data: (comments) => comments.isEmpty
-                                ? Center(child: Text('هنوز کامنتی وجود ندارد'))
-                                : ListView.builder(
-                                    reverse: true,
-                                    itemCount: comments.length,
-                                    itemBuilder: (context, index) {
-                                      final comment = comments[index];
-                                      return ListTile(
-                                        leading: CircleAvatar(
-                                          backgroundImage: comment
-                                                  .avatarUrl.isEmpty
-                                              ? AssetImage(
-                                                  'lib/util/images/default-avatar.jpg')
-                                              : NetworkImage(comment.avatarUrl),
+                      child: commentsAsyncValue.when(
+                        data: (comments) => comments.isEmpty
+                            ? const Center(
+                                child: Text('هنوز کامنتی وجود ندارد'))
+                            : ListView.builder(
+                                reverse: true,
+                                itemCount: comments.length,
+                                itemBuilder: (context, index) {
+                                  final comment = comments[index];
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage: comment.avatarUrl.isEmpty
+                                          ? const AssetImage(
+                                              'lib/util/images/default-avatar.jpg')
+                                          : NetworkImage(comment.avatarUrl),
+                                    ),
+                                    title: Row(
+                                      children: [
+                                        Text(
+                                          comment.username,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
-                                        title: Row(
-                                          children: [
-                                            Text(
-                                              comment.username,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            SizedBox(width: 4),
-                                            if (comment.isVerified)
-                                              Icon(
-                                                Icons.check_circle,
-                                                color: Colors.blue,
-                                                size: 16.0,
-                                              ),
-                                          ],
-                                        ),
-                                        subtitle: Text(comment.content),
-                                      );
-                                    },
-                                  ),
-                            loading: () =>
-                                Center(child: CircularProgressIndicator()),
-                            error: (err, stack) => Center(
-                              child: Text(
-                                  'مشکلی در بارگذاری کامنت‌ها به وجود آمده است'),
-                            ),
-                          );
-                        },
+                                        const SizedBox(width: 4),
+                                        if (comment.isVerified)
+                                          const Icon(
+                                            Icons.check_circle,
+                                            color: Colors.blue,
+                                            size: 16.0,
+                                          ),
+                                      ],
+                                    ),
+                                    subtitle: Text(comment.content),
+                                  );
+                                },
+                              ),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (err, stack) => const Center(
+                          child: Text(
+                              'مشکلی در بارگذاری کامنت‌ها به وجود آمده است'),
+                        ),
                       ),
                     ),
-                    Divider(),
+                    const Divider(),
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: commentController,
+                          child: FlutterMentions(
+                            key: key,
+                            suggestionPosition: SuggestionPosition.Top,
                             decoration: InputDecoration(
                               hintText: 'کامنت خود را وارد کنید...',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
+                            onMentionAdd: (mention) {
+                              // مدیریت زمانی که یک منشن اضافه می‌شود
+                              print('Mention added: ${mention['display']}');
+                            },
+                            mentions: [
+                              Mention(
+                                trigger: '@',
+                                data: userList,
+                                style: const TextStyle(color: Colors.blue),
+                                matchAll: false,
+                                suggestionBuilder: (data) {
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage: data['avatarUrl']
+                                              .isNotEmpty
+                                          ? NetworkImage(data['avatarUrl'])
+                                          : const AssetImage(
+                                                  'lib/util/images/default-avatar.jpg')
+                                              as ImageProvider,
+                                    ),
+                                    title: Text(data['display']),
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         IconButton(
-                          icon: Icon(Icons.send),
+                          icon: const Icon(Icons.send),
                           onPressed: () async {
-                            final commentText = commentController.text.trim();
+                            final commentController =
+                                key.currentState?.controller;
+                            final commentText =
+                                commentController?.text.trim() ?? '';
                             if (commentText.isNotEmpty) {
                               try {
-                                // استفاده از CommentNotifier برای ارسال کامنت
                                 await ref
                                     .read(commentServiceProvider)
                                     .addComment(
                                       postId: postId,
                                       content: commentText,
-                                      userId: supabase.auth.currentUser!.id,
+                                      userId: Supabase
+                                          .instance.client.auth.currentUser!.id,
                                     );
 
-                                // پاک کردن تکست فیلد
-                                commentController.clear();
-
-                                // رفرش کامنت‌ها
+                                commentController?.clear();
                                 ref.invalidate(commentsProvider(postId));
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                       content:
                                           Text('ارسال کامنت با خطا مواجه شد')),
                                 );

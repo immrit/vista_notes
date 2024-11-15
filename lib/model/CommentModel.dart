@@ -31,12 +31,9 @@ class CommentModel {
       content: map['content'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
       // بررسی وجود کلید users
-      username: map['profiles'] != null
-          ? map['profiles']['username'] as String
-          : 'کاربر',
-      avatarUrl: map['profiles'] != null
-          ? (map['profiles']['avatar_url'] as String? ?? '')
-          : '',
+      username: map['profiles']?['username'] as String ?? 'کاربر',
+      avatarUrl: map['profiles']?['avatar_url'] as String ?? '',
+
       isVerified: map['profiles'] != null
           ? (map['profiles']['is_verified'] ?? false)
           : false,

@@ -29,15 +29,46 @@ class _LoginuserState extends ConsumerState<Loginuser> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(isLoadingProvider);
     final redirecting = ref.watch(isRedirectingProvider);
+// تابع بررسی الگوی ایمیل
+    bool isEmail(String input) {
+      final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+      return emailRegex.hasMatch(input);
+    }
 
     Future<void> signIn() async {
       ref.read(isLoadingProvider.notifier).state = true;
 
       try {
+        String? email;
+
+        if (isEmail(emailController.text.trim())) {
+          // اگر ایمیل وارد شده باشد، مستقیماً از آن استفاده می‌کنیم
+          email = emailController.text.trim();
+        } else {
+          // اگر نام کاربری وارد شده باشد، جستجو در جدول پروفایل‌ها
+          final response = await Supabase.instance.client
+              .from('profiles')
+              .select('email')
+              .eq('username', emailController.text.trim())
+              .maybeSingle();
+
+          if (response == null) {
+            context.showSnackBar('نام کاربری/رمزعبور اشتباه است',
+                isError: true);
+            return;
+          }
+
+          email = response['email'] as String;
+        }
+
+        // ورود با ایمیل و رمز عبور
         await Supabase.instance.client.auth.signInWithPassword(
-          email: emailController.text.trim(),
+          email: email,
           password: passController.text.trim(),
         );
+        print('نام کاربری وارد شده: ${emailController.text.trim()}');
+        print('ایمیل یافت شده: $email');
+
         context.showSnackBar('خوش آمدید');
         emailController.clear();
         passController.clear();

@@ -281,7 +281,47 @@ class SupabaseService {
       rethrow;
     }
   }
+
+//delete posts
+  Future<void> deletePost(WidgetRef ref, String postId) async {
+    try {
+      final likesResponse =
+          await supabase.from('post_likes').delete().eq('post_id', postId);
+      if (likesResponse == null) {
+        print(
+            'likesResponse is null but continuing assuming the operation was successful.');
+      } else if (likesResponse.error != null) {
+        throw Exception('خطا در حذف لایک‌ها: ${likesResponse.error!.message}');
+      }
+
+      final notificationsResponse =
+          await supabase.from('notifications').delete().eq('post_id', postId);
+      if (notificationsResponse == null) {
+        print(
+            'notificationsResponse is null but continuing assuming the operation was successful.');
+      } else if (notificationsResponse.error != null) {
+        throw Exception(
+            'خطا در حذف اعلان‌ها: ${notificationsResponse.error!.message}');
+      }
+
+      final response =
+          await supabase.from('public_posts').delete().eq('id', postId);
+      if (response == null) {
+        print(
+            'response is null but continuing assuming the operation was successful.');
+      } else if (response.error != null) {
+        throw Exception('خطا در حذف پست: ${response.error!.message}');
+      }
+      ref.invalidate(fetchPublicPosts);
+
+      print('پست و وابستگی‌های آن با موفقیت حذف شدند.');
+    } catch (e) {
+      print('خطا در حذف پست: $e');
+      rethrow;
+    }
+  }
 }
+
 // تعریف پروایدر Supabase
 
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {

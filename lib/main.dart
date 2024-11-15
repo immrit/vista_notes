@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_mentions/flutter_mentions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -122,27 +123,29 @@ class _MyAppState extends ConsumerState<MyApp> {
           builder: (context, ref, child) {
             final theme =
                 ref.watch(themeProvider); // دریافت تم جاری از طریق Riverpod
-            return MaterialApp(
-              title: 'Vista',
-              debugShowCheckedModeBanner: false,
-              theme: theme, // استفاده از تم جاری
-              home: supabase.auth.currentSession == null
-                  ? const WelcomePage()
-                  : const HomeScreen(),
-              initialRoute: '/',
-              routes: {
-                '/signup': (context) => const SignUpScreen(),
-                '/home': (context) => const HomeScreen(),
-                '/login': (context) => const Loginuser(),
-                '/editeProfile': (context) => EditProfile(),
-                // '/profile': (context) => const Profile(),
-                '/welcome': (context) => const WelcomePage(),
-                '/settings': (context) => const Settings(),
-                '/reset-password': (context) => ResetPasswordPage(
-                      token:
-                          ModalRoute.of(context)?.settings.arguments as String,
-                    ),
-              },
+            return Portal(
+              child: MaterialApp(
+                title: 'Vista',
+                debugShowCheckedModeBanner: false,
+                theme: theme, // استفاده از تم جاری
+                home: supabase.auth.currentSession == null
+                    ? const WelcomePage()
+                    : const HomeScreen(),
+                initialRoute: '/',
+                routes: {
+                  '/signup': (context) => const SignUpScreen(),
+                  '/home': (context) => const HomeScreen(),
+                  '/login': (context) => const Loginuser(),
+                  '/editeProfile': (context) => EditProfile(),
+                  // '/profile': (context) => const Profile(),
+                  '/welcome': (context) => const WelcomePage(),
+                  '/settings': (context) => const Settings(),
+                  '/reset-password': (context) => ResetPasswordPage(
+                        token: ModalRoute.of(context)?.settings.arguments
+                            as String,
+                      ),
+                },
+              ),
             );
           },
         );
