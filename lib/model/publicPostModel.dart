@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:vistaNote/util/const.dart';
-
 // تعریف مدل پست عمومی
 class PublicPostModel {
   final String id;
@@ -29,17 +27,19 @@ class PublicPostModel {
   // متد سازنده از Map
   factory PublicPostModel.fromMap(Map<String, dynamic> map) {
     return PublicPostModel(
-      id: map['id'] as String,
-      userId: map['user_id'] as String,
-      content: map['content'] as String,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      username: map['profiles']['username'] as String,
-      avatarUrl:
-          map['profiles']['avatar_url'] as String? ?? '', // بررسی مقدار null
+      id: map['id'] as String? ?? '', // مقدار پیش‌فرض برای id
+      userId: map['user_id'] as String? ?? '', // مقدار پیش‌فرض برای userId
+      content: map['content'] as String? ?? '', // مقدار پیش‌فرض برای content
+      createdAt: DateTime.parse(
+          map['created_at'] as String? ?? ''), // مقدار پیش‌فرض برای createdAt
+      username: map['profiles']?['username'] as String? ??
+          'نام کاربری ناشناخته', // بررسی null برای username
+      avatarUrl: map['profiles']?['avatar_url'] as String? ??
+          '', // بررسی null برای avatarUrl
       likeCount: map['like_count'] as int? ?? 0,
       isLiked: map['is_liked'] as bool? ?? false,
-      isVerified:
-          map['profiles']['is_verified'] ?? false, // اضافه کردن isVerified
+      isVerified: map['profiles']?['is_verified'] ??
+          false, // بررسی null برای isVerified
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
+import 'package:vistaNote/security/security.dart';
 import 'package:vistaNote/view/screen/Settings.dart';
 import 'provider/provider.dart';
 import 'util/themes.dart';
@@ -20,7 +21,7 @@ import 'view/screen/ouathUser/editeProfile.dart';
 void main() async {
   await Hive.initFlutter(); // مقداردهی اولیه Hive
   await Hive.openBox('settings'); // باز کردن جعبه تنظیمات
-
+  updateIpAddress();
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -136,7 +137,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                   '/signup': (context) => const SignUpScreen(),
                   '/home': (context) => const HomeScreen(),
                   '/login': (context) => const Loginuser(),
-                  '/editeProfile': (context) => EditProfile(),
+                  '/editeProfile': (context) => const EditProfile(),
                   // '/profile': (context) => const Profile(),
                   '/welcome': (context) => const WelcomePage(),
                   '/settings': (context) => const Settings(),

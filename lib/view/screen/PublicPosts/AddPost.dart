@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shamsi_date/shamsi_date.dart'; // اضافه شده
+import 'package:vistaNote/security/security.dart';
+// اضافه شده
 import 'package:vistaNote/util/widgets.dart';
 import '../../../provider/provider.dart';
 
 class AddPublicPostScreen extends ConsumerStatefulWidget {
-  const AddPublicPostScreen({Key? key}) : super(key: key);
+  const AddPublicPostScreen({super.key});
 
   @override
   _AddPublicPostScreenState createState() => _AddPublicPostScreenState();
@@ -70,7 +70,7 @@ class _AddPublicPostScreenState extends ConsumerState<AddPublicPostScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('افزودن پست عمومی جدید'),
+        title: const Text('پست جدید'),
         centerTitle: true,
       ),
       body: ListView(

@@ -9,7 +9,7 @@ import '../../util/themes.dart';
 import 'ouathUser/updatePassword.dart';
 
 class Settings extends ConsumerWidget {
-  const Settings({Key? key}) : super(key: key);
+  const Settings({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,7 +37,7 @@ class Settings extends ConsumerWidget {
                       "${getprofile['username']}",
                     ),
                     if (getprofile['is_verified'])
-                      Icon(
+                      const Icon(
                         Icons.check_circle,
                         color: Colors.blue,
                         size: 16.0,
@@ -79,7 +79,7 @@ class Settings extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
       ),
-      bottomNavigationBar: SizedBox(
+      bottomNavigationBar: const SizedBox(
         width: double.infinity,
         height: 50,
         child: Align(
@@ -92,7 +92,7 @@ class Settings extends ConsumerWidget {
 }
 
 class ThemeItems extends ConsumerWidget {
-  const ThemeItems({Key? key}) : super(key: key);
+  const ThemeItems({super.key});
 
   // ذخیره تم انتخاب‌شده در Hive
   void _saveThemeToHive(String theme) async {
@@ -200,8 +200,7 @@ class ProfileFields extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const ProfileFields(this.title, this.icon, this.onTap, {Key? key})
-      : super(key: key);
+  const ProfileFields(this.title, this.icon, this.onTap, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -215,11 +214,13 @@ class ProfileFields extends StatelessWidget {
 
 // ویجت نمایش نسخه برنامه
 class VersionNumber extends StatelessWidget {
+  const VersionNumber({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '1.4.7+7.5 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
-      style: const TextStyle(fontSize: 16),
+    return const Text(
+      '1.4.8+8 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
+      style: TextStyle(fontSize: 16),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vistaNote/model/ProfileModel.dart';
 import 'package:vistaNote/model/notificationModel.dart';
 import 'package:vistaNote/model/publicPostModel.dart';
 import '../main.dart';
@@ -12,6 +13,11 @@ import '../util/themes.dart';
 //check user state
 final authStateProvider = StreamProvider<User?>((ref) {
   return supabase.auth.onAuthStateChange.map((event) => event.session?.user);
+});
+
+final authProvider = Provider<User?>((ref) {
+  final auth = Supabase.instance.client.auth;
+  return auth.currentUser;
 });
 
 //fetch user profile
@@ -229,8 +235,7 @@ class SupabaseService {
         'sender_id': senderId,
         'post_id': postId,
         'type': 'like',
-        'content':
-            'کاربر ${senderProfile['username']} پست شما رو پسندید: $postContent',
+        'content': '⭐', // ایموجی لایک به عنوان مقدار content
         'is_read': false
       });
     }
@@ -321,6 +326,8 @@ class SupabaseService {
       rethrow;
     }
   }
+
+  addComment(String postId, String content) {}
 }
 
 // تعریف پروایدر Supabase
@@ -403,7 +410,7 @@ class ProfileService {
   final _supabase = Supabase.instance.client;
 
   // دریافت پروفایل کاربر فعلی
-  Future<ProfileModel?> getCurrentUserProfile() async {
+  Future<UserModel?> getCurrentUserProfile() async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return null;
@@ -414,7 +421,7 @@ class ProfileService {
           .eq('id', user.id)
           .single();
 
-      return ProfileModel.fromMap(response);
+      return UserModel.fromMap(response);
     } catch (e) {
       print('Error fetching current user profile: $e');
       return null;
@@ -422,7 +429,7 @@ class ProfileService {
   }
 
   // دریافت پروفایل با شناسه
-  Future<ProfileModel?> getProfileById(String userId) async {
+  Future<UserModel?> getProfileById(String userId) async {
     try {
       final response = await _supabase
           .from('profiles')
@@ -430,7 +437,7 @@ class ProfileService {
           .eq('id', userId)
           .single();
 
-      return ProfileModel.fromMap(response);
+      return UserModel.fromMap(response);
     } catch (e) {
       print('Error fetching profile: $e');
       return null;
@@ -444,36 +451,39 @@ final profileServiceProvider = Provider<ProfileService>((ref) {
 });
 
 // Provider برای پروفایل کاربر فعلی
-final currentUserProfileProvider = FutureProvider<ProfileModel?>((ref) {
+final currentUserProfileProvider = FutureProvider<UserModel?>((ref) {
   final profileService = ref.watch(profileServiceProvider);
   return profileService.getCurrentUserProfile();
 });
 
 // Provider برای پروفایل با شناسه خاص
 final profileByIdProvider =
-    FutureProvider.family<ProfileModel?, String>((ref, userId) {
+    FutureProvider.family<UserModel?, String>((ref, userId) {
   final profileService = ref.watch(profileServiceProvider);
   return profileService.getProfileById(userId);
 });
 
 // مثال استفاده در ویجت
 class ProfileWidget extends ConsumerWidget {
+  const ProfileWidget({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // دریافت پروفایل کاربر فعلی
     final currentProfileAsync = ref.watch(currentUserProfileProvider);
 
     return currentProfileAsync.when(
-      loading: () => CircularProgressIndicator(),
-      error: (error, stack) => Text('خطا در بارگذاری پروفایل'),
+      loading: () => const CircularProgressIndicator(),
+      error: (error, stack) => const Text('خطا در بارگذاری پروفایل'),
       data: (profile) {
         if (profile == null) {
-          return Text('کاربر وارد نشده است');
+          return const Text('کاربر وارد نشده است');
         }
         return Column(
           children: [
             Text(profile.username),
-            if (profile.isVerified) Icon(Icons.verified, color: Colors.blue)
+            if (profile.isVerified)
+              const Icon(Icons.verified, color: Colors.blue)
           ],
         );
       },
@@ -485,23 +495,24 @@ class ProfileWidget extends ConsumerWidget {
 class OtherProfileWidget extends ConsumerWidget {
   final String userId;
 
-  OtherProfileWidget({required this.userId});
+  const OtherProfileWidget({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileByIdProvider(userId));
 
     return profileAsync.when(
-      loading: () => CircularProgressIndicator(),
-      error: (error, stack) => Text('خطا در بارگذاری پروفایل'),
+      loading: () => const CircularProgressIndicator(),
+      error: (error, stack) => const Text('خطا در بارگذاری پروفایل'),
       data: (profile) {
         if (profile == null) {
-          return Text('پروفایل یافت نشد');
+          return const Text('پروفایل یافت نشد');
         }
         return Column(
           children: [
             Text(profile.username),
-            if (profile.isVerified) Icon(Icons.verified, color: Colors.blue)
+            if (profile.isVerified)
+              const Icon(Icons.verified, color: Colors.blue)
           ],
         );
       },
@@ -574,13 +585,13 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
   final CommentService _commentService;
   final TextEditingController contentController = TextEditingController();
 
-  CommentNotifier(this._commentService) : super(AsyncValue.data(null));
+  CommentNotifier(this._commentService) : super(const AsyncValue.data(null));
 
   Future<void> addComment(
       {required String postId, required String userId}) async {
     if (contentController.text.trim().isEmpty) return;
 
-    state = AsyncValue.loading();
+    state = const AsyncValue.loading();
     try {
       await _commentService.addComment(
           postId: postId,
@@ -588,9 +599,87 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
           content: contentController.text.trim());
 
       contentController.clear();
-      state = AsyncValue.data(null);
+      state = const AsyncValue.data(null);
     } catch (error) {
       state = AsyncValue.error(error, StackTrace.current);
     }
   }
 }
+
+class ProfileNotifier extends StateNotifier<ProfileModel?> {
+  final Ref ref;
+
+  ProfileNotifier(this.ref) : super(null);
+
+  Future<void> fetchProfile(String userId) async {
+    try {
+      final supabase = Supabase.instance.client;
+
+      // دریافت اطلاعات پروفایل
+      final profileData = await supabase.from('profiles').select('''
+  id,
+  username,
+  avatar_url,
+  email,
+  bio,
+  followers_count,
+  created_at,
+  is_verified,
+  verification_type
+''').eq('id', userId).single();
+
+      // دریافت پست‌های عمومی
+      final postsData = await supabase.from('public_posts').select('''
+      id,
+      content,
+      created_at,
+      like_count
+    ''').eq('user_id', userId).order('created_at', ascending: false);
+      ;
+
+      // به‌روزرسانی وضعیت پروفایل و پست‌ها
+      final profile = ProfileModel.fromMap(profileData);
+      final posts =
+          postsData.map((post) => PublicPostModel.fromMap(post)).toList();
+
+      state = profile.copyWith(posts: posts);
+    } catch (e) {
+      print('خطا در دریافت پروفایل: $e');
+      state = null;
+    }
+  }
+
+  Future<void> toggleFollow(String userId) async {
+    final supabase = Supabase.instance.client;
+
+    if (state == null) return;
+    final isFollowed = state!.isFollowed;
+
+    try {
+      if (isFollowed) {
+        // حذف دنبال کردن
+        await supabase
+            .from('follows')
+            .delete()
+            .eq('follower_id', supabase.auth.currentUser!.id)
+            .eq('following_id', userId);
+      } else {
+        // اضافه کردن دنبال کردن
+        await supabase.from('follows').insert({
+          'follower_id': supabase.auth.currentUser!.id,
+          'following_id': userId,
+        });
+      }
+
+      // فقط اگر عملیات موفق بود، وضعیت به‌روزرسانی شود
+      state = state!.copyWith(isFollowed: !isFollowed);
+    } catch (e) {
+      print('خطا در تغییر وضعیت دنبال کردن: $e');
+    }
+  }
+}
+
+final userProfileProvider =
+    StateNotifierProvider.family<ProfileNotifier, ProfileModel?, String>(
+  (ref, userId) => ProfileNotifier(ref)..fetchProfile(userId),
+);

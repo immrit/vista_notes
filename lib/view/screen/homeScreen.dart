@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:vistaNote/main.dart';
 import 'package:vistaNote/view/screen/Notes/NotesPage.dart';
-import 'package:vistaNote/view/screen/support.dart';
 import 'PublicPosts/notificationScreen.dart';
+import 'PublicPosts/profileScreen.dart';
 import 'PublicPosts/publicPosts.dart';
-import '../../provider/provider.dart'; // پرووایدرها
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +16,17 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
+  // لیست صفحات
+  final List<Widget> _tabs = [
+    const NotesScreen(), // صفحه یادداشت‌ها
+    const PublicPostsScreen(), // صفحه پست‌های عمومی
+    const NotificationsPage(), // صفحه اعلان‌ها
+    ProfileScreen(
+      userId: supabase.auth.currentUser!.id,
+    )
+  ];
+
+  // هندل کردن تغییر تب
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -26,36 +35,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final notesAsyncValue = ref.watch(notesProvider);
-    final publicPostsAsyncValue =
-        ref.watch(fetchPublicPosts); // پرووایدر پست‌ها
-
-    // صفحات برای هر تب
-    final List<Widget> tabs = [
-      const NotesScreen(), // صفحه یادداشت‌ها
-      PublicPostsScreen(), // صفحه پست‌های عمومی
-      NotificationsPage()
-    ];
-
     return Scaffold(
-      body: tabs[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+      body: _tabs[_selectedIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
             label: 'یادداشت‌ها',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notes),
+          NavigationDestination(
+            icon: Icon(Icons.notes_outlined),
+            selectedIcon: Icon(Icons.notes),
             label: 'کافه ویستا',
           ),
-          BottomNavigationBarItem(
-            label: 'اعلان ها',
-            icon: Icon(Icons.favorite),
+          NavigationDestination(
+            icon: Icon(Icons.favorite_outline),
+            selectedIcon: Icon(Icons.favorite),
+            label: 'اعلان‌ها',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_2_outlined),
+            selectedIcon: Icon(Icons.person_2),
+            label: 'حساب کاربری',
           ),
         ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        elevation: 3,
+        animationDuration: const Duration(milliseconds: 500),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
     );
   }

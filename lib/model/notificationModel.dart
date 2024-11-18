@@ -79,7 +79,7 @@ class NotificationModel extends Equatable {
       recipientId: recipientId ?? this.recipientId,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
-      type: notificationType ?? this.type,
+      type: notificationType ?? type,
       username: username ?? this.username,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       isRead: isRead ?? this.isRead,

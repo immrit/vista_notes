@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 enum VerificationType { none, blueTick, official }
 
 @immutable
-class ProfileModel extends Equatable {
+class UserModel extends Equatable {
   final String id;
   final String username;
   final String? avatarUrl;
@@ -15,7 +15,7 @@ class ProfileModel extends Equatable {
   final bool isVerified;
   final VerificationType verificationType; // اضافه کردن verificationType
 
-  const ProfileModel({
+  const UserModel({
     required this.id,
     required this.username,
     this.avatarUrl,
@@ -26,12 +26,12 @@ class ProfileModel extends Equatable {
   });
 
   // سازنده از JSON
-  factory ProfileModel.fromJson(String source) =>
-      ProfileModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory UserModel.fromJson(String source) =>
+      UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   // سازنده از Map با هندلینگ پیشرفته
-  factory ProfileModel.fromMap(Map<String, dynamic> map) {
-    return ProfileModel(
+  factory UserModel.fromMap(Map<String, dynamic> map) {
+    return UserModel(
       id: (map['user_id'] ?? map['id'] ?? '').toString(),
       username: (map['username'] ?? '').toString(),
       avatarUrl: map['avatar_url']?.toString(),
@@ -65,7 +65,7 @@ class ProfileModel extends Equatable {
   String toJson() => json.encode(toMap());
 
   // متد copyWith برای تغییرات ایمن
-  ProfileModel copyWith({
+  UserModel copyWith({
     String? id,
     String? username,
     String? avatarUrl,
@@ -74,7 +74,7 @@ class ProfileModel extends Equatable {
     bool? isVerified,
     VerificationType? verificationType, // اضافه کردن verificationType
   }) {
-    return ProfileModel(
+    return UserModel(
       id: id ?? this.id,
       username: username ?? this.username,
       avatarUrl: avatarUrl ?? this.avatarUrl,

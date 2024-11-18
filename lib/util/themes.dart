@@ -43,9 +43,7 @@ final ThemeData darkTheme = ThemeData(
     secondary: Colors.white,
     onPrimary: Colors.white,
     onSecondary: Colors.black,
-    background: Colors.grey[900]!,
     surface: Colors.grey[800]!,
-    onBackground: Colors.white,
     onSurface: Colors.white,
   ),
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -102,9 +100,7 @@ final ThemeData yellowBlackTheme = ThemeData(
     secondary: Colors.black,
     onPrimary: Colors.black,
     onSecondary: Colors.yellow,
-    background: Colors.white,
     surface: Colors.yellow[100]!,
-    onBackground: Colors.black,
     onSurface: Colors.black,
   ),
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -135,9 +131,7 @@ final ThemeData tealWhiteTheme = ThemeData(
     secondary: Colors.white,
     onPrimary: Colors.white,
     onSecondary: Colors.teal,
-    background: Colors.teal[50]!,
     surface: Colors.teal[100]!,
-    onBackground: Colors.teal[900]!,
     onSurface: Colors.teal[900]!,
   ),
   bottomNavigationBarTheme: BottomNavigationBarThemeData(

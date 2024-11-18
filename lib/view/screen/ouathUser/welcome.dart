@@ -27,11 +27,11 @@ class WelcomePage extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    textAlign: TextAlign.right,
-                    'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
-                    style: TextStyle(fontSize: 15.sp, color: Colors.white),
-                  ),
+                  // Text(
+                  //   textAlign: TextAlign.right,
+                  //   'همه چیز رو میتونی اینجا در امنیت کامل ذخیره کنی که یادت نره \n 🙂ضمنا سازنده برنامه خودش فراموشکاره',
+                  //   style: TextStyle(fontSize: 15.sp, color: Colors.white),
+                  // ),
                   SizedBox(height: 200.h),
                 ],
               ),

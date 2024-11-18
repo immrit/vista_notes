@@ -341,7 +341,7 @@ class NoteGridWidget extends ConsumerWidget {
           onLongPress: () {
             showCustomBottomSheet(context, note, () {
               ref.read(deleteNoteProvider(note.id));
-              ref.refresh(notesProvider);
+              ref.invalidate(notesProvider);
               Navigator.pop(context);
             });
           },
@@ -514,7 +514,7 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
 class ReportDialog extends ConsumerStatefulWidget {
   final PublicPostModel post;
 
-  const ReportDialog({Key? key, required this.post}) : super(key: key);
+  const ReportDialog({super.key, required this.post});
 
   @override
   ConsumerState<ReportDialog> createState() => _ReportDialogState();
@@ -611,22 +611,20 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
               style: theme.textTheme.bodyMedium,
             ),
             // لیست رادیویی دلایل گزارش
-            ...reportReasons
-                .map((reason) => RadioListTile<String>(
-                      title: Text(
-                        reason,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      value: reason,
-                      groupValue: _selectedReason,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedReason = value!;
-                        });
-                      },
-                      activeColor: theme.colorScheme.secondary,
-                    ))
-                .toList(),
+            ...reportReasons.map((reason) => RadioListTile<String>(
+                  title: Text(
+                    reason,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  value: reason,
+                  groupValue: _selectedReason,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedReason = value!;
+                    });
+                  },
+                  activeColor: theme.colorScheme.secondary,
+                )),
 
             // فیلد توضیحات اضافی برای 'سایر موارد'
             if (_selectedReason == 'سایر موارد')
@@ -654,7 +652,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             foregroundColor: theme.textTheme.bodyLarge?.color,
           ),
           onPressed: () => Navigator.pop(context),
-          child: Text('انصراف'),
+          child: const Text('انصراف'),
         ),
 
         // دکمه ارسال گزارش
@@ -664,9 +662,108 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             foregroundColor: theme.colorScheme.onSecondary,
           ),
           onPressed: _selectedReason.isNotEmpty ? _submitReport : null,
-          child: Text('ثبت گزارش'),
+          child: const Text('ثبت گزارش'),
         ),
       ],
     );
   }
+}
+
+//jeneral text field
+
+bool isPersian(String text) {
+  // بررسی می‌کند آیا متن دارای حروف فارسی است یا نه
+  final RegExp persianRegExp = RegExp(r'[\u0600-\u06FF]');
+  return persianRegExp.hasMatch(text);
+}
+
+TextAlign getTextAlignment(String text) {
+  return isPersian(text) ? TextAlign.right : TextAlign.left;
+}
+
+void showCommentsBottomSheet(
+  BuildContext context,
+  WidgetRef ref,
+  String postId,
+  String userId,
+) {
+  final TextEditingController commentController = TextEditingController();
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final commentsAsyncValue =
+                            ref.watch(commentsProvider(postId));
+
+                        return commentsAsyncValue.when(
+                          data: (comments) => comments.isEmpty
+                              ? const Center(
+                                  child: Text('هنوز کامنتی وجود ندارد'))
+                              : ListView.builder(
+                                  reverse: true,
+                                  itemCount: comments.length,
+                                  itemBuilder: (context, index) {
+                                    final comment = comments[index];
+                                    return ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundImage: comment
+                                                .avatarUrl.isEmpty
+                                            ? const AssetImage(
+                                                'lib/util/images/default-avatar.jpg')
+                                            : NetworkImage(comment.avatarUrl),
+                                      ),
+                                      title: Text(comment.username),
+                                      subtitle: Text(comment.content),
+                                    );
+                                  },
+                                ),
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (error, stackTrace) =>
+                              Center(child: Text('خطا در بارگذاری کامنت‌ها')),
+                        );
+                      },
+                    ),
+                  ),
+                  TextField(
+                    controller: commentController,
+                    decoration: InputDecoration(
+                      labelText: 'کامنت خود را بنویسید...',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () async {
+                          final content = commentController.text.trim();
+                          if (content.isNotEmpty) {
+                            await ref
+                                .read(supabaseServiceProvider)
+                                .addComment(postId, content);
+                            commentController.clear();
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }

@@ -25,18 +25,15 @@ class CommentModel {
   // متد سازنده از Map
   factory CommentModel.fromMap(Map<String, dynamic> map) {
     return CommentModel(
-      id: map['id'] as String,
-      postId: map['post_id'] as String,
-      userId: map['user_id'] as String,
-      content: map['content'] as String,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      // بررسی وجود کلید users
-      username: map['profiles']?['username'] as String ?? 'کاربر',
-      avatarUrl: map['profiles']?['avatar_url'] as String ?? '',
-
-      isVerified: map['profiles'] != null
-          ? (map['profiles']['is_verified'] ?? false)
-          : false,
+      id: map['id'] as String? ?? '',
+      postId: map['post_id'] as String? ?? '',
+      userId: map['user_id'] as String? ?? '',
+      content: map['content'] as String? ?? 'متن خالی',
+      createdAt: DateTime.parse(
+          map['created_at'] as String? ?? DateTime.now().toIso8601String()),
+      username: map['profiles']?['username'] as String? ?? 'کاربر',
+      avatarUrl: map['profiles']?['avatar_url'] as String? ?? '',
+      isVerified: map['profiles']?['is_verified'] as bool? ?? false,
     );
   }
 

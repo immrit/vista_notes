@@ -30,14 +30,11 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
   Future<void> _getProfile() async {
     ref.read(loadingProvider.notifier).state = true;
     try {
-      final userId = supabase.auth.currentSession?.user?.id;
+      final userId = supabase.auth.currentSession?.user.id;
       if (userId == null) return;
 
-      final data = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single() as Map<String, dynamic>;
+      final data =
+          await supabase.from('profiles').select().eq('id', userId).single();
 
       if (!mounted) return;
 
