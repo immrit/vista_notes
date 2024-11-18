@@ -229,7 +229,8 @@ class SupabaseService {
         'sender_id': senderId,
         'post_id': postId,
         'type': 'like',
-        'content': '⭐', // ایموجی لایک به عنوان مقدار content
+        'content':
+            'کاربر ${senderProfile['username']} پست شما رو پسندید: $postContent',
         'is_read': false
       });
     }
