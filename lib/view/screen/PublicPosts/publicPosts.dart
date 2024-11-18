@@ -21,7 +21,11 @@ class PublicPostsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('کافه ویستا'),
+        title: Text(
+          'کافه ویستا',
+          style: TextStyle(
+              fontSize: 25, fontWeight: FontWeight.bold, fontFamily: 'vazier'),
+        ),
         centerTitle: true,
       ),
       endDrawer: CustomDrawer(getprofile, currentcolor, context),
@@ -203,17 +207,25 @@ class PublicPostsScreen extends ConsumerWidget {
                                   color: post.isLiked ? Colors.red : null,
                                 ),
                                 onPressed: () async {
-                                  post.isLiked = !post.isLiked;
-                                  post.likeCount += post.isLiked ? 1 : -1;
-                                  (context as Element).markNeedsBuild();
+                                  try {
+                                    // از ref.read استفاده کنید
+                                    await ref
+                                        .read(supabaseServiceProvider)
+                                        .toggleLike(
+                                          postId: post.id,
+                                          ownerId: post.userId,
+                                          ref: ref,
+                                        );
 
-                                  await ref
-                                      .watch(supabaseServiceProvider)
-                                      .toggleLike(
-                                        postId: post.id,
-                                        ownerId: post.userId,
-                                        ref: ref,
-                                      );
+                                    // چون از FutureProvider استفاده می‌کنید، نیاز به به‌روزرسانی مستقیم دارید
+                                    ref.invalidate(fetchPublicPosts);
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('خطا در لایک کردن: $e')),
+                                    );
+                                  }
                                 },
                               ),
                               Text('${post.likeCount}'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vistaNote/util/widgets.dart';
 
 import '../../../provider/provider.dart';
 import '../../../util/const.dart';
@@ -10,7 +11,10 @@ class NotificationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(notificationsProvider);
+    final getprofile = ref.watch(profileProvider);
+    final currentcolor = ref.watch(themeProvider);
     return Scaffold(
+      endDrawer: CustomDrawer(getprofile, currentcolor, context),
       appBar: AppBar(
         title: const Text('اعلان ها'),
       ),

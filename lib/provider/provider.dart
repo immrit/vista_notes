@@ -148,108 +148,159 @@ class SupabaseService {
 
   SupabaseService(this.supabase);
 
-  Future<void> toggleLike(
-      {required String postId,
-      required String ownerId,
-      required WidgetRef ref}) async {
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) {
-      throw Exception('User not authenticated');
-    }
-
+  Future<void> toggleLike({
+    required String postId,
+    required String ownerId,
+    required WidgetRef ref,
+  }) async {
     try {
-      // بررسی لایک موجود
-      final existingLike = await supabase
+      // بررسی اعتبار شناسه‌ها
+      if (postId.isEmpty) {
+        throw ArgumentError('شناسه پست نمی‌تواند خالی باشد');
+      }
+
+      if (ownerId.isEmpty) {
+        throw ArgumentError('شناسه مالک پست نمی‌تواند خالی باشد');
+      }
+
+      final userId = _validateUser();
+
+      // بررسی اینکه آیا شناسه‌ها UUID معتبر هستند
+      _validateUUID(postId);
+      _validateUUID(ownerId);
+      _validateUUID(userId);
+
+      // بررسی لایک موجود با استفاده از باکچ سیف
+      final existingLike = await _checkExistingLike(postId, userId);
+
+      if (existingLike == null) {
+        await _addLike(postId, userId, ownerId);
+      } else {
+        await _removeLike(postId, userId, ownerId);
+      }
+
+      // بروزرسانی استیت
+      ref.invalidate(fetchPublicPosts);
+    } on AuthException catch (e) {
+      print('خطای احراز هویت: ${e.message}');
+      rethrow;
+    } on ArgumentError catch (e) {
+      print('خطای اعتبارسنجی: ${e.message}');
+      rethrow;
+    } catch (e) {
+      print('خطا در toggleLike: $e');
+      rethrow;
+    }
+  }
+
+// متد اعتبارسنجی UUID
+  void _validateUUID(String uuid) {
+    final uuidRegex = RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+        caseSensitive: false);
+
+    if (uuid.isEmpty || !uuidRegex.hasMatch(uuid)) {
+      throw ArgumentError('شناسه نامعتبر: $uuid');
+    }
+  }
+
+  String _validateUser() {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      throw AuthException('کاربر احراز هویت نشده است');
+    }
+    return user.id;
+  }
+
+  Future<Map<String, dynamic>?> _checkExistingLike(
+      String postId, String userId) async {
+    try {
+      return await supabase
           .from('post_likes')
           .select()
           .eq('post_id', postId)
           .eq('user_id', userId)
           .maybeSingle();
-
-      if (existingLike == null) {
-        // ثبت لایک جدید
-        await _addLike(postId, userId, ownerId);
-      } else {
-        // حذف لایک
-        await _removeLike(postId, userId, ownerId);
-      }
     } catch (e) {
-      print('Error in toggleLike: $e');
-      rethrow;
+      print('خطا در بررسی لایک موجود: $e');
+      return null;
     }
   }
 
   Future<void> _addLike(String postId, String userId, String ownerId) async {
-    // ثبت لایک
-    await supabase.from('post_likes').insert({
-      'post_id': postId,
-      'user_id': userId,
-    });
+    try {
+      await supabase.from('post_likes').insert({
+        'post_id': postId,
+        'user_id': userId,
+      });
 
-    // به‌روزرسانی تعداد لایک‌ها
-    await _updateLikeCount(postId, increase: true);
+      await _updateLikeCount(postId, increase: true);
 
-    // ایجاد نوتیفیکیشن فقط اگر لایک کننده صاحب پست نباشد
-    if (userId != ownerId) {
-      await _createLikeNotification(postId, userId, ownerId);
+      if (userId != ownerId) {
+        await _createLikeNotification(postId, userId, ownerId);
+      }
+    } catch (e) {
+      print('خطا در افزودن لایک: $e');
+      rethrow;
     }
   }
 
   Future<void> _removeLike(String postId, String userId, String ownerId) async {
-    // حذف لایک
-    await supabase.from('post_likes').delete().match({
-      'post_id': postId,
-      'user_id': userId,
-    });
+    try {
+      await supabase.from('post_likes').delete().match({
+        'post_id': postId,
+        'user_id': userId,
+      });
 
-    // به‌روزرسانی تعداد لایک‌ها
-    await _updateLikeCount(postId, increase: false);
-
-    // حذف نوتیفیکیشن
-    await _removeLikeNotification(postId, userId, ownerId);
+      await _updateLikeCount(postId, increase: false);
+      await _removeLikeNotification(postId, userId, ownerId);
+    } catch (e) {
+      print('خطا در حذف لایک: $e');
+      rethrow;
+    }
   }
 
   Future<void> _createLikeNotification(
       String postId, String senderId, String recipientId) async {
-    // دریافت اطلاعات پروفایل فرستنده
-    final senderProfile = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', senderId)
-        .single();
+    try {
+      final existingNotification = await supabase
+          .from('notifications')
+          .select()
+          .eq('recipient_id', recipientId)
+          .eq('sender_id', senderId)
+          .eq('post_id', postId)
+          .eq('type', 'like')
+          .maybeSingle();
 
-    // بررسی عدم وجود اعلان تکراری
-    final existingNotification = await supabase
-        .from('notifications')
-        .select()
-        .eq('recipient_id', recipientId)
-        .eq('sender_id', senderId)
-        .eq('post_id', postId)
-        .eq('type', 'like')
-        .maybeSingle();
-
-    if (existingNotification == null) {
-      // ثبت نوتیفیکیشن
-      await supabase.from('notifications').insert({
-        'recipient_id': recipientId,
-        'sender_id': senderId,
-        'post_id': postId,
-        'type': 'like',
-        'content': '⭐', // ایموجی لایک به عنوان مقدار content
-        'is_read': false
-      });
+      if (existingNotification == null) {
+        await supabase.from('notifications').insert({
+          'recipient_id': recipientId,
+          'sender_id': senderId,
+          'post_id': postId,
+          'type': 'like',
+          'content': '⭐',
+          'is_read': false
+        });
+      }
+    } catch (e) {
+      print('خطا در ایجاد نوتیفیکیشن: $e');
+      rethrow;
     }
   }
 
   Future<void> _removeLikeNotification(
       String postId, String senderId, String recipientId) async {
-    // حذف نوتیفیکیشن لایک
-    await supabase.from('notifications').delete().match({
-      'recipient_id': recipientId,
-      'sender_id': senderId,
-      'post_id': postId,
-      'type': 'like'
-    });
+    try {
+      await supabase.from('notifications').delete().match({
+        'recipient_id': recipientId,
+        'sender_id': senderId,
+        'post_id': postId,
+        'type': 'like'
+      });
+    } catch (e) {
+      print('خطا در حذف نوتیفیکیشن: $e');
+      rethrow;
+    }
   }
 
   Future<void> _updateLikeCount(String postId, {required bool increase}) async {
@@ -257,26 +308,33 @@ class SupabaseService {
       await supabase.rpc('update_like_count',
           params: {'post_id_input': postId, 'increment': increase ? 1 : -1});
     } catch (e) {
-      print('Error updating like count: $e');
+      print('خطا در بروزرسانی تعداد لایک‌ها: $e');
       rethrow;
     }
   }
 
-  Future<void> insertReport(
-      {required String postId,
-      required String reportedUserId,
-      required String reason,
-      String? additionalDetails}) async {
+  Future<void> insertReport({
+    required String postId,
+    required String reportedUserId,
+    required String reason,
+    String? additionalDetails,
+  }) async {
     try {
-      // بررسی اینکه کاربر لاگین کرده باشد
-      if (supabase.auth.currentUser == null) {
-        throw Exception('کاربر لاگین نشده است');
+      // بررسی اعتبار شناسه‌ها
+      if (postId.isEmpty || reportedUserId.isEmpty) {
+        throw ArgumentError('شناسه‌ها نمی‌توانند خالی باشند');
       }
+
+      _validateUUID(postId);
+      _validateUUID(reportedUserId);
+
+      final userId = _validateUser();
+      _validateUUID(userId);
 
       await supabase.from('reports').insert({
         'post_id': postId,
         'reported_user_id': reportedUserId,
-        'reporter_id': supabase.auth.currentUser!.id,
+        'reporter_id': userId,
         'reason': reason,
         'additional_details': additionalDetails,
         'created_at': DateTime.now().toIso8601String(),
@@ -288,36 +346,26 @@ class SupabaseService {
     }
   }
 
-//delete posts
   Future<void> deletePost(WidgetRef ref, String postId) async {
     try {
-      final likesResponse =
-          await supabase.from('post_likes').delete().eq('post_id', postId);
-      if (likesResponse == null) {
-        print(
-            'likesResponse is null but continuing assuming the operation was successful.');
-      } else if (likesResponse.error != null) {
-        throw Exception('خطا در حذف لایک‌ها: ${likesResponse.error!.message}');
+      // بررسی اعتبار شناسه
+      if (postId.isEmpty) {
+        throw ArgumentError('شناسه پست نمی‌تواند خالی باشد');
       }
 
-      final notificationsResponse =
-          await supabase.from('notifications').delete().eq('post_id', postId);
-      if (notificationsResponse == null) {
-        print(
-            'notificationsResponse is null but continuing assuming the operation was successful.');
-      } else if (notificationsResponse.error != null) {
-        throw Exception(
-            'خطا در حذف اعلان‌ها: ${notificationsResponse.error!.message}');
-      }
+      _validateUUID(postId);
 
-      final response =
-          await supabase.from('public_posts').delete().eq('id', postId);
-      if (response == null) {
-        print(
-            'response is null but continuing assuming the operation was successful.');
-      } else if (response.error != null) {
-        throw Exception('خطا در حذف پست: ${response.error!.message}');
-      }
+      final userId = _validateUser();
+
+      // حذف لایک‌ها
+      await supabase.from('post_likes').delete().eq('post_id', postId);
+
+      // حذف نوتیفیکیشن‌ها
+      await supabase.from('notifications').delete().eq('post_id', postId);
+
+      // حذف پست
+      await supabase.from('public_posts').delete().eq('id', postId);
+
       ref.invalidate(fetchPublicPosts);
 
       print('پست و وابستگی‌های آن با موفقیت حذف شدند.');
@@ -326,11 +374,7 @@ class SupabaseService {
       rethrow;
     }
   }
-
-  addComment(String postId, String content) {}
 }
-
-// تعریف پروایدر Supabase
 
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {
   final supabase = Supabase.instance.client;
@@ -524,22 +568,29 @@ class OtherProfileWidget extends ConsumerWidget {
 //Comment StateNotifier
 
 class CommentService {
-  final supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
 
-  Future<CommentModel> addComment(
-      {required String postId,
-      required String userId,
-      required String content}) async {
+  CommentService(this._supabase);
+
+  Future<CommentModel> addComment({
+    required String postId,
+    required String content,
+  }) async {
     try {
+      final currentUser = _supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('کاربر وارد سیستم نشده است');
+      }
+
       if (content.trim().isEmpty) {
         throw Exception('محتوای کامنت نمی‌تواند خالی باشد');
       }
 
-      final response = await supabase
+      final response = await _supabase
           .from('comments')
           .insert({
             'post_id': postId,
-            'user_id': userId,
+            'user_id': currentUser.id,
             'content': content,
             'created_at': DateTime.now().toIso8601String(),
           })
@@ -555,7 +606,7 @@ class CommentService {
 
   Future<List<CommentModel>> fetchComments(String postId) async {
     try {
-      final response = await supabase
+      final response = await _supabase
           .from('comments')
           .select('*, profiles(username, avatar_url, is_verified)')
           .eq('post_id', postId)
@@ -571,8 +622,11 @@ class CommentService {
   }
 }
 
-// Provider برای واکشی کامنت‌ها از دیتابیس
-final commentServiceProvider = Provider((ref) => CommentService());
+// comment_providers.dart
+final commentServiceProvider = Provider<CommentService>((ref) {
+  final supabase = Supabase.instance.client;
+  return CommentService(supabase);
+});
 
 final commentsProvider =
     FutureProvider.family<List<CommentModel>, String>((ref, postId) {
@@ -587,16 +641,17 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
 
   CommentNotifier(this._commentService) : super(const AsyncValue.data(null));
 
-  Future<void> addComment(
-      {required String postId, required String userId}) async {
-    if (contentController.text.trim().isEmpty) return;
+  Future<void> addComment({required String postId}) async {
+    final content = contentController.text.trim();
+    if (content.isEmpty) return;
 
     state = const AsyncValue.loading();
+
     try {
       await _commentService.addComment(
-          postId: postId,
-          userId: userId,
-          content: contentController.text.trim());
+        postId: postId,
+        content: content,
+      );
 
       contentController.clear();
       state = const AsyncValue.data(null);
@@ -604,7 +659,19 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncValue.error(error, StackTrace.current);
     }
   }
+
+  @override
+  void dispose() {
+    contentController.dispose();
+    super.dispose();
+  }
 }
+
+final commentNotifierProvider =
+    StateNotifierProvider<CommentNotifier, AsyncValue<void>>((ref) {
+  final commentService = ref.read(commentServiceProvider);
+  return CommentNotifier(commentService);
+});
 
 class ProfileNotifier extends StateNotifier<ProfileModel?> {
   final Ref ref;
@@ -614,35 +681,57 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
   Future<void> fetchProfile(String userId) async {
     try {
       final supabase = Supabase.instance.client;
+      final currentUserId = supabase.auth.currentUser?.id;
 
       // دریافت اطلاعات پروفایل
       final profileData = await supabase.from('profiles').select('''
-  id,
-  username,
-  avatar_url,
-  email,
-  bio,
-  followers_count,
-  created_at,
-  is_verified,
-  verification_type
-''').eq('id', userId).single();
-
-      // دریافت پست‌های عمومی
-      final postsData = await supabase.from('public_posts').select('''
       id,
-      content,
+      username,
+      avatar_url,
+      email,
+      bio,
+      followers_count,
       created_at,
-      like_count
-    ''').eq('user_id', userId).order('created_at', ascending: false);
-      ;
+      is_verified,
+      verification_type
+    ''').eq('id', userId).single();
+
+      // دریافت پست‌های عمومی با اطلاعات اضافی
+      final postsData = await supabase.from('public_posts').select('''
+        id, 
+        content, 
+        created_at, 
+        user_id,
+        like_count,
+        profiles(username, avatar_url, is_verified),
+        post_likes!inner(user_id)
+      ''').eq('user_id', userId).order('created_at', ascending: false);
+
+      // بررسی وضعیت فالو
+      final followStatus = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', supabase.auth.currentUser!.id)
+          .eq('following_id', userId)
+          .maybeSingle();
 
       // به‌روزرسانی وضعیت پروفایل و پست‌ها
       final profile = ProfileModel.fromMap(profileData);
-      final posts =
-          postsData.map((post) => PublicPostModel.fromMap(post)).toList();
 
-      state = profile.copyWith(posts: posts);
+      final posts = postsData.map((post) {
+        // محاسبه وضعیت لایک برای هر پست
+        final likeCount = post['like_count'] ?? 0;
+        final postLikes = post['post_likes'] as List;
+
+        return PublicPostModel.fromMap({
+          ...post,
+          'like_count': likeCount,
+          'is_liked': postLikes.any((like) => like['user_id'] == currentUserId),
+          'profiles': post['profiles'],
+        });
+      }).toList();
+
+      state = profile.copyWith(posts: posts, isFollowed: followStatus != null);
     } catch (e) {
       print('خطا در دریافت پروفایل: $e');
       state = null;
@@ -651,8 +740,9 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
 
   Future<void> toggleFollow(String userId) async {
     final supabase = Supabase.instance.client;
+    final currentUserId = supabase.auth.currentUser?.id;
 
-    if (state == null) return;
+    if (state == null || currentUserId == null) return;
     final isFollowed = state!.isFollowed;
 
     try {
@@ -661,20 +751,104 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
         await supabase
             .from('follows')
             .delete()
-            .eq('follower_id', supabase.auth.currentUser!.id)
+            .eq('follower_id', currentUserId)
             .eq('following_id', userId);
       } else {
         // اضافه کردن دنبال کردن
         await supabase.from('follows').insert({
-          'follower_id': supabase.auth.currentUser!.id,
+          'follower_id': currentUserId,
           'following_id': userId,
         });
       }
 
-      // فقط اگر عملیات موفق بود، وضعیت به‌روزرسانی شود
-      state = state!.copyWith(isFollowed: !isFollowed);
+      // به‌روزرسانی وضعیت فالو در استیت
+      state = state!.copyWith(
+          isFollowed: !isFollowed,
+          followersCount: isFollowed
+              ? state!.followersCount - 1
+              : state!.followersCount + 1);
     } catch (e) {
-      print('خطا در تغییر وضعیت دنبال کردن: $e');
+      print('خطا در تغییر وضعیت فالو: $e');
+    }
+  }
+
+  // متد جدید برای به‌روزرسانی پست
+  void updatePost(PublicPostModel updatedPost) {
+    // اگر استیت خالی باشد، کاری انجام نده
+    if (state == null) return;
+
+    // ایجاد لیست جدید از پست‌ها با جایگزینی پست به‌روزرسانی شده
+    final updatedPosts = state!.posts.map((post) {
+      return post.id == updatedPost.id ? updatedPost : post;
+    }).toList();
+
+    // ایجاد نسخه جدید از پروفایل با پست‌های به‌روزرسانی شده
+    state = state!.copyWith(posts: updatedPosts);
+  }
+
+  // به‌روزرسانی وضعیت فالو
+  //     state = state!.copyWith(
+  //         isFollowed: !isFollowed,
+  //         followersCount: isFollowed
+  //             ? (state!.followersCount - 1)
+  //             : (state!.followersCount + 1));
+
+  //     // تازه‌سازی پروایدر
+  //     ref.invalidate(userProfileProvider(userId));
+  //   } catch (e) {
+  //     print('خطا در تغییر وضعیت دنبال کردن: $e');
+  //   }
+  // }
+
+  // متد جدید برای لایک کردن پست
+  Future<void> toggleLike(String postId) async {
+    final supabase = Supabase.instance.client;
+    final currentUserId = supabase.auth.currentUser?.id;
+
+    if (state == null || currentUserId == null) return;
+
+    try {
+      // بررسی وضعیت لایک فعلی
+      final existingLike = await supabase
+          .from('post_likes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+
+      if (existingLike != null) {
+        // حذف لایک
+        await supabase
+            .from('post_likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', currentUserId);
+      } else {
+        // اضافه کردن لایک
+        await supabase.from('post_likes').insert({
+          'post_id': postId,
+          'user_id': currentUserId,
+        });
+      }
+
+      // به‌روزرسانی لیست پست‌ها
+      final updatedPosts = state!.posts.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+              likeCount: existingLike != null
+                  ? post.likeCount - 1
+                  : post.likeCount + 1,
+              isLiked: existingLike == null);
+        }
+        return post;
+      }).toList();
+
+      state = state!.copyWith(posts: updatedPosts);
+
+      // تازه‌سازی پروایدر
+      ref.invalidate(userProfileProvider(state!.id));
+    } catch (e) {
+      print('خطا در تغییر وضعیت لایک: $e');
     }
   }
 }

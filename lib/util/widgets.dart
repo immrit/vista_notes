@@ -441,12 +441,21 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
                   ),
                   margin: const EdgeInsets.only(bottom: 0),
                   currentAccountPictureSize: const Size(65, 65),
-                  accountName: Text(
-                    '${getprofile['username']}',
-                    style: TextStyle(
-                        color: currentcolor.brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black),
+                  accountName: Row(
+                    children: [
+                      Text(
+                        '${getprofile['username']}',
+                        style: TextStyle(
+                            color: currentcolor.brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black),
+                      ),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      if (getprofile['is_verified'])
+                        Icon(Icons.verified, color: Colors.blue, size: 16),
+                    ],
                   ),
                   accountEmail: Text("${supabase.auth.currentUser!.email}",
                       style: TextStyle(
@@ -725,7 +734,8 @@ void showCommentsBottomSheet(
                                                 .avatarUrl.isEmpty
                                             ? const AssetImage(
                                                 'lib/util/images/default-avatar.jpg')
-                                            : NetworkImage(comment.avatarUrl),
+                                            : NetworkImage(comment.avatarUrl)
+                                                as ImageProvider,
                                       ),
                                       title: Text(comment.username),
                                       subtitle: Text(comment.content),
@@ -749,10 +759,17 @@ void showCommentsBottomSheet(
                         onPressed: () async {
                           final content = commentController.text.trim();
                           if (content.isNotEmpty) {
-                            await ref
-                                .read(supabaseServiceProvider)
-                                .addComment(postId, content);
-                            commentController.clear();
+                            try {
+                              await ref.read(commentServiceProvider).addComment(
+                                  postId: postId,
+                                  // userId: userId,
+                                  content: content);
+                              commentController.clear();
+                              ref.refresh(commentsProvider(
+                                  postId)); // به‌روزرسانی لیست کامنت‌ها
+                            } catch (e) {
+                              print('خطا در ارسال کامنت: $e');
+                            }
                           }
                         },
                       ),
