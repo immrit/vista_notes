@@ -10,11 +10,11 @@ class PublicPostModel extends Equatable {
   final DateTime createdAt;
   final String username;
   final String avatarUrl;
-  final int likeCount;
-  final bool isLiked;
+  int likeCount;
+  bool isLiked;
   final bool isVerified;
 
-  const PublicPostModel({
+  PublicPostModel({
     required this.id,
     required this.userId,
     required this.content,

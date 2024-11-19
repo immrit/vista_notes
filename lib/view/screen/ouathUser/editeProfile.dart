@@ -16,6 +16,9 @@ class EditProfile extends ConsumerStatefulWidget {
 
 class _EditProfileState extends ConsumerState<EditProfile> {
   final TextEditingController _usernameController = TextEditingController();
+  TextEditingController fullNameController = TextEditingController();
+  final TextEditingController bioController = TextEditingController();
+
   File? _imageFile;
   final picker = ImagePicker();
 
@@ -179,6 +182,13 @@ class _EditProfileState extends ConsumerState<EditProfile> {
             _usernameController.text =
                 data['username'] ?? ""; // دریافت نام کاربری فعلی
           }
+          if (fullNameController.text.isEmpty) {
+            fullNameController.text =
+                data['full_name'] ?? ""; // دریافت نام کاربری فعلی
+          }
+          if (bioController.text.isEmpty) {
+            bioController.text = data['bio'] ?? ""; // دریافت بیو
+          }
 
           return Padding(
             padding: const EdgeInsets.only(top: 50),
@@ -209,6 +219,18 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                     if (value == null || value.isEmpty) {
                       return 'لطفا مقادیر را وارد نمایید';
                     }
+                  }, false, TextInputType.text),
+                  SizedBox(height: 20.h),
+                  customTextField('نام', fullNameController, (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'لطفا مقادیر را وارد نمایید';
+                    }
+                  }, false, TextInputType.text),
+                  SizedBox(height: 20.h),
+                  customTextField('درباره شما', bioController, (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'لطفا مقادیر را وارد نمایید';
+                    }
                   }, false, TextInputType.text)
                 ],
               ),
@@ -227,6 +249,8 @@ class _EditProfileState extends ConsumerState<EditProfile> {
         child: customButton(() {
           final updatedData = {
             'username': _usernameController.text,
+            'full_name': fullNameController.text,
+            'bio': bioController.text
           };
           ref.refresh(profileProvider);
           Navigator.pushReplacementNamed(context, '/home');

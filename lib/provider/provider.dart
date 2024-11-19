@@ -141,6 +141,7 @@ final fetchPublicPosts = FutureProvider<List<PublicPostModel>>((ref) async {
     throw Exception("Exception in fetching public posts: $e");
   }
 });
+final postsProvider = StateProvider<List<PublicPostModel>>((ref) => []);
 
 // سرویس Supabase برای مدیریت لایک‌ها
 class SupabaseService {
@@ -684,54 +685,74 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
       final currentUserId = supabase.auth.currentUser?.id;
 
       // دریافت اطلاعات پروفایل
-      final profileData = await supabase.from('profiles').select('''
-      id,
-      username,
-      avatar_url,
-      email,
-      bio,
-      followers_count,
-      created_at,
-      is_verified,
-      verification_type
-    ''').eq('id', userId).single();
+      final profileResponse = await supabase.from('profiles').select('''
+            id,
+            username,
+            full_name,
+            avatar_url,
+            email,
+            bio,
+            created_at,
+            is_verified
+          ''').eq('id', userId).single();
 
-      // دریافت پست‌های عمومی با اطلاعات اضافی
-      final postsData = await supabase.from('public_posts').select('''
-        id, 
-        content, 
-        created_at, 
-        user_id,
-        like_count,
-        profiles(username, avatar_url, is_verified),
-        post_likes!inner(user_id)
-      ''').eq('user_id', userId).order('created_at', ascending: false);
+      if (profileResponse == null) {
+        print("پروفایل یافت نشد.");
+        return;
+      }
+
+      // محاسبه تعداد دنبال‌کنندگان
+// محاسبه تعداد دنبال‌کنندگان
+      final followersResponse = await supabase
+          .from('follows')
+          .select('id')
+          .eq('following_id', userId);
+
+      final followersCount = followersResponse.length;
+
+// محاسبه تعداد دنبال‌شونده‌ها
+      final followingResponse =
+          await supabase.from('follows').select('id').eq('follower_id', userId);
+
+      final followingCount = followingResponse.length;
+
+      // دریافت پست‌ها
+      final postsResponse = await supabase.from('public_posts').select('''
+            id, 
+            content, 
+            created_at, 
+            user_id,
+            like_count,
+            profiles(username, avatar_url, is_verified),
+            post_likes!inner(user_id)
+          ''').eq('user_id', userId).order('created_at', ascending: false);
 
       // بررسی وضعیت فالو
-      final followStatus = await supabase
+      final followStatusResponse = await supabase
           .from('follows')
           .select('id')
           .eq('follower_id', supabase.auth.currentUser!.id)
           .eq('following_id', userId)
           .maybeSingle();
 
-      // به‌روزرسانی وضعیت پروفایل و پست‌ها
-      final profile = ProfileModel.fromMap(profileData);
-
-      final posts = postsData.map((post) {
-        // محاسبه وضعیت لایک برای هر پست
-        final likeCount = post['like_count'] ?? 0;
+      // ساخت مدل پروفایل
+      final profile = ProfileModel.fromMap(profileResponse);
+      final posts = postsResponse.map((post) {
         final postLikes = post['post_likes'] as List;
-
         return PublicPostModel.fromMap({
           ...post,
-          'like_count': likeCount,
           'is_liked': postLikes.any((like) => like['user_id'] == currentUserId),
           'profiles': post['profiles'],
         });
       }).toList();
 
-      state = profile.copyWith(posts: posts, isFollowed: followStatus != null);
+      // به‌روزرسانی استیت
+      state = profile.copyWith(
+        posts: posts,
+        followersCount: followersCount,
+        followingCount: followingCount,
+        isFollowed: followStatusResponse != null,
+      );
     } catch (e) {
       print('خطا در دریافت پروفایل: $e');
       state = null;
@@ -743,113 +764,60 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
     final currentUserId = supabase.auth.currentUser?.id;
 
     if (state == null || currentUserId == null) return;
-    final isFollowed = state!.isFollowed;
 
     try {
-      if (isFollowed) {
-        // حذف دنبال کردن
+      if (state!.isFollowed) {
+        // حذف فالو
         await supabase
             .from('follows')
             .delete()
             .eq('follower_id', currentUserId)
             .eq('following_id', userId);
+
+        // کاهش تعداد فالوورها
+        state = state!.copyWith(
+          isFollowed: false,
+          followersCount: state!.followersCount - 1,
+        );
       } else {
-        // اضافه کردن دنبال کردن
+        // اضافه کردن فالو
         await supabase.from('follows').insert({
           'follower_id': currentUserId,
           'following_id': userId,
         });
-      }
 
-      // به‌روزرسانی وضعیت فالو در استیت
-      state = state!.copyWith(
-          isFollowed: !isFollowed,
-          followersCount: isFollowed
-              ? state!.followersCount - 1
-              : state!.followersCount + 1);
+        // افزایش تعداد فالوورها
+        state = state!.copyWith(
+          isFollowed: true,
+          followersCount: state!.followersCount + 1,
+        );
+      }
     } catch (e) {
       print('خطا در تغییر وضعیت فالو: $e');
     }
   }
 
-  // متد جدید برای به‌روزرسانی پست
   void updatePost(PublicPostModel updatedPost) {
-    // اگر استیت خالی باشد، کاری انجام نده
     if (state == null) return;
 
-    // ایجاد لیست جدید از پست‌ها با جایگزینی پست به‌روزرسانی شده
     final updatedPosts = state!.posts.map((post) {
-      return post.id == updatedPost.id ? updatedPost : post;
+      if (post.id == updatedPost.id) {
+        return updatedPost;
+      }
+      return post;
     }).toList();
 
-    // ایجاد نسخه جدید از پروفایل با پست‌های به‌روزرسانی شده
     state = state!.copyWith(posts: updatedPosts);
   }
 
-  // به‌روزرسانی وضعیت فالو
-  //     state = state!.copyWith(
-  //         isFollowed: !isFollowed,
-  //         followersCount: isFollowed
-  //             ? (state!.followersCount - 1)
-  //             : (state!.followersCount + 1));
+  void addNewPost(PublicPostModel newPost) {
+    if (state == null) return;
 
-  //     // تازه‌سازی پروایدر
-  //     ref.invalidate(userProfileProvider(userId));
-  //   } catch (e) {
-  //     print('خطا در تغییر وضعیت دنبال کردن: $e');
-  //   }
-  // }
+    // افزودن پست جدید به ابتدای لیست
+    final updatedPosts = [newPost, ...state!.posts];
 
-  // متد جدید برای لایک کردن پست
-  Future<void> toggleLike(String postId) async {
-    final supabase = Supabase.instance.client;
-    final currentUserId = supabase.auth.currentUser?.id;
-
-    if (state == null || currentUserId == null) return;
-
-    try {
-      // بررسی وضعیت لایک فعلی
-      final existingLike = await supabase
-          .from('post_likes')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-
-      if (existingLike != null) {
-        // حذف لایک
-        await supabase
-            .from('post_likes')
-            .delete()
-            .eq('post_id', postId)
-            .eq('user_id', currentUserId);
-      } else {
-        // اضافه کردن لایک
-        await supabase.from('post_likes').insert({
-          'post_id': postId,
-          'user_id': currentUserId,
-        });
-      }
-
-      // به‌روزرسانی لیست پست‌ها
-      final updatedPosts = state!.posts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(
-              likeCount: existingLike != null
-                  ? post.likeCount - 1
-                  : post.likeCount + 1,
-              isLiked: existingLike == null);
-        }
-        return post;
-      }).toList();
-
-      state = state!.copyWith(posts: updatedPosts);
-
-      // تازه‌سازی پروایدر
-      ref.invalidate(userProfileProvider(state!.id));
-    } catch (e) {
-      print('خطا در تغییر وضعیت لایک: $e');
-    }
+    // به‌روزرسانی استیت با پست‌های جدید
+    state = state!.copyWith(posts: updatedPosts);
   }
 }
 

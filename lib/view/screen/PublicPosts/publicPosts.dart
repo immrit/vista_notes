@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../main.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
 import 'AddPost.dart';
@@ -21,7 +22,7 @@ class PublicPostsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'کافه ویستا',
           style: TextStyle(
               fontSize: 25, fontWeight: FontWeight.bold, fontFamily: 'vazier'),
@@ -94,7 +95,10 @@ class PublicPostsScreen extends ConsumerWidget {
                               ),
                               subtitle: Text(
                                 formattedDate,
-                                style: const TextStyle(fontSize: 12.0),
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
                               ),
                               trailing: PopupMenuButton<String>(
                                 onSelected: (value) async {
@@ -207,25 +211,17 @@ class PublicPostsScreen extends ConsumerWidget {
                                   color: post.isLiked ? Colors.red : null,
                                 ),
                                 onPressed: () async {
-                                  try {
-                                    // از ref.read استفاده کنید
-                                    await ref
-                                        .read(supabaseServiceProvider)
-                                        .toggleLike(
-                                          postId: post.id,
-                                          ownerId: post.userId,
-                                          ref: ref,
-                                        );
+                                  post.isLiked = !post.isLiked;
+                                  post.likeCount += post.isLiked ? 1 : -1;
+                                  (context as Element).markNeedsBuild();
 
-                                    // چون از FutureProvider استفاده می‌کنید، نیاز به به‌روزرسانی مستقیم دارید
-                                    ref.invalidate(fetchPublicPosts);
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content:
-                                              Text('خطا در لایک کردن: $e')),
-                                    );
-                                  }
+                                  await ref
+                                      .watch(supabaseServiceProvider)
+                                      .toggleLike(
+                                        postId: post.id,
+                                        ownerId: post.userId,
+                                        ref: ref,
+                                      );
                                 },
                               ),
                               Text('${post.likeCount}'),
@@ -288,85 +284,4 @@ class PublicPostsScreen extends ConsumerWidget {
       ),
     );
   }
-
-  // void _showCommentsBottomSheet(
-  //     BuildContext context, WidgetRef ref, String postId, String userId) {
-  //   final TextEditingController commentController = TextEditingController();
-
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     builder: (BuildContext context) {
-  //       return StatefulBuilder(
-  //         builder: (context, setState) {
-  //           return Padding(
-  //             padding: EdgeInsets.only(
-  //               bottom: MediaQuery.of(context).viewInsets.bottom,
-  //             ),
-  //             child: Container(
-  //               height: MediaQuery.of(context).size.height * 0.7,
-  //               padding: const EdgeInsets.all(16),
-  //               child: Column(
-  //                 children: [
-  //                   Expanded(
-  //                     child: Consumer(
-  //                       builder: (context, ref, _) {
-  //                         final commentsAsyncValue =
-  //                             ref.watch(commentsProvider(postId));
-
-  //                         return commentsAsyncValue.when(
-  //                           data: (comments) => comments.isEmpty
-  //                               ? const Center(
-  //                                   child: Text('هنوز کامنتی وجود ندارد'))
-  //                               : ListView.builder(
-  //                                   reverse: true,
-  //                                   itemCount: comments.length,
-  //                                   itemBuilder: (context, index) {
-  //                                     final comment = comments[index];
-  //                                     return ListTile(
-  //                                       leading: CircleAvatar(
-  //                                         backgroundImage: comment
-  //                                                 .avatarUrl.isEmpty
-  //                                             ? const AssetImage(
-  //                                                 'lib/util/images/default-avatar.jpg')
-  //                                             : NetworkImage(comment.avatarUrl),
-  //                                       ),
-  //                                       title: Text(comment.username),
-  //                                       subtitle: Text(comment.content),
-  //                                     );
-  //                                   },
-  //                                 ),
-  //                           loading: () => const Center(
-  //                               child: CircularProgressIndicator()),
-  //                           error: (error, stackTrace) => Center(
-  //                             child: Text('خطا در بارگذاری کامنت‌ها'),
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //                   ),
-  //                   TextField(
-  //                     controller: commentController,
-  //                     decoration: const InputDecoration(
-  //                       hintText: 'نظر خود را وارد کنید...',
-  //                       suffixIcon: Icon(Icons.send),
-  //                     ),
-  //                     onSubmitted: (value) async {
-  //                       if (value.isNotEmpty) {
-  //                         await ref
-  //                             .read(commentServiceProvider)
-  //                             .addComment(postId, commentController.text);
-  //                         commentController.clear();
-  //                       }
-  //                     },
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
 }

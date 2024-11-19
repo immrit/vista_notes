@@ -450,11 +450,12 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
                                 ? Colors.white
                                 : Colors.black),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 5,
                       ),
                       if (getprofile['is_verified'])
-                        Icon(Icons.verified, color: Colors.blue, size: 16),
+                        const Icon(Icons.verified,
+                            color: Colors.blue, size: 16),
                     ],
                   ),
                   accountEmail: Text("${supabase.auth.currentUser!.email}",
@@ -737,41 +738,57 @@ void showCommentsBottomSheet(
                                             : NetworkImage(comment.avatarUrl)
                                                 as ImageProvider,
                                       ),
-                                      title: Text(comment.username),
+                                      title: Row(
+                                        children: [
+                                          Text(comment.username),
+                                          const SizedBox(width: 5),
+                                          if (comment.isVerified)
+                                            const Icon(Icons.verified,
+                                                color: Colors.blue, size: 16),
+                                        ],
+                                      ),
                                       subtitle: Text(comment.content),
                                     );
                                   },
                                 ),
                           loading: () =>
                               const Center(child: CircularProgressIndicator()),
-                          error: (error, stackTrace) =>
-                              Center(child: Text('خطا در بارگذاری کامنت‌ها')),
+                          error: (error, stackTrace) => const Center(
+                              child: Text('خطا در بارگذاری کامنت‌ها')),
                         );
                       },
                     ),
                   ),
-                  TextField(
-                    controller: commentController,
-                    decoration: InputDecoration(
-                      labelText: 'کامنت خود را بنویسید...',
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: () async {
-                          final content = commentController.text.trim();
-                          if (content.isNotEmpty) {
-                            try {
-                              await ref.read(commentServiceProvider).addComment(
-                                  postId: postId,
-                                  // userId: userId,
-                                  content: content);
-                              commentController.clear();
-                              ref.refresh(commentsProvider(
-                                  postId)); // به‌روزرسانی لیست کامنت‌ها
-                            } catch (e) {
-                              print('خطا در ارسال کامنت: $e');
+                  Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: TextField(
+                      controller: commentController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        labelText: 'کامنت خود را بنویسید...',
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.send),
+                          onPressed: () async {
+                            final content = commentController.text.trim();
+                            if (content.isNotEmpty) {
+                              try {
+                                await ref
+                                    .read(commentServiceProvider)
+                                    .addComment(
+                                        postId: postId,
+                                        // userId: userId,
+                                        content: content);
+                                commentController.clear();
+                                ref.refresh(commentsProvider(
+                                    postId)); // به‌روزرسانی لیست کامنت‌ها
+                              } catch (e) {
+                                print('خطا در ارسال کامنت: $e');
+                              }
                             }
-                          }
-                        },
+                          },
+                        ),
                       ),
                     ),
                   ),

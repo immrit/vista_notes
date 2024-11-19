@@ -10,23 +10,27 @@ enum VerificationType { none, blueTick, official }
 class ProfileModel extends Equatable {
   final String id;
   final String username;
+  final String fullName;
   final String? avatarUrl;
   final String? email;
-  final String? bio; // فیلد bio برای توضیحات پروفایل
+  final String? bio; // توضیحات پروفایل
   final int followersCount; // تعداد دنبال‌کنندگان
+  final int followingCount; // تعداد دنبال‌شده‌ها
   final DateTime? createdAt;
   final bool isVerified;
   final VerificationType verificationType;
-  final bool isFollowed;
+  final bool isFollowed; // وضعیت دنبال‌کردن کاربر فعلی
   final List<PublicPostModel> posts;
 
   const ProfileModel({
     required this.id,
     required this.username,
+    required this.fullName,
     this.avatarUrl,
     this.email,
     this.bio,
     this.followersCount = 0, // مقدار پیش‌فرض
+    this.followingCount = 0, // مقدار پیش‌فرض
     this.createdAt,
     this.isVerified = false,
     this.verificationType = VerificationType.none,
@@ -35,38 +39,45 @@ class ProfileModel extends Equatable {
   });
 
   factory ProfileModel.fromMap(Map<String, dynamic> map) {
+    // بررسی اجباری بودن مقادیر `id` و `username`
+    if (map['id'] == null || map['username'] == null) {
+      throw ArgumentError('Missing required fields: id or username');
+    }
+
     return ProfileModel(
-      id: (map['user_id'] ?? map['id'] ?? '').toString(),
-      username: (map['username'] ?? '').toString(),
+      id: map['id']!.toString(),
+      username: map['username']!.toString(),
+      fullName: map['full_name']?.toString() ?? '',
       avatarUrl: map['avatar_url']?.toString(),
       email: map['email']?.toString(),
-      bio: map['bio']?.toString(), // مقداردهی فیلد bio
-      followersCount: map['followers_count'] ?? 0, // مقداردهی دنبال‌کنندگان
+      bio: map['bio']?.toString(),
+      followersCount: map['followers_count'] ?? 0,
+      followingCount: map['following_count'] ?? 0,
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString())
           : null,
       isVerified: map['is_verified'] ?? false,
-      verificationType: map['verification_type'] != null
-          ? VerificationType.values.firstWhere(
-              (type) => type.name == map['verification_type'],
-              orElse: () => VerificationType.none,
-            )
-          : VerificationType.none,
+      verificationType: VerificationType.values.firstWhere(
+        (type) => type.name == map['verification_type'],
+        orElse: () => VerificationType.none,
+      ),
       isFollowed: map['is_followed'] ?? false,
-      posts: (map['posts'] as List<dynamic>?)
-              ?.map((post) => PublicPostModel.fromMap(post))
-              .toList() ??
-          [],
+      posts: List<PublicPostModel>.from(
+        (map['posts'] as List<dynamic>? ?? [])
+            .map((post) => PublicPostModel.fromMap(post)),
+      ),
     );
   }
 
   Map<String, dynamic> toMap() => {
         'id': id,
         'username': username,
+        'full_name': fullName,
         'avatar_url': avatarUrl,
         'email': email,
-        'bio': bio, // تبدیل به Map
-        'followers_count': followersCount, // تبدیل به Map
+        'bio': bio,
+        'followers_count': followersCount,
+        'following_count': followingCount,
         'created_at': createdAt?.toIso8601String(),
         'is_verified': isVerified,
         'verification_type': verificationType.name,
@@ -79,10 +90,12 @@ class ProfileModel extends Equatable {
   ProfileModel copyWith({
     String? id,
     String? username,
+    String? fullName,
     String? avatarUrl,
     String? email,
     String? bio,
     int? followersCount,
+    int? followingCount,
     DateTime? createdAt,
     bool? isVerified,
     VerificationType? verificationType,
@@ -92,10 +105,12 @@ class ProfileModel extends Equatable {
     return ProfileModel(
       id: id ?? this.id,
       username: username ?? this.username,
+      fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       email: email ?? this.email,
       bio: bio ?? this.bio,
       followersCount: followersCount ?? this.followersCount,
+      followingCount: followingCount ?? this.followingCount,
       createdAt: createdAt ?? this.createdAt,
       isVerified: isVerified ?? this.isVerified,
       verificationType: verificationType ?? this.verificationType,
@@ -108,10 +123,12 @@ class ProfileModel extends Equatable {
   List<Object?> get props => [
         id,
         username,
+        fullName,
         avatarUrl,
         email,
-        bio, // اضافه شدن bio به props
-        followersCount, // اضافه شدن followersCount به props
+        bio,
+        followersCount,
+        followingCount,
         isVerified,
         verificationType,
         isFollowed,

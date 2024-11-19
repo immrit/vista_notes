@@ -39,11 +39,3 @@ Future<void> updateIpAddress() async {
     print('Error updating IP: $error');
   }
 }
-
-// Future getIpAddress() async {
-//   // Get IP address and update user profile
-//   final ipAddress = await updateIpAddress();
-//   await Supabase.instance.client
-//       .from('profiles')
-//       .insert({'last_ip': ipAddress}).eq('id', supabase.auth.currentUser!.id);
-// }

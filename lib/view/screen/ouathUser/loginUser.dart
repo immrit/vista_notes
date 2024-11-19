@@ -3,15 +3,13 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vistaNote/main.dart';
 import 'package:vistaNote/util/widgets.dart';
 
 import '../../../provider/provider.dart';
-import '../../../security/security.dart';
 import 'signupUser.dart';
 
 class Loginuser extends ConsumerStatefulWidget {
-  const Loginuser({Key? key}) : super(key: key);
+  const Loginuser({super.key});
 
   @override
   _LoginuserState createState() => _LoginuserState();

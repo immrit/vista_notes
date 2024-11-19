@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:vistaNote/main.dart';
 import '../../../model/ProfileModel.dart';
 import '../../../model/publicPostModel.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
+import '../ouathUser/editeProfile.dart';
+import 'AddPost.dart';
 // در فایل ProfileScreen:
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   final String userId;
 
-  const ProfileScreen({Key? key, required this.userId}) : super(key: key);
+  const ProfileScreen({super.key, required this.userId});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -25,7 +27,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.initState();
     // واکشی اطلاعات پروفایل در اینجا
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(userProfileProvider(widget.userId).notifier);
+      ref
+          .read(userProfileProvider(widget.userId).notifier)
+          .fetchProfile(widget.userId);
     });
   }
 
@@ -40,13 +44,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       endDrawer: CustomDrawer(getprofile, currentcolor, context),
       body: profileState == null
           ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
-              slivers: [
-                _buildSliverAppBar(profileState),
-                _buildPostsList(profileState),
-              ],
+          : RefreshIndicator(
+              onRefresh: _refreshProfile, // متد برای به‌روزرسانی
+
+              child: CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(profileState),
+                  _buildPostsList(profileState),
+                ],
+              ),
             ),
+      floatingActionButton: profileState != null &&
+              currentUser != null &&
+              profileState.id == currentUser.id
+          ? FloatingActionButton(
+              child: const Icon(Icons.edit),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddPublicPostScreen(),
+                  ),
+                );
+              },
+            )
+          : null, // زمانی که پروفایل مربوط به کاربر جاری نیست، null می‌شود
     );
+  }
+
+// متد به‌روزرسانی پروفایل
+  Future<void> _refreshProfile() async {
+    try {
+      // واکشی مجدد پروفایل
+      await ref
+          .read(userProfileProvider(widget.userId).notifier)
+          .fetchProfile(widget.userId);
+
+      // واکشی مجدد پست‌ها
+      await ref.read(postsProvider);
+    } catch (e) {
+      // نمایش خطا در صورت وجود
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('خطا در به‌روزرسانی: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   SliverAppBar _buildSliverAppBar(ProfileModel profile) {
@@ -116,15 +159,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildProfileActionButton(
       ProfileModel profile, bool isCurrentUserProfile) {
-    return isCurrentUserProfile
-        ? ElevatedButton(
-            onPressed: () => Navigator.pushNamed(context, '/editProfile'),
-            child: const Text('Edit Profile'),
-          )
-        : ElevatedButton(
-            onPressed: () => _toggleFollow(profile.id),
-            child: Text(profile.isFollowed ? 'Following' : 'Follow'),
-          );
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isCurrentUserProfile
+            ? Colors.black // پس‌زمینه مشکی برای دکمه ویرایش پروفایل
+            : profile.isFollowed
+                ? (isDarkTheme
+                    ? Colors.white
+                    : Colors.black) // پس‌زمینه برای حالت دنبال کردن
+                : Colors.white, // پس‌زمینه برای حالت لغو دنبال کردن
+        foregroundColor: isCurrentUserProfile
+            ? Colors.white // متن سفید برای دکمه ویرایش پروفایل
+            : profile.isFollowed
+                ? (isDarkTheme
+                    ? Colors.black // متن مشکی برای حالت دنبال کردن در تم تاریک
+                    : Colors.white) // متن سفید برای حالت دنبال کردن در تم روشن
+                : (isDarkTheme
+                    ? Colors
+                        .black // متن مشکی برای حالت لغو دنبال کردن در تم تاریک
+                    : Colors
+                        .black), // متن مشکی برای حالت لغو دنبال کردن در تم روشن
+        side: BorderSide(
+          color: isCurrentUserProfile
+              ? Colors.transparent // بدون کادر برای ویرایش پروفایل
+              : profile.isFollowed
+                  ? Colors.transparent // بدون کادر برای حالت دنبال کردن
+                  : (isDarkTheme
+                      ? Colors
+                          .black // کادر مشکی برای حالت لغو دنبال کردن در تم تاریک
+                      : Colors
+                          .black), // کادر مشکی برای حالت لغو دنبال کردن در تم روشن
+        ),
+      ),
+      onPressed: () => isCurrentUserProfile
+          ? Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => EditProfile()))
+          : _toggleFollow(profile.id),
+      child: Text(
+        isCurrentUserProfile
+            ? 'ویرایش پروفایل'
+            : profile.isFollowed
+                ? 'لغو دنبال کردن'
+                : 'دنبال کردن',
+      ),
+    );
   }
 
   Widget _buildProfileDetails(ProfileModel profile) {
@@ -132,7 +212,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          profile.username,
+          profile.fullName,
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -143,7 +223,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Text(profile.bio!),
         ],
         const SizedBox(height: 16),
-        Text('${profile.followersCount} followers'),
+        Row(
+          children: [
+            Text(
+              '${profile.followersCount} followers',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 20),
+            Text(
+              '${profile.followingCount} following',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -172,7 +264,83 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPostHeader(profile, post),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildPostHeader(profile, post),
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    switch (value) {
+                      case 'report':
+                        showDialog(
+                          context: context,
+                          builder: (context) => ReportDialog(post: post),
+                        );
+                        break;
+                      case 'copy':
+                        Clipboard.setData(ClipboardData(text: post.content));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('متن کپی شد!')));
+                        break;
+                      case 'delete':
+                        bool confirmDelete = await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('حذف پست'),
+                            content:
+                                const Text('آیا از حذف این پست اطمینان دارید؟'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('خیر'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('بله'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmDelete ?? false) {
+                          final supabaseService =
+                              ref.read(supabaseServiceProvider);
+                          try {
+                            await supabaseService.deletePost(ref, post.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('پست حذف شد!')));
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('خطا در حذف پست!')));
+                          }
+                        }
+                        break;
+                    }
+                  },
+                  itemBuilder: (BuildContext context) {
+                    final currentUserId = supabase.auth.currentUser?.id;
+                    return <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'report',
+                        child: Text('گزارش کردن'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'copy',
+                        child: Text('کپی کردن'),
+                      ),
+                      if (post.userId == currentUserId)
+                        const PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Text('حذف'),
+                        ),
+                    ];
+                  },
+                  icon: const Icon(Icons.more_vert),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             Text(post.content),
             const SizedBox(height: 16),
@@ -184,6 +352,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildPostHeader(ProfileModel profile, PublicPostModel post) {
+    DateTime createdAt = post.createdAt.toLocal();
+    Jalali jalaliDate = Jalali.fromDateTime(createdAt);
+    String formattedDate =
+        '${jalaliDate.year}/${jalaliDate.month}/${jalaliDate.day}';
     return Row(
       children: [
         CircleAvatar(
@@ -208,7 +380,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
             Text(
-              _formatDate(post.createdAt),
+              formattedDate,
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 12,
@@ -265,24 +437,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _toggleLike(PublicPostModel post) async {
+    // به‌روزرسانی محلی
     final updatedPost = post.copyWith(
       isLiked: !post.isLiked,
       likeCount: post.isLiked ? post.likeCount - 1 : post.likeCount + 1,
     );
 
-    await ref.read(supabaseServiceProvider).toggleLike(
-          postId: post.id,
-          ownerId: post.userId,
-          ref: ref,
-        );
-
     ref
         .read(userProfileProvider(widget.userId).notifier)
         .updatePost(updatedPost);
+
+    // ارسال درخواست به سرور
+    try {
+      if (updatedPost.isLiked) {
+        await supabase.from('post_likes').insert({
+          'post_id': updatedPost.id,
+          'user_id': supabase.auth.currentUser!.id,
+        });
+      } else {
+        await supabase
+            .from('post_likes')
+            .delete()
+            .eq('post_id', updatedPost.id)
+            .eq('user_id', supabase.auth.currentUser!.id);
+      }
+    } catch (e) {
+      print('خطا در ثبت لایک: $e');
+    }
   }
 
-  void _toggleFollow(String userId) {
-    ref.read(userProfileProvider(widget.userId).notifier).toggleFollow(userId);
+  void _toggleFollow(String userId) async {
+    try {
+      await ref
+          .read(userProfileProvider(widget.userId).notifier)
+          .toggleFollow(userId);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('خطا در تغییر وضعیت فالو: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showComments(PublicPostModel post) {
@@ -290,13 +486,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _sharePost(PublicPostModel post) {
-    String shareText =
-        'کاربر ${post.username} به شما ارسال کرد: \n\n${post.content}';
+    String shareText = '${post.username}: \n\n${post.content}';
     Share.share(shareText);
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return '';
-    return '${date.day}/${date.month}/${date.year}';
   }
 }
