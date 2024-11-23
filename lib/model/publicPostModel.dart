@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 class PublicPostModel extends Equatable {
   final String id;
   final String userId;
+  final String fullName;
   final String content;
   final DateTime createdAt;
   final String username;
@@ -17,6 +18,7 @@ class PublicPostModel extends Equatable {
   PublicPostModel({
     required this.id,
     required this.userId,
+    required this.fullName,
     required this.content,
     required this.createdAt,
     required this.username,
@@ -31,6 +33,7 @@ class PublicPostModel extends Equatable {
     return PublicPostModel(
       id: _parseString(map, 'id'),
       userId: _parseString(map, 'user_id'),
+      fullName: _parseString(map, 'full_name'),
       content: _parseString(map, 'content'),
       createdAt: _parseDateTime(map, 'created_at'),
       username: _parseUsername(map),
@@ -71,6 +74,10 @@ class PublicPostModel extends Equatable {
     return map['profiles']?['username']?.toString() ?? 'نام کاربری ناشناخته';
   }
 
+  static String _parseFullName(Map<String, dynamic> map) {
+    return map['profiles']?['full_name']?.toString() ?? 'نام کاربری ناشناخته';
+  }
+
   static String _parseAvatarUrl(Map<String, dynamic> map) {
     return map['profiles']?['avatar_url']?.toString() ?? '';
   }
@@ -88,6 +95,7 @@ class PublicPostModel extends Equatable {
       'created_at': createdAt.toIso8601String(),
       'profiles': {
         'username': username,
+        'full_name': fullName,
         'avatar_url': avatarUrl,
         'is_verified': isVerified,
       },
@@ -107,6 +115,7 @@ class PublicPostModel extends Equatable {
   PublicPostModel copyWith({
     String? id,
     String? userId,
+    String? fullName,
     String? content,
     DateTime? createdAt,
     String? username,
@@ -118,6 +127,7 @@ class PublicPostModel extends Equatable {
     return PublicPostModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
+      fullName: fullName ?? this.fullName,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       username: username ?? this.username,
@@ -135,6 +145,8 @@ class PublicPostModel extends Equatable {
     PublicPostModel(
       id: $id, 
       userId: $userId, 
+      fullName: $fullName, 
+    
       content: $content, 
       createdAt: $createdAt, 
       username: $username, 
@@ -150,6 +162,7 @@ class PublicPostModel extends Equatable {
   List<Object?> get props => [
         id,
         userId,
+        fullName,
         content,
         createdAt,
         username,

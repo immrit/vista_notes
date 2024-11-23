@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vistaNote/util/widgets.dart';
-
+import 'package:vistaNote/view/screen/PublicPosts/profileScreen.dart';
 import '../../../provider/provider.dart';
 import '../../../util/const.dart';
+import 'PostDetailPage.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -37,7 +38,15 @@ class NotificationsPage extends ConsumerWidget {
                               ? const AssetImage(defaultAvatarUrl)
                               : NetworkImage(notification.avatarUrl),
                         ),
-                        title: Text(notification.username),
+                        title: Row(
+                          children: [
+                            Text(notification.username),
+                            const SizedBox(width: 5),
+                            if (notification.userIsVerified)
+                              const Icon(Icons.verified,
+                                  color: Colors.blue, size: 16),
+                          ],
+                        ),
                         subtitle: Directionality(
                           textDirection: TextDirection.rtl,
                           child: Text(notification.content,
@@ -51,6 +60,26 @@ class NotificationsPage extends ConsumerWidget {
                               ? Colors.green
                               : const Color.fromARGB(255, 137, 127, 127),
                         ),
+                        onTap: () {
+                          if (notification.type == 'follow') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProfileScreen(
+                                    userId: notification.senderId),
+                              ),
+                            );
+                          } else if (notification.type == 'like' ||
+                              notification.type == 'comment') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PostDetailsPage(
+                                    postId: notification.PostId),
+                              ),
+                            );
+                          }
+                        },
                       ),
                       Divider(
                         endIndent: 20,
@@ -62,6 +91,11 @@ class NotificationsPage extends ConsumerWidget {
                 },
               ),
       ),
+      floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.refresh),
+          onPressed: () async {
+            ref.refresh(notificationsProvider);
+          }),
     );
   }
 }

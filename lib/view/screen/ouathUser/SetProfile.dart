@@ -1,5 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vistaNote/util/widgets.dart';
@@ -18,6 +19,8 @@ class SetProfileData extends ConsumerStatefulWidget {
 
 class _SetProfileDataState extends ConsumerState<SetProfileData> {
   final _usernameController = TextEditingController();
+  TextEditingController fullNameController = TextEditingController();
+  final TextEditingController bioController = TextEditingController();
   File? _imageFile;
   final picker = ImagePicker();
 
@@ -39,6 +42,8 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
       if (!mounted) return;
 
       _usernameController.text = (data['username'] ?? '') as String;
+      fullNameController.text = (data['full_name'] ?? '') as String;
+      bioController.text = (data['bio'] ?? '') as String;
       final avatarUrl = data['avatar_url'] as String?;
       if (avatarUrl != null && avatarUrl.isNotEmpty) {
         _imageFile = File(avatarUrl);
@@ -99,9 +104,19 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
+    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(userName)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لطفاً فقط از حروف انگلیسی استفاده کنید')),
+      );
+      ref.read(loadingProvider.notifier).state = false;
+      return;
+    }
+
     final updates = {
       'id': user.id,
       'username': userName,
+      'full_name': fullNameController.text,
+      'bio': bioController.text,
       'updated_at': DateTime.now().toIso8601String(),
       'email': user.email,
     };
@@ -158,8 +173,8 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
           GestureDetector(
             onTap: _pickImage,
             child: Container(
-              width: 150,
-              height: 150,
+              width: .16.sh,
+              height: .16.sh,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 image: DecorationImage(
@@ -180,11 +195,28 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
               if (value == null || value.isEmpty) {
                 return 'لطفا مقادیر را وارد نمایید';
               }
+              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+                return 'لطفاً فقط از حروف انگلیسی استفاده کنید';
+              }
+              return null;
             },
             false,
             TextInputType.text,
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 20.h),
+          customTextField('نام', fullNameController, (value) {
+            if (value == null || value.isEmpty) {
+              return 'لطفا مقادیر را وارد نمایید';
+            }
+            return null;
+          }, false, TextInputType.text),
+          SizedBox(height: 20.h),
+          customTextField('درباره شما', bioController, (value) {
+            if (value == null || value.isEmpty) {
+              return 'لطفا مقادیر را وارد نمایید';
+            }
+            return null;
+          }, false, TextInputType.text)
         ],
       ),
       bottomNavigationBar: Padding(

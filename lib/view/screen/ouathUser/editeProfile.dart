@@ -183,8 +183,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                 data['username'] ?? ""; // دریافت نام کاربری فعلی
           }
           if (fullNameController.text.isEmpty) {
-            fullNameController.text =
-                data['full_name'] ?? ""; // دریافت نام کاربری فعلی
+            fullNameController.text = data['full_name'] ?? ""; // دریافت نام
           }
           if (bioController.text.isEmpty) {
             bioController.text = data['bio'] ?? ""; // دریافت بیو
@@ -219,18 +218,24 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                     if (value == null || value.isEmpty) {
                       return 'لطفا مقادیر را وارد نمایید';
                     }
+                    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+                      return 'لطفاً فقط از حروف انگلیسی استفاده کنید';
+                    }
+                    return null;
                   }, false, TextInputType.text),
                   SizedBox(height: 20.h),
                   customTextField('نام', fullNameController, (value) {
                     if (value == null || value.isEmpty) {
                       return 'لطفا مقادیر را وارد نمایید';
                     }
+                    return null;
                   }, false, TextInputType.text),
                   SizedBox(height: 20.h),
                   customTextField('درباره شما', bioController, (value) {
                     if (value == null || value.isEmpty) {
                       return 'لطفا مقادیر را وارد نمایید';
                     }
+                    return null;
                   }, false, TextInputType.text)
                 ],
               ),
@@ -247,8 +252,18 @@ class _EditProfileState extends ConsumerState<EditProfile> {
           left: 10,
         ),
         child: customButton(() {
+          final userName = _usernameController.text.trim();
+          if (!RegExp(r'^[a-zA-Z]+$').hasMatch(userName)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      'لطفاً فقط از حروف انگلیسی در نام کاربری استفاده کنید')),
+            );
+            return;
+          }
+
           final updatedData = {
-            'username': _usernameController.text,
+            'username': userName,
             'full_name': fullNameController.text,
             'bio': bioController.text
           };

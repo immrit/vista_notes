@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../main.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
 import 'AddPost.dart';
@@ -87,7 +86,7 @@ class PublicPostsScreen extends ConsumerWidget {
                                   const SizedBox(width: 1),
                                   if (post.isVerified)
                                     const Icon(
-                                      Icons.check_circle,
+                                      Icons.verified,
                                       color: Colors.blue,
                                       size: 16.0,
                                     ),

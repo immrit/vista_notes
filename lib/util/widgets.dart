@@ -12,6 +12,7 @@ import 'package:vistaNote/model/NotesModel.dart';
 import 'package:vistaNote/view/screen/Notes/AddNoteScreen.dart';
 import '../model/publicPostModel.dart';
 import '../provider/provider.dart';
+import '../view/screen/PublicPosts/profileScreen.dart';
 import '../view/screen/searchPage.dart';
 import '../view/screen/support.dart';
 import 'themes.dart';
@@ -500,7 +501,7 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
           ),
           onTap: () {
             const String inviteText =
-                'دوست عزیز سلام! من از ویستا نوت برای ذخیره یادداشت هام استفاده میکنم! \n امکانات این نرم افزار بی نظیره میتونی از این لینک از طریق مایکت دانلودش کنی:  https://myket.ir/app/com.example.vista_notes2 ';
+                'دوست عزیز سلام! من از ویستا نوت برای ذخیره یادداشت هام و ارتباط با کلی رفیق جدید استفاده میکنم! \n پیشنهاد میکنم همین الان از بازار نصبش کنی😉:  https://cafebazaar.ir/app/com.example.vista_notes2/ ';
             Share.share(inviteText);
           },
         ),
@@ -578,7 +579,6 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             ? _additionalDetailsController.text.trim()
             : null,
       );
-
       // بستن دیالوگ و نمایش پیام موفقیت
       if (mounted) {
         Navigator.pop(context);
@@ -729,25 +729,212 @@ void showCommentsBottomSheet(
                                   itemCount: comments.length,
                                   itemBuilder: (context, index) {
                                     final comment = comments[index];
-                                    return ListTile(
-                                      leading: CircleAvatar(
-                                        backgroundImage: comment
-                                                .avatarUrl.isEmpty
-                                            ? const AssetImage(
-                                                'lib/util/images/default-avatar.jpg')
-                                            : NetworkImage(comment.avatarUrl)
-                                                as ImageProvider,
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProfileScreen(
+                                                      userId: comment.userId,
+                                                    )));
+                                      },
+                                      child: ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundImage: comment
+                                                  .avatarUrl.isEmpty
+                                              ? const AssetImage(
+                                                  'lib/util/images/default-avatar.jpg')
+                                              : NetworkImage(comment.avatarUrl)
+                                                  as ImageProvider,
+                                        ),
+                                        title: Row(
+                                          children: [
+                                            Text(comment.username),
+                                            const SizedBox(width: 5),
+                                            if (comment.isVerified)
+                                              const Icon(Icons.verified,
+                                                  color: Colors.blue, size: 16),
+                                          ],
+                                        ),
+                                        subtitle: Directionality(
+                                            textDirection: TextDirection.rtl,
+                                            child: Text(comment.content)),
+                                        trailing: PopupMenuButton<String>(
+                                          onSelected: (value) async {
+                                            if (value == 'گزارش تخلف') {
+                                              String selectedReason = '';
+                                              TextEditingController
+                                                  additionalDetailsController =
+                                                  TextEditingController();
+
+                                              final confirmed =
+                                                  await showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return StatefulBuilder(
+                                                    builder:
+                                                        (context, setState) {
+                                                      final theme =
+                                                          Theme.of(context);
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'گزارش تخلف'),
+                                                        content:
+                                                            SingleChildScrollView(
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              const Text(
+                                                                  'لطفاً دلیل گزارش را انتخاب کنید:'),
+                                                              ...[
+                                                                'محتوای نامناسب',
+                                                                'هرزنگاری',
+                                                                'توهین آمیز',
+                                                                'اسپم',
+                                                                'محتوای تبلیغاتی',
+                                                                'سایر موارد'
+                                                              ].map((reason) {
+                                                                return RadioListTile<
+                                                                    String>(
+                                                                  title: Text(
+                                                                      reason),
+                                                                  value: reason,
+                                                                  groupValue:
+                                                                      selectedReason,
+                                                                  onChanged:
+                                                                      (value) {
+                                                                    setState(
+                                                                        () {
+                                                                      selectedReason =
+                                                                          value!;
+                                                                    });
+                                                                  },
+                                                                );
+                                                              }),
+                                                              if (selectedReason ==
+                                                                  'سایر موارد')
+                                                                TextField(
+                                                                  controller:
+                                                                      additionalDetailsController,
+                                                                  decoration:
+                                                                      const InputDecoration(
+                                                                    hintText:
+                                                                        'جزئیات بیشتر را وارد کنید',
+                                                                  ),
+                                                                  maxLines: 3,
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        actions: <Widget>[
+                                                          TextButton(
+                                                            style: TextButton
+                                                                .styleFrom(
+                                                              foregroundColor:
+                                                                  theme
+                                                                      .textTheme
+                                                                      .bodyLarge
+                                                                      ?.color,
+                                                            ),
+                                                            child: const Text(
+                                                                'لغو'),
+                                                            onPressed: () {
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(false);
+                                                            },
+                                                          ),
+                                                          TextButton(
+                                                            style: TextButton
+                                                                .styleFrom(
+                                                              backgroundColor:
+                                                                  theme
+                                                                      .colorScheme
+                                                                      .secondary,
+                                                              foregroundColor: theme
+                                                                  .colorScheme
+                                                                  .onSecondary,
+                                                            ),
+                                                            child: const Text(
+                                                                'گزارش'),
+                                                            onPressed: () {
+                                                              if (selectedReason
+                                                                  .isEmpty) {
+                                                                ScaffoldMessenger.of(
+                                                                        context)
+                                                                    .showSnackBar(
+                                                                  const SnackBar(
+                                                                    content: Text(
+                                                                        'لطفاً دلیل گزارش را انتخاب کنید'),
+                                                                  ),
+                                                                );
+                                                                return;
+                                                              }
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(true);
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              );
+
+                                              if (confirmed == true) {
+                                                try {
+                                                  await ref
+                                                      .read(
+                                                          reportCommentServiceProvider)
+                                                      .reportComment(
+                                                        commentId: comment.id,
+                                                        reporterId: userId,
+                                                        reason: selectedReason,
+                                                        additionalDetails:
+                                                            selectedReason ==
+                                                                    'سایر موارد'
+                                                                ? additionalDetailsController
+                                                                    .text
+                                                                    .trim()
+                                                                : null,
+                                                      );
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'کامنت با موفقیت گزارش شد.'),
+                                                    ),
+                                                  );
+                                                } catch (e) {
+                                                  print(
+                                                      'خطا در گزارش تخلف: $e');
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          'خطا در گزارش کامنت.'),
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          },
+                                          itemBuilder: (BuildContext context) =>
+                                              <PopupMenuEntry<String>>[
+                                            const PopupMenuItem<String>(
+                                              value: 'گزارش تخلف',
+                                              child: Text('گزارش تخلف'),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      title: Row(
-                                        children: [
-                                          Text(comment.username),
-                                          const SizedBox(width: 5),
-                                          if (comment.isVerified)
-                                            const Icon(Icons.verified,
-                                                color: Colors.blue, size: 16),
-                                        ],
-                                      ),
-                                      subtitle: Text(comment.content),
                                     );
                                   },
                                 ),
@@ -777,12 +964,9 @@ void showCommentsBottomSheet(
                                 await ref
                                     .read(commentServiceProvider)
                                     .addComment(
-                                        postId: postId,
-                                        // userId: userId,
-                                        content: content);
+                                        postId: postId, content: content);
                                 commentController.clear();
-                                ref.refresh(commentsProvider(
-                                    postId)); // به‌روزرسانی لیست کامنت‌ها
+                                ref.refresh(commentsProvider(postId));
                               } catch (e) {
                                 print('خطا در ارسال کامنت: $e');
                               }
@@ -800,4 +984,112 @@ void showCommentsBottomSheet(
       );
     },
   );
+}
+
+//report profile dialog
+class ReportProfileDialog extends StatefulWidget {
+  final String userId; // شناسه پروفایل کاربری که قرار است گزارش شود
+
+  const ReportProfileDialog({super.key, required this.userId});
+
+  @override
+  _ReportProfileDialogState createState() => _ReportProfileDialogState();
+}
+
+class _ReportProfileDialogState extends State<ReportProfileDialog> {
+  String selectedReason = '';
+  TextEditingController additionalDetailsController = TextEditingController();
+
+  final List<String> reportReasons = [
+    'محتوای نامناسب',
+    'هرزنگاری',
+    'توهین آمیز',
+    'اسپم',
+    'محتوای تبلیغاتی',
+    'سایر موارد',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('گزارش تخلف'),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('لطفاً دلیل گزارش را انتخاب کنید:'),
+            ...reportReasons.map((reason) {
+              return RadioListTile<String>(
+                title: Text(reason),
+                value: reason,
+                groupValue: selectedReason,
+                onChanged: (String? value) {
+                  setState(() {
+                    selectedReason = value!;
+                  });
+                },
+              );
+            }),
+            if (selectedReason == 'سایر موارد')
+              TextField(
+                controller: additionalDetailsController,
+                decoration: const InputDecoration(
+                  hintText: 'جزئیات بیشتر را وارد کنید',
+                ),
+                maxLines: 3,
+              ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: const Text('لغو'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        Consumer(
+          builder: (context, ref, child) => TextButton(
+            child: const Text('گزارش'),
+            onPressed: () async {
+              if (selectedReason.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('لطفاً دلیل گزارش را انتخاب کنید'),
+                  ),
+                );
+                return;
+              }
+
+              try {
+                await ref.read(reportProfileServiceProvider).reportProfile(
+                      userId: widget.userId,
+                      reporterId: ref.read(authProvider)?.id ?? '',
+                      reason: selectedReason,
+                      additionalDetails:
+                          additionalDetailsController.text.isEmpty
+                              ? null
+                              : additionalDetailsController.text,
+                    );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('پروفایل با موفقیت گزارش شد.'),
+                  ),
+                );
+              } catch (e) {
+                print('خطا در گزارش پروفایل: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('خطا در گزارش پروفایل.'),
+                  ),
+                );
+              }
+
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }

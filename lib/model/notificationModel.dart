@@ -9,7 +9,9 @@ class NotificationModel extends Equatable {
   final DateTime createdAt;
   final String type;
   final String username;
+  final bool userIsVerified;
   final String avatarUrl;
+  final String PostId;
   final bool isRead;
 
   const NotificationModel({
@@ -21,6 +23,8 @@ class NotificationModel extends Equatable {
     this.type = 'general',
     required this.username,
     required this.avatarUrl,
+    required this.userIsVerified,
+    required this.PostId,
     this.isRead = false,
   });
 
@@ -38,6 +42,8 @@ class NotificationModel extends Equatable {
         type: (map['type'] ?? 'general').toString(),
         username: map['sender']?['username']?.toString() ?? 'Unknown',
         avatarUrl: map['sender']?['avatar_url']?.toString() ?? '',
+        userIsVerified: map['sender']?['is_verified'] == true,
+        PostId: map['post_id']?.toString() ?? '',
         isRead: map['is_read'] == true,
       );
     } catch (e) {
@@ -57,7 +63,9 @@ class NotificationModel extends Equatable {
         'profiles': {
           'username': username,
           'avatar_url': avatarUrl,
+          'is_verified': userIsVerified,
         },
+        'post_id': PostId,
         'is_read': isRead,
       };
 
@@ -71,6 +79,8 @@ class NotificationModel extends Equatable {
     String? notificationType,
     String? username,
     String? avatarUrl,
+    bool? userIsVerified,
+    String? PostId,
     bool? isRead,
   }) {
     return NotificationModel(
@@ -82,6 +92,8 @@ class NotificationModel extends Equatable {
       type: notificationType ?? type,
       username: username ?? this.username,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      userIsVerified: userIsVerified ?? this.userIsVerified,
+      PostId: PostId ?? this.PostId,
       isRead: isRead ?? this.isRead,
     );
   }
@@ -106,6 +118,7 @@ class NotificationModel extends Equatable {
       sender: $senderId, 
       content: $content, 
       type: $type, 
+      postid: $PostId,
       read: $isRead
     )''';
 

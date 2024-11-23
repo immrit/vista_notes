@@ -39,9 +39,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final currentUser = ref.watch(authProvider);
     final getprofile = ref.watch(profileProvider);
     final currentcolor = ref.watch(themeProvider);
+    final isCurrentUserProfile = profileState != null &&
+        currentUser != null &&
+        profileState.id == currentUser.id;
 
     return Scaffold(
-      endDrawer: CustomDrawer(getprofile, currentcolor, context),
+      endDrawer: isCurrentUserProfile
+          ? CustomDrawer(getprofile, currentcolor, context)
+          : null,
       body: profileState == null
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -49,7 +54,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               child: CustomScrollView(
                 slivers: [
-                  _buildSliverAppBar(profileState),
+                  _buildSliverAppBar(profileState, getprofile, currentcolor,
+                      isCurrentUserProfile),
                   _buildPostsList(profileState),
                 ],
               ),
@@ -80,7 +86,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           .fetchProfile(widget.userId);
 
       // واکشی مجدد پست‌ها
-      await ref.read(postsProvider);
+      ref.read(postsProvider);
     } catch (e) {
       // نمایش خطا در صورت وجود
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,11 +98,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  SliverAppBar _buildSliverAppBar(ProfileModel profile) {
+  SliverAppBar _buildSliverAppBar(ProfileModel profile, dynamic getprofile,
+      ThemeData currentcolor, dynamic isCurrentUserProfile) {
     return SliverAppBar(
       expandedHeight: 300,
       floating: false,
       pinned: true,
+      actions: [
+        if (!isCurrentUserProfile) // اگر کاربر جاری در پروفایل خود نباشد
+          PopupMenuButton(
+            onSelected: (value) {
+              showDialog(
+                context: context,
+                builder: (context) => ReportProfileDialog(
+                  userId: widget.userId,
+                ),
+              );
+            },
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'report',
+                  child: Text('گزارش کردن'),
+                ),
+              ];
+            },
+          )
+      ],
       title: _buildAppBarTitle(profile),
       flexibleSpace: FlexibleSpaceBar(
         background: _buildProfileHeader(profile),
@@ -148,12 +176,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfileAvatar(ProfileModel profile) {
-    return CircleAvatar(
-      radius: 40,
-      backgroundImage:
-          profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
-      child:
-          profile.avatarUrl == null ? const Icon(Icons.person, size: 40) : null,
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: CircleAvatar(
+        radius: 40,
+        backgroundImage:
+            profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
+        child: profile.avatarUrl == null
+            ? const Icon(Icons.person, size: 40)
+            : null,
+      ),
     );
   }
 
@@ -194,8 +226,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
       onPressed: () => isCurrentUserProfile
-          ? Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => EditProfile()))
+          ? Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const EditProfile()))
           : _toggleFollow(profile.id),
       child: Text(
         isCurrentUserProfile
@@ -220,7 +252,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         if (profile.bio != null) ...[
           const SizedBox(height: 10),
-          Text(profile.bio!),
+          Directionality(
+              textDirection: TextDirection.rtl, child: Text(profile.bio!)),
         ],
         const SizedBox(height: 16),
         Row(
@@ -257,6 +290,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildPostItem(ProfileModel profile, PublicPostModel post) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -291,11 +326,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 const Text('آیا از حذف این پست اطمینان دارید؟'),
                             actions: <Widget>[
                               TextButton(
+                                style: TextButton.styleFrom(
+                                  foregroundColor:
+                                      theme.textTheme.bodyLarge?.color,
+                                ),
                                 onPressed: () =>
                                     Navigator.of(context).pop(false),
                                 child: const Text('خیر'),
                               ),
                               TextButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.secondary,
+                                  foregroundColor:
+                                      theme.colorScheme.onSecondary,
+                                ),
                                 onPressed: () =>
                                     Navigator.of(context).pop(true),
                                 child: const Text('بله'),
@@ -342,7 +386,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Text(post.content),
+            Directionality(
+                textDirection: TextDirection.rtl, child: Text(post.content)),
             const SizedBox(height: 16),
             _buildPostActions(post),
           ],

@@ -208,7 +208,7 @@ class SupabaseService {
   String _validateUser() {
     final user = supabase.auth.currentUser;
     if (user == null) {
-      throw AuthException('کاربر احراز هویت نشده است');
+      throw const AuthException('کاربر احراز هویت نشده است');
     }
     return user.id;
   }
@@ -397,7 +397,7 @@ class NotificationsNotifier extends StateNotifier<List<NotificationModel>> {
     final response = await supabase
         .from('notifications')
         .select(
-            '*, sender:profiles!notifications_sender_id_fkey(username, avatar_url)')
+            '*, sender:profiles!notifications_sender_id_fkey(username, avatar_url , is_verified)')
         .eq('recipient_id', userId) // استفاده از شناسه کاربر فعلی
         .order('created_at', ascending: false);
 
@@ -696,11 +696,6 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
             is_verified
           ''').eq('id', userId).single();
 
-      if (profileResponse == null) {
-        print("پروفایل یافت نشد.");
-        return;
-      }
-
       // محاسبه تعداد دنبال‌کنندگان
 // محاسبه تعداد دنبال‌کنندگان
       final followersResponse = await supabase
@@ -717,15 +712,33 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
       final followingCount = followingResponse.length;
 
       // دریافت پست‌ها
+      // دریافت پست‌ها
       final postsResponse = await supabase.from('public_posts').select('''
-            id, 
-            content, 
-            created_at, 
-            user_id,
-            like_count,
-            profiles(username, avatar_url, is_verified),
-            post_likes!inner(user_id)
-          ''').eq('user_id', userId).order('created_at', ascending: false);
+    id, 
+    content, 
+    created_at, 
+    user_id,
+    profiles(username, avatar_url, is_verified),
+    post_likes(user_id)
+''').eq('user_id', userId).order('created_at', ascending: false);
+
+// ساخت مدل پروفایل
+      final profile = ProfileModel.fromMap(profileResponse);
+      final posts = postsResponse.map((post) {
+        final postLikes = post['post_likes'] as List? ?? [];
+        final likeCount = postLikes.length;
+        final isLiked =
+            postLikes.any((like) => like['user_id'] == currentUserId);
+
+        return PublicPostModel.fromMap({
+          ...post,
+          'like_count': likeCount,
+          'is_liked': isLiked,
+          'username': post['profiles']?['username'] ?? 'Unknown',
+          'avatar_url': post['profiles']?['avatar_url'] ?? '',
+          'is_verified': post['profiles']?['is_verified'] ?? false,
+        });
+      }).toList();
 
       // بررسی وضعیت فالو
       final followStatusResponse = await supabase
@@ -736,8 +749,7 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
           .maybeSingle();
 
       // ساخت مدل پروفایل
-      final profile = ProfileModel.fromMap(profileResponse);
-      final posts = postsResponse.map((post) {
+      postsResponse.map((post) {
         final postLikes = post['post_likes'] as List;
         return PublicPostModel.fromMap({
           ...post,
@@ -774,6 +786,13 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
             .eq('follower_id', currentUserId)
             .eq('following_id', userId);
 
+        // حذف اعلان فالو
+        await supabase.from('notifications').delete().match({
+          'recipient_id': userId,
+          'sender_id': currentUserId,
+          'type': 'follow',
+        });
+
         // کاهش تعداد فالوورها
         state = state!.copyWith(
           isFollowed: false,
@@ -785,6 +804,14 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
           'follower_id': currentUserId,
           'following_id': userId,
         });
+
+        // ایجاد اعلان فالو
+        // await supabase.from('notifications').insert({
+        //   'recipient_id': userId,
+        //   'sender_id': currentUserId,
+        //   'type': 'follow',
+        //   'content': 'کاربر شما را دنبال کرد'
+        // });
 
         // افزایش تعداد فالوورها
         state = state!.copyWith(
@@ -825,3 +852,100 @@ final userProfileProvider =
     StateNotifierProvider.family<ProfileNotifier, ProfileModel?, String>(
   (ref, userId) => ProfileNotifier(ref)..fetchProfile(userId),
 );
+
+final postProvider =
+    FutureProvider.family<PublicPostModel, String>((ref, postId) async {
+  final supabase = Supabase.instance.client;
+
+  final response = await supabase
+      .from('public_posts')
+      .select(
+          '*, profiles(username, avatar_url, is_verified), post_likes(user_id)')
+      .eq('id', postId)
+      .maybeSingle();
+
+  if (response == null) {
+    throw Exception('پستی با این شناسه یافت نشد.');
+  }
+
+  final likes = response['post_likes'] as List<dynamic>? ?? [];
+  final likeCount = likes.length;
+  final isLiked =
+      likes.any((like) => like['user_id'] == supabase.auth.currentUser?.id);
+  print('Response from Supabase: $response');
+
+  return PublicPostModel.fromMap({
+    ...response,
+    'like_count': likeCount,
+    'is_liked': isLiked,
+    'username': response['profiles']?['username'] ?? 'Unknown',
+    'avatar_url': response['profiles']?['avatar_url'] ?? '',
+    'is_verified': response['profiles']?['is_verified'] ?? false,
+  });
+});
+
+class ReportCommentService {
+  final SupabaseClient supabase;
+
+  ReportCommentService(this.supabase);
+
+  Future<void> reportComment({
+    required String commentId,
+    required String reporterId,
+    required String reason,
+    String? additionalDetails,
+  }) async {
+    try {
+      // ارسال گزارش به جدول comment_reports
+      await supabase.from('comment_reports').insert({
+        'comment_id': commentId,
+        'reporter_id': reporterId,
+        'reason': reason, // دلیل گزارش
+        'additional_details': additionalDetails, // توضیحات اضافی
+        'reported_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to report comment: $e');
+    }
+  }
+}
+
+// ارائه‌دهنده سرویس گزارش کامنت‌ها
+final reportCommentServiceProvider = Provider<ReportCommentService>((ref) {
+  final supabase = ref.watch(supabaseClientProvider);
+  return ReportCommentService(supabase);
+});
+
+//profile report
+
+class ReportProfileService {
+  final SupabaseClient supabase;
+
+  ReportProfileService(this.supabase);
+
+  Future<void> reportProfile({
+    required String userId,
+    required String reporterId,
+    required String reason,
+    String? additionalDetails,
+  }) async {
+    try {
+      // ارسال گزارش به جدول profile_reports
+      await supabase.from('profile_reports').insert({
+        'profile_id': userId,
+        'reporter_id': reporterId,
+        'reason': reason, // دلیل گزارش
+        'additional_details': additionalDetails, // توضیحات اضافی
+        'reported_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to report profile: $e');
+    }
+  }
+}
+
+// ارائه‌دهنده سرویس گزارش پروفایل‌ها
+final reportProfileServiceProvider = Provider<ReportProfileService>((ref) {
+  final supabase = ref.watch(supabaseClientProvider);
+  return ReportProfileService(supabase);
+});
