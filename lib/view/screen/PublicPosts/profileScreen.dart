@@ -387,7 +387,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 12),
             Directionality(
-                textDirection: TextDirection.rtl, child: Text(post.content)),
+                textDirection: getDirectionality(post.content),
+                child: Text(
+                  post.content,
+                  textAlign: getTextAlignment(post.content),
+                )),
             const SizedBox(height: 16),
             _buildPostActions(post),
           ],

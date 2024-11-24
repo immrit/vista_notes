@@ -27,7 +27,7 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]).then((_) async {
     await Supabase.initialize(
-      url: 'http://45.150.32.75:54321',
+      url: 'http://api.coffevista.ir:54321',
       anonKey:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
     );

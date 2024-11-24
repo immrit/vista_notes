@@ -169,9 +169,10 @@ Widget addNotesTextFiels(
   return Container(
     padding: const EdgeInsets.all(20),
     child: Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: getDirectionality(controller.text),
       child: TextField(
         maxLines: lines,
+        textAlign: getTextAlignment(controller.text),
         maxLength: maxLength,
         controller: controller,
         style: TextStyle(fontSize: fontSize, fontWeight: fontWeight),
@@ -179,7 +180,7 @@ Widget addNotesTextFiels(
         decoration: InputDecoration(
             hintText: name,
             border: InputBorder.none,
-            hintStyle: TextStyle(fontSize: 25.sp)),
+            hintStyle: TextStyle(fontSize: 20.sp)),
       ),
     ),
   );
@@ -494,17 +495,17 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
                 MaterialPageRoute(builder: (context) => const SupportPage()));
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.person_add),
-          title: const Text(
-            'دعوت از دوستان',
-          ),
-          onTap: () {
-            const String inviteText =
-                'دوست عزیز سلام! من از ویستا نوت برای ذخیره یادداشت هام و ارتباط با کلی رفیق جدید استفاده میکنم! \n پیشنهاد میکنم همین الان از بازار نصبش کنی😉:  https://cafebazaar.ir/app/com.example.vista_notes2/ ';
-            Share.share(inviteText);
-          },
-        ),
+        // ListTile(
+        //   leading: const Icon(Icons.person_add),
+        //   title: const Text(
+        //     'دعوت از دوستان',
+        //   ),
+        //   onTap: () {
+        //     const String inviteText =
+        //         'دوست عزیز سلام! من از ویستا نوت برای ذخیره یادداشت هام و ارتباط با کلی رفیق جدید استفاده میکنم! \n پیشنهاد میکنم همین الان از بازار نصبش کنی😉:  https://cafebazaar.ir/app/com.example.vista_notes2/ ';
+        //     Share.share(inviteText);
+        //   },
+        // ),
         ListTile(
           leading: const Icon(Icons.logout),
           title: const Text(
@@ -689,6 +690,10 @@ bool isPersian(String text) {
 
 TextAlign getTextAlignment(String text) {
   return isPersian(text) ? TextAlign.right : TextAlign.left;
+}
+
+TextDirection getDirectionality(String text) {
+  return isPersian(text) ? TextDirection.rtl : TextDirection.ltr;
 }
 
 void showCommentsBottomSheet(
