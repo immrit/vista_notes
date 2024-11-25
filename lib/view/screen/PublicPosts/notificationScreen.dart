@@ -70,7 +70,8 @@ class NotificationsPage extends ConsumerWidget {
                               ),
                             );
                           } else if (notification.type == 'like' ||
-                              notification.type == 'comment') {
+                              notification.type == 'comment' ||
+                              notification.type == 'mention') {
                             Navigator.push(
                               context,
                               MaterialPageRoute(

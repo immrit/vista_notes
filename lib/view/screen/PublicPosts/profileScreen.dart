@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vistaNote/main.dart';
+import 'package:vistaNote/util/const.dart';
 import '../../../model/ProfileModel.dart';
 import '../../../model/publicPostModel.dart';
 import '../../../provider/provider.dart';
@@ -102,6 +103,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ThemeData currentcolor, dynamic isCurrentUserProfile) {
     return SliverAppBar(
       expandedHeight: 300,
+      backgroundColor: Brightness.dark == Theme.of(context).brightness
+          ? Colors.grey[900]
+          : null,
       floating: false,
       pinned: true,
       actions: [
@@ -117,7 +121,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             },
             itemBuilder: (BuildContext context) {
               return <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: 'report',
                   child: Text('گزارش کردن'),
                 ),
@@ -183,7 +187,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundImage:
             profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
         child: profile.avatarUrl == null
-            ? const Icon(Icons.person, size: 40)
+            ? CircleAvatar(
+                backgroundImage: AssetImage(
+                  defaultAvatarUrl,
+                ),
+                radius: 40,
+              )
             : null,
       ),
     );
@@ -292,110 +301,103 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildPostItem(ProfileModel profile, PublicPostModel post) {
     final theme = Theme.of(context);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildPostHeader(profile, post),
-                PopupMenuButton<String>(
-                  onSelected: (value) async {
-                    switch (value) {
-                      case 'report':
-                        showDialog(
-                          context: context,
-                          builder: (context) => ReportDialog(post: post),
-                        );
-                        break;
-                      case 'copy':
-                        Clipboard.setData(ClipboardData(text: post.content));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('متن کپی شد!')));
-                        break;
-                      case 'delete':
-                        bool confirmDelete = await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('حذف پست'),
-                            content:
-                                const Text('آیا از حذف این پست اطمینان دارید؟'),
-                            actions: <Widget>[
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  foregroundColor:
-                                      theme.textTheme.bodyLarge?.color,
-                                ),
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('خیر'),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildPostHeader(profile, post),
+              PopupMenuButton<String>(
+                onSelected: (value) async {
+                  switch (value) {
+                    case 'report':
+                      showDialog(
+                        context: context,
+                        builder: (context) => ReportDialog(post: post),
+                      );
+                      break;
+                    case 'copy':
+                      Clipboard.setData(ClipboardData(text: post.content));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('متن کپی شد!')));
+                      break;
+                    case 'delete':
+                      bool confirmDelete = await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('حذف پست'),
+                          content:
+                              const Text('آیا از حذف این پست اطمینان دارید؟'),
+                          actions: <Widget>[
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                foregroundColor:
+                                    theme.textTheme.bodyLarge?.color,
                               ),
-                              TextButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.secondary,
-                                  foregroundColor:
-                                      theme.colorScheme.onSecondary,
-                                ),
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('بله'),
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('خیر'),
+                            ),
+                            TextButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.secondary,
+                                foregroundColor: theme.colorScheme.onSecondary,
                               ),
-                            ],
-                          ),
-                        );
-                        if (confirmDelete ?? false) {
-                          final supabaseService =
-                              ref.read(supabaseServiceProvider);
-                          try {
-                            await supabaseService.deletePost(ref, post.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('پست حذف شد!')));
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('خطا در حذف پست!')));
-                          }
-                        }
-                        break;
-                    }
-                  },
-                  itemBuilder: (BuildContext context) {
-                    final currentUserId = supabase.auth.currentUser?.id;
-                    return <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'report',
-                        child: Text('گزارش کردن'),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'copy',
-                        child: Text('کپی کردن'),
-                      ),
-                      if (post.userId == currentUserId)
-                        const PopupMenuItem<String>(
-                          value: 'delete',
-                          child: Text('حذف'),
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('بله'),
+                            ),
+                          ],
                         ),
-                    ];
-                  },
-                  icon: const Icon(Icons.more_vert),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Directionality(
-                textDirection: getDirectionality(post.content),
-                child: Text(
-                  post.content,
-                  textAlign: getTextAlignment(post.content),
-                )),
-            const SizedBox(height: 16),
-            _buildPostActions(post),
-          ],
-        ),
+                      );
+                      if (confirmDelete ?? false) {
+                        final supabaseService =
+                            ref.read(supabaseServiceProvider);
+                        try {
+                          await supabaseService.deletePost(ref, post.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('پست حذف شد!')));
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('خطا در حذف پست!')));
+                        }
+                      }
+                      break;
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  final currentUserId = supabase.auth.currentUser?.id;
+                  return <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'report',
+                      child: Text('گزارش کردن'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'copy',
+                      child: Text('کپی کردن'),
+                    ),
+                    if (post.userId == currentUserId)
+                      const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Text('حذف'),
+                      ),
+                  ];
+                },
+                icon: const Icon(Icons.more_vert),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Directionality(
+              textDirection: getDirectionality(post.content),
+              child: Text(
+                post.content,
+                textAlign: getTextAlignment(post.content),
+              )),
+          const SizedBox(height: 16),
+          _buildPostActions(post),
+        ],
       ),
     );
   }
@@ -442,15 +444,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildPostActions(PublicPostModel post) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildLikeButton(post),
-            _buildCommentButton(post),
-            _buildShareButton(post),
+            Row(
+              children: [
+                _buildLikeButton(post),
+                _buildCommentButton(post),
+                _buildShareButton(post),
+              ],
+            ),
           ],
+        ),
+        SizedBox(height: 10),
+        const Divider(
+          endIndent: 18,
+          indent: 18,
+          color: Colors.white30,
         ),
       ],
     );

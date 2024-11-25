@@ -578,6 +578,9 @@ class CommentService {
     required String content,
   }) async {
     try {
+      // چاپ اطلاعات برای دیباگ
+      print('Adding comment - PostID: $postId, Content: $content');
+
       final currentUser = _supabase.auth.currentUser;
       if (currentUser == null) {
         throw Exception('کاربر وارد سیستم نشده است');
@@ -587,20 +590,32 @@ class CommentService {
         throw Exception('محتوای کامنت نمی‌تواند خالی باشد');
       }
 
+      // دقت کنید که نام جدول دقیقا مطابق دیتابیس شما باشد
       final response = await _supabase
-          .from('comments')
+          .from('comments') // نام جدول را دقیقا چک کنید
           .insert({
             'post_id': postId,
             'user_id': currentUser.id,
             'content': content,
             'created_at': DateTime.now().toIso8601String(),
           })
-          .select('*, profiles(username, avatar_url, is_verified)')
+          .select('*, user:profiles(username, avatar_url, is_verified)')
           .single();
+
+      print('Comment added successfully: $response');
 
       return CommentModel.fromMap(response);
     } catch (e) {
       print('خطا در ارسال کامنت: $e');
+
+      // چاپ اطلاعات کامل خطا برای دیباگ
+      if (e is PostgrestException) {
+        print('Postgrest Error Details:');
+        print('Code: ${e.code}');
+        print('Hint: ${e.hint}');
+        print('Message: ${e.message}');
+      }
+
       rethrow;
     }
   }
@@ -621,7 +636,75 @@ class CommentService {
       return [];
     }
   }
+
+  Future<void> deleteComment(String commentId) async {
+    try {
+      final currentUserId = _supabase.auth.currentUser!.id;
+
+      // Optional: You might want to add a check to ensure only the comment owner can delete
+      final response = await _supabase
+          .from('comments')
+          .delete()
+          .eq('id', commentId)
+          .eq('user_id', currentUserId);
+
+      return response;
+    } catch (e) {
+      print('Error deleting comment: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<UserModel>> searchMentionableUsers(String query) async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .or('username.ilike.%$query%,name.ilike.%$query%')
+          .limit(10);
+
+      return (response as List)
+          .map((userData) => UserModel.fromJson(userData))
+          .toList();
+    } catch (e) {
+      print('Error searching users: $e');
+      return [];
+    }
+  }
+
+  Future<void> addMentionToComment({
+    required String commentId,
+    required List<String> mentionedUserIds,
+  }) async {
+    try {
+      final currentUser = _supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('کاربر وارد سیستم نشده است');
+      }
+
+      // درج منشن‌ها در جدول comment_mentions
+      final mentions = mentionedUserIds
+          .map((userId) => {
+                'comment_id': commentId,
+                'user_id': userId,
+                'created_at': DateTime.now().toIso8601String(),
+              })
+          .toList();
+
+      await _supabase.from('comment_mentions').insert(mentions);
+    } catch (e) {
+      print('خطا در اضافه کردن منشن به کامنت: $e');
+      rethrow;
+    }
+  }
 }
+
+// Provider برای جستجوی کاربران
+final mentionableUsersProvider =
+    FutureProvider.family<List<UserModel>, String>((ref, query) {
+  final commentService = ref.watch(commentServiceProvider);
+  return commentService.searchMentionableUsers(query);
+});
 
 // comment_providers.dart
 final commentServiceProvider = Provider<CommentService>((ref) {
@@ -642,18 +725,36 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
 
   CommentNotifier(this._commentService) : super(const AsyncValue.data(null));
 
-  Future<void> addComment({required String postId}) async {
-    final content = contentController.text.trim();
-    if (content.isEmpty) return;
+  Future<void> addComment({
+    required String postId,
+    required String content,
+    List<String> mentionedUserIds = const [],
+  }) async {
+    // اینجا از contentController استفاده می‌کنید، در حالی که content پارامتر ورودی است
+    // final trimmedContent = contentController.text.trim(); // 🚨 مشکل اینجاست
+
+    // بهتر است از پارامتر ورودی استفاده کنید
+    final trimmedContent = content.trim();
+
+    if (trimmedContent.isEmpty) return;
 
     state = const AsyncValue.loading();
 
     try {
-      await _commentService.addComment(
+      final comment = await _commentService.addComment(
         postId: postId,
-        content: content,
+        content: trimmedContent,
       );
 
+      // اگر منشن‌هایی وجود دارد، آنها را اضافه کنید
+      if (mentionedUserIds.isNotEmpty) {
+        await _commentService.addMentionToComment(
+          commentId: comment.id,
+          mentionedUserIds: mentionedUserIds,
+        );
+      }
+
+      // contentController را پاک کنید
       contentController.clear();
       state = const AsyncValue.data(null);
     } catch (error) {
@@ -661,10 +762,17 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  @override
-  void dispose() {
-    contentController.dispose();
-    super.dispose();
+  // New method for deleting comments
+  Future<void> deleteComment(String commentId, WidgetRef ref) async {
+    state = const AsyncValue.loading();
+
+    try {
+      await _commentService.deleteComment(commentId);
+      state = const AsyncValue.data(null);
+      ref.invalidate(commentsProvider(commentId));
+    } catch (error) {
+      state = AsyncValue.error(error, StackTrace.current);
+    }
   }
 }
 
@@ -948,4 +1056,105 @@ class ReportProfileService {
 final reportProfileServiceProvider = Provider<ReportProfileService>((ref) {
   final supabase = ref.watch(supabaseClientProvider);
   return ReportProfileService(supabase);
+});
+
+//mention user profile
+// mention_providers.dart
+final mentionUsersProvider = FutureProvider<List<UserModel>>((ref) async {
+  try {
+    final supabase = Supabase.instance.client;
+
+    // واکشی کاربران با اطلاعات کامل
+    final response = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, is_verified, verification_type')
+        .order('username');
+
+    return (response as List)
+        .map((userData) => UserModel.fromMap(userData))
+        .toList();
+  } catch (e) {
+    print('خطا در دریافت کاربران برای منشن: $e');
+    return [];
+  }
+});
+
+// mention_service.dart
+class MentionService {
+  final SupabaseClient _supabase;
+
+  MentionService(this._supabase);
+
+  Future<List<UserModel>> searchUsers(String query) async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select('id, username, avatar_url, is_verified, verification_type')
+          .or('username.ilike.%$query%, email.ilike.%$query%')
+          .limit(10);
+
+      return (response as List)
+          .map((userData) => UserModel.fromMap(userData))
+          .toList();
+    } catch (e) {
+      print('خطا در جستجوی کاربران: $e');
+      return [];
+    }
+  }
+
+  // متد اضافه کردن منشن به کامنت
+  Future<void> addMentionToComment({
+    required String commentId,
+    required List<String> mentionedUserIds,
+  }) async {
+    try {
+      await _supabase.from('comment_mentions').insert(mentionedUserIds
+          .map((userId) => {
+                'comment_id': commentId,
+                'user_id': userId,
+              })
+          .toList());
+    } catch (e) {
+      print('خطا در ثبت منشن‌ها: $e');
+      rethrow;
+    }
+  }
+}
+
+// mention_notifier.dart
+class MentionNotifier extends StateNotifier<List<UserModel>> {
+  final MentionService _mentionService;
+
+  MentionNotifier(this._mentionService) : super([]);
+
+  Future<void> searchMentionableUsers(String query) async {
+    if (query.isEmpty) {
+      state = [];
+      return;
+    }
+
+    try {
+      final users = await _mentionService.searchUsers(query);
+      state = users;
+    } catch (e) {
+      state = [];
+      print('خطا در جستجوی کاربران: $e');
+    }
+  }
+
+  void clearMentions() {
+    state = [];
+  }
+}
+
+// mention_providers_final.dart
+final mentionServiceProvider = Provider<MentionService>((ref) {
+  final supabase = Supabase.instance.client;
+  return MentionService(supabase);
+});
+
+final mentionNotifierProvider =
+    StateNotifierProvider<MentionNotifier, List<UserModel>>((ref) {
+  final mentionService = ref.read(mentionServiceProvider);
+  return MentionNotifier(mentionService);
 });

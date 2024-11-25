@@ -37,15 +37,17 @@ class UserModel extends Equatable {
       avatarUrl: map['avatar_url']?.toString(),
       email: map['email']?.toString(),
       createdAt: map['created_at'] != null
-          ? DateTime.tryParse(map['created_at'].toString())
+          ? DateTime.tryParse(map['created_at'] as String)
           : null,
       isVerified: map['is_verified'] ?? false,
       verificationType: map['verification_type'] != null
           ? VerificationType.values.firstWhere(
-              (type) => type.name == map['verification_type'],
+              (type) =>
+                  type.name.toLowerCase() ==
+                  map['verification_type'].toString().toLowerCase(),
               orElse: () => VerificationType.none,
             )
-          : VerificationType.none, // پارسینگ verification_type
+          : VerificationType.none,
     );
   }
 
@@ -106,56 +108,3 @@ class UserModel extends Equatable {
   bool get hasAvatar => avatarUrl != null && avatarUrl!.isNotEmpty;
   bool get hasEmail => email != null && email!.isNotEmpty;
 }
-  
-
-
-
-
-// Provider مدیریت پروفایل
-// class ProfileNotifier extends StateNotifier<ProfileModel?> {
-//   final Ref ref;
-
-//   ProfileNotifier(this.ref) : super(null);
-
-//   Future<void> fetchProfile() async {
-//     try {
-//       final user = Supabase.instance.client.auth.currentUser;
-//       if (user != null) {
-//         final userData = await Supabase.instance.client
-//             .from('profiles')
-//             .select()
-//             .eq('id', user.id)
-//             .single();
-
-//         state = ProfileModel.fromMap(
-//             {'id': user.id, 'email': user.email, ...userData});
-//       }
-//     } catch (e) {
-//       state = null;
-//       print('خطا در دریافت پروفایل: $e');
-//     }
-//   }
-
-//   Future<void> updateProfile(ProfileModel updatedProfile) async {
-//     try {
-//       await Supabase.instance.client
-//           .from('profiles')
-//           .update(updatedProfile.toMap())
-//           .eq('id', updatedProfile.id);
-
-//       state = updatedProfile;
-//     } catch (e) {
-//       print('خطا در بروزرسانی پروفایل: $e');
-//     }
-//   }
-
-//   void clearProfile() {
-//     state = null;
-//   }
-// }
-
-// // Provider نهایی
-// final profileProvider =
-//     StateNotifierProvider<ProfileNotifier, ProfileModel?>((ref) {
-//   return ProfileNotifier(ref);
-// });
