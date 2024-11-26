@@ -15,8 +15,10 @@ import 'AddPost.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   final String userId;
+  final String username;
 
-  const ProfileScreen({super.key, required this.userId});
+  const ProfileScreen(
+      {super.key, required this.userId, required this.username});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();

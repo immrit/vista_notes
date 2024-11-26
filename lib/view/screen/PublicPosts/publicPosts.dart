@@ -58,6 +58,7 @@ class PublicPostsScreen extends ConsumerWidget {
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => ProfileScreen(
                                     userId: post.userId,
+                                    username: post.username,
                                   )));
                         },
                         child: ListTile(

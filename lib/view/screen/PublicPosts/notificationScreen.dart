@@ -66,7 +66,9 @@ class NotificationsPage extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ProfileScreen(
-                                    userId: notification.senderId),
+                                  userId: notification.senderId,
+                                  username: notification.username,
+                                ),
                               ),
                             );
                           } else if (notification.type == 'like' ||

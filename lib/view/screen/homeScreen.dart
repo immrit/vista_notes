@@ -23,6 +23,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const NotificationsPage(), // صفحه اعلان‌ها
     ProfileScreen(
       userId: supabase.auth.currentUser!.id,
+      username: supabase.auth.currentUser!.email!,
     )
   ];
 

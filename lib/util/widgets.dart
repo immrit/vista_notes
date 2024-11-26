@@ -1,6 +1,4 @@
 import 'dart:io';
-
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +14,7 @@ import '../model/CommentModel.dart';
 import '../model/UserModel.dart';
 import '../model/publicPostModel.dart';
 import '../provider/provider.dart';
+import '../view/screen/PublicPosts/profileScreen.dart';
 import '../view/screen/searchPage.dart';
 import '../view/screen/support.dart';
 import 'themes.dart';
@@ -733,8 +732,18 @@ void showCommentsBottomSheet(
 
                         return commentsAsyncValue.when(
                           data: (comments) => comments.isEmpty
-                              ? const Center(
-                                  child: Text('هنوز کامنتی وجود ندارد'))
+                              ? Container(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  child: Column(
+                                    // crossAxisAlignment:
+                                    //     CrossAxisAlignment.center,
+                                    // mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.message_rounded),
+                                      Text('هنوز کامنتی وجود ندارد'),
+                                    ],
+                                  ))
                               : _buildCommentsList(
                                   context, ref, comments, userId),
                           loading: () =>
@@ -984,7 +993,7 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
           textDirection: getDirectionality(comment.content),
           child: RichText(
             text: TextSpan(
-              children: _buildCommentTextSpans(comment, isDarkMode),
+              children: _buildCommentTextSpans(comment, isDarkMode, context),
             ),
           ),
         ),
@@ -1129,16 +1138,6 @@ Future<void> _showReportDialog(BuildContext context, WidgetRef ref,
                 : null,
           );
 
-      AwesomeDialog(
-        context: context,
-        dialogType: DialogType.success,
-        animType: AnimType.bottomSlide,
-        title: 'گزارش موفق',
-        desc: 'کامنت با موفقیت گزارش شد.',
-        btnOkOnPress: () {},
-        btnOkColor: Colors.green,
-      ).show();
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('کامنت با موفقیت گزارش شد.'),
@@ -1166,12 +1165,25 @@ Future<void> _showDeleteConfirmationDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text('انصراف'),
+          child: Text(
+            'انصراف',
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.grey[800],
+            ),
+          ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           onPressed: () => Navigator.of(context).pop(true),
-          child: Text('حذف'),
+          child: Text(
+            'حذف',
+            style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.grey[800]),
+          ),
         ),
       ],
     ),
@@ -1202,7 +1214,8 @@ Future<void> _showDeleteConfirmationDialog(
 }
 
 // Parse comment text to handle mentions
-List<TextSpan> _buildCommentTextSpans(CommentModel comment, bool isDarkMode) {
+List<TextSpan> _buildCommentTextSpans(
+    CommentModel comment, bool isDarkMode, BuildContext context) {
   final List<TextSpan> spans = [];
   final mentionRegex = RegExp(r'@(\w+)');
 
@@ -1231,8 +1244,24 @@ List<TextSpan> _buildCommentTextSpans(CommentModel comment, bool isDarkMode) {
           fontWeight: FontWeight.bold,
         ),
         recognizer: TapGestureRecognizer()
-          ..onTap = () {
-            // ناوبری به پروفایل کاربر
+          ..onTap = () async {
+            final username = match.group(1); // استخراج نام کاربری
+            if (username != null) {
+              // دریافت userId از پایگاه داده یا API بر اساس username
+              final userId = await getUserIdByUsername(username);
+              if (userId != null) {
+                // ناوبری به پروفایل کاربر
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(
+                      username: username,
+                      userId: userId,
+                    ),
+                  ),
+                );
+              }
+            }
           },
       ),
     );
@@ -1252,6 +1281,22 @@ List<TextSpan> _buildCommentTextSpans(CommentModel comment, bool isDarkMode) {
   }
 
   return spans;
+}
+
+// یک متد برای جلب userId از پایگاه داده بر اساس username
+Future<String?> getUserIdByUsername(String username) async {
+  // فرض کنید از Supabase برای جلب userId استفاده می‌کنید
+  final response = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+  if (response != null && response['id'] != null) {
+    return response['id'];
+  } else {
+    return null; // اگر کاربر یافت نشد
+  }
 }
 
 // Delete Comment Method
