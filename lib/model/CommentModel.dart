@@ -10,6 +10,7 @@ class CommentModel {
   final String username;
   final String avatarUrl;
   bool isVerified; // فیلد isVerified
+  final String postOwnerId; // فیلد جدید
 
   CommentModel({
     required this.id,
@@ -20,6 +21,7 @@ class CommentModel {
     required this.username,
     this.avatarUrl = '', // مقدار پیش‌فرض برای avatarUrl
     this.isVerified = false, // مقدار پیش‌فرض برای isVerified
+    required this.postOwnerId, // فیلد جدید اجباری
   });
 
   // متد سازنده از Map
@@ -34,6 +36,7 @@ class CommentModel {
       username: map['profiles']?['username'] as String? ?? 'کاربر',
       avatarUrl: map['profiles']?['avatar_url'] as String? ?? '',
       isVerified: map['profiles']?['is_verified'] as bool? ?? false,
+      postOwnerId: map['post_owner_id'] as String? ?? '', // استخراج فیلد
     );
   }
 
@@ -50,6 +53,7 @@ class CommentModel {
         'avatar_url': avatarUrl,
         'is_verified': isVerified,
       },
+      'post_owner_id': postOwnerId, // اضافه کردن به Map
     };
   }
 
@@ -62,5 +66,5 @@ class CommentModel {
 
   @override
   String toString() =>
-      'CommentModel(id: $id, postId: $postId, userId: $userId, content: $content, createdAt: $createdAt, username: $username, avatarUrl: $avatarUrl, isVerified: $isVerified)';
+      'CommentModel(id: $id, postId: $postId, userId: $userId, content: $content, createdAt: $createdAt, username: $username, avatarUrl: $avatarUrl, isVerified: $isVerified ,postOwnerId: $postOwnerId)';
 }

@@ -576,6 +576,7 @@ class CommentService {
   Future<CommentModel> addComment({
     required String postId,
     required String content,
+    required String postOwnerId,
   }) async {
     try {
       // چاپ اطلاعات برای دیباگ
@@ -597,6 +598,7 @@ class CommentService {
             'post_id': postId,
             'user_id': currentUser.id,
             'content': content,
+            'post_owner_id': postOwnerId,
             'created_at': DateTime.now().toIso8601String(),
           })
           .select('*, user:profiles(username, avatar_url, is_verified)')
@@ -728,12 +730,10 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> addComment({
     required String postId,
     required String content,
+    required String postOwnerId, // Add this parameter
+
     List<String> mentionedUserIds = const [],
   }) async {
-    // اینجا از contentController استفاده می‌کنید، در حالی که content پارامتر ورودی است
-    // final trimmedContent = contentController.text.trim(); // 🚨 مشکل اینجاست
-
-    // بهتر است از پارامتر ورودی استفاده کنید
     final trimmedContent = content.trim();
 
     if (trimmedContent.isEmpty) return;
@@ -741,9 +741,14 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
 
     try {
+      // دریافت postOwnerId بر اساس postId
+      final postOwnerId = await getPostOwnerId(postId);
+
+      // افزودن کامنت با مشخصات کامل
       final comment = await _commentService.addComment(
         postId: postId,
         content: trimmedContent,
+        postOwnerId: postOwnerId, // Ensure it's passed where expected
       );
 
       // اگر منشن‌هایی وجود دارد، آنها را اضافه کنید
@@ -754,12 +759,22 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
         );
       }
 
-      // contentController را پاک کنید
       contentController.clear();
       state = const AsyncValue.data(null);
     } catch (error) {
       state = AsyncValue.error(error, StackTrace.current);
     }
+  }
+
+  Future<String> getPostOwnerId(String postId) async {
+    // فرضی بر این که از یک دیتابیس مانند Supabase استفاده می‌کنید.
+    final response = await supabase
+        .from('public_posts')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+
+    return response['user_id'] as String;
   }
 
   // New method for deleting comments

@@ -733,6 +733,7 @@ void showCommentsBottomSheet(
                         return commentsAsyncValue.when(
                           data: (comments) => comments.isEmpty
                               ? Container(
+                                  padding: EdgeInsets.only(top: 80),
                                   width: double.infinity,
                                   height: double.infinity,
                                   child: Column(
@@ -740,8 +741,27 @@ void showCommentsBottomSheet(
                                     //     CrossAxisAlignment.center,
                                     // mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.message_rounded),
-                                      Text('هنوز کامنتی وجود ندارد'),
+                                      Icon(
+                                        Icons.speaker_notes_off,
+                                        size: 180,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white24
+                                            : Colors
+                                                .black26, // تغییر رنگ بر اساس تم
+                                      ),
+                                      Text(
+                                        'هنوز کامنتی وجود ندارد',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white24
+                                              : Colors
+                                                  .black26, // تغییر رنگ بر اساس تم
+                                        ),
+                                      ),
                                     ],
                                   ))
                               : _buildCommentsList(
@@ -873,7 +893,7 @@ Widget _buildMentionSuggestions(
               avatar: CircleAvatar(
                 backgroundImage: user.avatarUrl != null
                     ? NetworkImage(user.avatarUrl!) as ImageProvider
-                    : AssetImage(defaultAvatarUrl),
+                    : const AssetImage(defaultAvatarUrl),
               ),
               label: Text(user.username),
             ),
@@ -927,7 +947,9 @@ void _sendComment(
           .read(commentNotifierProvider.notifier)
           .addComment(
             postId: postId,
+            postOwnerId: supabase.auth.currentUser!.id,
             content: content, // محتوای کامل کامنت
+
             mentionedUserIds: mentionedUserIds,
           )
           .then((value) {
@@ -965,13 +987,13 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
   final isDarkMode = theme.brightness == Brightness.dark;
 
   return ListTile(
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Hero(
         tag: 'avatar_${comment.id}',
         child: CircleAvatar(
           radius: 25,
           backgroundImage: comment.avatarUrl != null
-              ? NetworkImage(comment.avatarUrl!)
+              ? NetworkImage(comment.avatarUrl)
               : null,
           child: comment.avatarUrl == null
               ? Icon(
@@ -981,12 +1003,23 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
               : null,
         ),
       ),
-      title: Text(
-        comment.username,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: isDarkMode ? Colors.white70 : Colors.black87,
-        ),
+      title: Row(
+        children: [
+          Text(
+            comment.username,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          SizedBox(width: 2),
+          if (comment.isVerified)
+            const Icon(
+              Icons.verified,
+              color: Colors.blue,
+              size: 15,
+            )
+        ],
       ),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Directionality(
@@ -997,7 +1030,7 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
             ),
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1025,7 +1058,8 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
                   )
                 ];
 
-                if (comment.userId == currentUserId) {
+                if (comment.userId == currentUserId ||
+                    comment.postOwnerId == currentUserId) {
                   menuItems.add(
                     const PopupMenuItem<String>(
                       value: 'حذف کامنت',
@@ -1160,8 +1194,8 @@ Future<void> _showDeleteConfirmationDialog(
   final confirmDelete = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('حذف'),
-      content: Text('آیا از حذف این کامنت اطمینان دارید؟'),
+      title: const Text('حذف'),
+      content: const Text('آیا از حذف این کامنت اطمینان دارید؟'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
@@ -1292,7 +1326,7 @@ Future<String?> getUserIdByUsername(String username) async {
       .eq('username', username)
       .single();
 
-  if (response != null && response['id'] != null) {
+  if (response['id'] != null) {
     return response['id'];
   } else {
     return null; // اگر کاربر یافت نشد
@@ -1312,7 +1346,7 @@ void _deleteComment(BuildContext context, WidgetRef ref, String commentId,
 
     // Optional: Show success message
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('کامنت با موفقیت حذف شد')),
+      const SnackBar(content: Text('کامنت با موفقیت حذف شد')),
     );
   } catch (e) {
     // Handle error
@@ -1327,9 +1361,9 @@ void _reportComment(BuildContext context, CommentModel comment) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('گزارش تخلف'),
+      title: const Text('گزارش تخلف'),
       content: TextField(
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           hintText: 'دلیل گزارش را توضیح دهید',
         ),
         maxLines: 3,
@@ -1340,14 +1374,14 @@ void _reportComment(BuildContext context, CommentModel comment) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('انصراف'),
+          child: const Text('انصراف'),
         ),
         ElevatedButton(
           onPressed: () {
             // Implement report submission
             Navigator.pop(context);
           },
-          child: Text('ثبت گزارش'),
+          child: const Text('ثبت گزارش'),
         ),
       ],
     ),

@@ -33,19 +33,45 @@ class NotificationsPage extends ConsumerWidget {
                   return Column(
                     children: [
                       ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: notification.avatarUrl.isEmpty
-                              ? const AssetImage(defaultAvatarUrl)
-                              : NetworkImage(notification.avatarUrl),
+                        leading: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProfileScreen(
+                                  userId: notification.senderId,
+                                  username: notification.username,
+                                ),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            backgroundImage: notification.avatarUrl.isEmpty
+                                ? const AssetImage(defaultAvatarUrl)
+                                : NetworkImage(notification.avatarUrl),
+                          ),
                         ),
-                        title: Row(
-                          children: [
-                            Text(notification.username),
-                            const SizedBox(width: 5),
-                            if (notification.userIsVerified)
-                              const Icon(Icons.verified,
-                                  color: Colors.blue, size: 16),
-                          ],
+                        title: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProfileScreen(
+                                  userId: notification.senderId,
+                                  username: notification.username,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Text(notification.username),
+                              const SizedBox(width: 5),
+                              if (notification.userIsVerified)
+                                const Icon(Icons.verified,
+                                    color: Colors.blue, size: 16),
+                            ],
+                          ),
                         ),
                         subtitle: Directionality(
                           textDirection: TextDirection.rtl,

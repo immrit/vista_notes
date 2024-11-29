@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:vistaNote/main.dart';
-import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/PublicPosts/profileScreen.dart';
 import '../../../model/CommentModel.dart';
 import '../../../model/UserModel.dart';
@@ -43,10 +42,18 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
       appBar: AppBar(
         title: const Text('جزئیات پست'),
       ),
-      body: postAsyncValue.when(
-        data: (post) => _buildPostDetails(context, post),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('خطا در بارگذاری پست: $error')),
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            postAsyncValue.when(
+              data: (post) => _buildPostDetails(context, post),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) =>
+                  Center(child: Text('خطا در بارگذاری پست: $error')),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildCommentInputArea(context, mentionNotifier),
     );
@@ -253,10 +260,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                     if (comment.userId != supabase.auth.currentUser?.id)
                       PopupMenuItem(
                         value: 'report',
-                        child: Row(
+                        child: const Row(
                           children: [
-                            const Icon(Icons.flag, color: Colors.orange),
-                            const SizedBox(width: 8),
+                            Icon(Icons.flag, color: Colors.orange),
+                            SizedBox(width: 8),
                             Text(
                               'گزارش',
                             ),
@@ -268,10 +275,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
                     // if (comment.userId == supabase.auth.currentUser?.id)
                     PopupMenuItem(
                       value: 'delete',
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const Icon(Icons.delete, color: Colors.red),
-                          const SizedBox(width: 8),
+                          Icon(Icons.delete, color: Colors.red),
+                          SizedBox(width: 8),
                           Text('حذف'),
                         ],
                       ),
@@ -290,7 +297,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
               child: RichText(
                 text: TextSpan(
                   children: _buildCommentTextSpans(comment, isDarkMode),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     height: 1.4,
                   ),
@@ -317,7 +324,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
 
       // Optional: Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('کامنت با موفقیت حذف شد')),
+        const SnackBar(content: Text('کامنت با موفقیت حذف شد')),
       );
     } catch (e) {
       // Handle error
@@ -440,16 +447,21 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
 
   Widget _buildCommentInputArea(
       BuildContext context, List<UserModel> mentionNotifier) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (mentionNotifier.isNotEmpty) _buildMentionList(mentionNotifier),
-            _buildTextField(),
-          ],
+    return Container(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (mentionNotifier.isNotEmpty)
+                _buildMentionList(mentionNotifier),
+              _buildTextField(),
+            ],
+          ),
         ),
       ),
     );
@@ -539,6 +551,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         await ref.read(commentNotifierProvider.notifier).addComment(
               postId: widget.postId,
               content: content,
+              postOwnerId: supabase.auth.currentUser!.id,
               mentionedUserIds: mentionedUserIds,
             );
         commentController.clear();
@@ -627,7 +640,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         .eq('username', username)
         .single();
 
-    if (response != null && response['id'] != null) {
+    if (response['id'] != null) {
       return response['id'];
     } else {
       return null; // اگر کاربر یافت نشد

@@ -234,11 +234,13 @@ class PublicPostsScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const Divider(
-                        endIndent: 18,
-                        indent: 18,
-                        color: Colors.white30,
-                      ),
+                      Divider(
+                        endIndent: 1,
+                        indent: 1,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white10
+                            : Colors.black26, // رنگ متفاوت برای تم روشن
+                      )
                     ],
                   ),
                 );

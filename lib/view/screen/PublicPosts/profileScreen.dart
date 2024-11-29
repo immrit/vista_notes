@@ -123,7 +123,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             },
             itemBuilder: (BuildContext context) {
               return <PopupMenuEntry<String>>[
-                PopupMenuItem<String>(
+                const PopupMenuItem<String>(
                   value: 'report',
                   child: Text('گزارش کردن'),
                 ),
@@ -189,7 +189,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundImage:
             profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
         child: profile.avatarUrl == null
-            ? CircleAvatar(
+            ? const CircleAvatar(
                 backgroundImage: AssetImage(
                   defaultAvatarUrl,
                 ),
@@ -250,6 +250,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  @override
   Widget _buildProfileDetails(ProfileModel profile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,14 +270,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Text(
-              '${profile.followersCount} followers',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            GestureDetector(
+              onTap: () {
+                // Navigator.of(context).push(
+                //   MaterialPageRoute(
+                //     builder: (context) =>
+                //         FollowersScreen(userId: widget.userId),
+                //   ),
+                // );
+              },
+              child: Text(
+                '${profile.followersCount} followers',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(width: 20),
-            Text(
-              '${profile.followingCount} following',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            GestureDetector(
+              onTap: () {
+                // Navigator.of(context).push(
+                //   MaterialPageRoute(
+                //     builder: (context) =>
+                //         FollowingScreen(userId: widget.userId),
+                //   ),
+                // );
+              },
+              child: Text(
+                '${profile.followingCount} following',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -460,12 +481,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ],
         ),
-        SizedBox(height: 10),
-        const Divider(
-          endIndent: 18,
-          indent: 18,
-          color: Colors.white30,
-        ),
+        const SizedBox(height: 10),
+        Divider(
+          endIndent: 1,
+          indent: 1,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white10
+              : Colors.black26, // رنگ متفاوت برای تم روشن
+        )
       ],
     );
   }
