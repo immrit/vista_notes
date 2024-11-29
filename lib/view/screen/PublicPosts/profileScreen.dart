@@ -9,6 +9,8 @@ import '../../../model/ProfileModel.dart';
 import '../../../model/publicPostModel.dart';
 import '../../../provider/provider.dart';
 import '../../../util/widgets.dart';
+import 'followers and followings/FollowersScreen.dart';
+import 'followers and followings/FollowingScreen.dart';
 import '../ouathUser/editeProfile.dart';
 import 'AddPost.dart';
 // در فایل ProfileScreen:
@@ -48,7 +50,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       endDrawer: isCurrentUserProfile
-          ? CustomDrawer(getprofile, currentcolor, context)
+          ? CustomDrawer(getprofile, currentcolor, context, ref)
           : null,
       body: profileState == null
           ? const Center(child: CircularProgressIndicator())
@@ -272,30 +274,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             GestureDetector(
               onTap: () {
-                // Navigator.of(context).push(
-                //   MaterialPageRoute(
-                //     builder: (context) =>
-                //         FollowersScreen(userId: widget.userId),
-                //   ),
-                // );
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        FollowersScreen(userId: widget.userId),
+                  ),
+                );
               },
               child: Text(
-                '${profile.followersCount} followers',
+                '${profile.followersCount}  دنبال کنندگان',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(width: 20),
             GestureDetector(
               onTap: () {
-                // Navigator.of(context).push(
-                //   MaterialPageRoute(
-                //     builder: (context) =>
-                //         FollowingScreen(userId: widget.userId),
-                //   ),
-                // );
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        FollowingScreen(userId: widget.userId),
+                  ),
+                );
               },
               child: Text(
-                '${profile.followingCount} following',
+                '${profile.followingCount} دنبال شونده ها',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/main.dart';
@@ -423,7 +424,14 @@ Route createSearchPageRoute() {
 //CustomDrawer
 
 Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
-    ThemeData currentcolor, BuildContext context) {
+    ThemeData currentcolor, BuildContext context, WidgetRef ref) {
+  void _saveThemeToHive(String theme) async {
+    var box = Hive.box('settings');
+    await box.put('selectedTheme', theme);
+
+    final themeNotifier = ref.watch(themeProvider.notifier);
+  }
+
   return Drawer(
     width: 0.6.sw,
     child: Column(
@@ -478,6 +486,30 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
               },
               loading: () => const Center(child: CircularProgressIndicator())),
         ),
+        SwitchListTile(
+          title: const Text('حالت شب/روز'),
+          value: ref.watch(themeProvider).brightness == Brightness.dark,
+          onChanged: (bool isDark) {
+            // تغییر تم
+            final themeNotifier = ref.read(themeProvider.notifier);
+
+            if (isDark) {
+              themeNotifier.state = darkTheme;
+              _saveThemeToHive('dark');
+            } else {
+              themeNotifier.state = lightTheme;
+              _saveThemeToHive('light');
+            }
+          },
+          secondary: Icon(
+            ref.watch(themeProvider).brightness == Brightness.dark
+                ? Icons.dark_mode
+                : Icons.light_mode,
+          ),
+          activeColor: Colors.black,
+          activeTrackColor: Colors.white10,
+        ),
+
         ListTile(
           leading: const Icon(Icons.settings),
           title: const Text(

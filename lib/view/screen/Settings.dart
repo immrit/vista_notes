@@ -109,86 +109,119 @@ class ThemeItems extends ConsumerWidget {
         title: const Text('تغییر تم'),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(right: 10, bottom: 15),
-            child: Directionality(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Directionality(
               textDirection: TextDirection.rtl,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "استایل ها:",
-                  style: TextStyle(fontSize: 20),
-                ),
+              child: const Text(
+                "استایل‌ها:",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 15, // فاصله افقی بین آیتم‌ها
+              runSpacing: 15, // فاصله عمودی بین ردیف‌ها
+              alignment: WrapAlignment.center,
+              children: [
+                _buildThemeOption(
+                  context,
+                  color: Colors.blue,
+                  icon: Icons.wb_sunny,
+                  themeName: 'light',
+                  onTap: () {
+                    themeNotifier.state = lightTheme;
+                    _saveThemeToHive('light');
+                  },
+                ),
+                _buildThemeOption(
+                  context,
+                  color: Colors.blueGrey,
+                  icon: Icons.nightlight_round,
+                  themeName: 'dark',
+                  onTap: () {
+                    themeNotifier.state = darkTheme;
+                    _saveThemeToHive('dark');
+                  },
+                ),
+                _buildThemeOption(
+                  context,
+                  color: Colors.red,
+                  icon: Icons.color_lens,
+                  themeName: 'red',
+                  onTap: () {
+                    themeNotifier.state = redWhiteTheme;
+                    _saveThemeToHive('red');
+                  },
+                ),
+                _buildThemeOption(
+                  context,
+                  color: Colors.amber,
+                  icon: Icons.color_lens,
+                  themeName: 'yellow',
+                  onTap: () {
+                    themeNotifier.state = yellowBlackTheme;
+                    _saveThemeToHive('yellow');
+                  },
+                ),
+                _buildThemeOption(
+                  context,
+                  color: Colors.teal,
+                  icon: Icons.color_lens,
+                  themeName: 'teal',
+                  onTap: () {
+                    themeNotifier.state = tealWhiteTheme;
+                    _saveThemeToHive('teal');
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // متد کمکی برای ساخت آپشن‌های تم
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required Color color,
+    required IconData icon,
+    required String themeName,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white24
+                : Colors.black12,
+            width: 2,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // گزینه‌های تغییر تم با آیکون و رنگ‌های متفاوت
-              GestureDetector(
-                onTap: () {
-                  themeNotifier.state = lightTheme;
-                  _saveThemeToHive('light');
-                },
-                child: const CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  radius: 30,
-                  child: Icon(Icons.wb_sunny, color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  themeNotifier.state = darkTheme;
-                  _saveThemeToHive('dark');
-                },
-                child: const CircleAvatar(
-                  backgroundColor: Colors.blueGrey,
-                  radius: 30,
-                  child: Icon(Icons.nightlight_round, color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  themeNotifier.state = redWhiteTheme;
-                  _saveThemeToHive('red');
-                },
-                child: const CircleAvatar(
-                  backgroundColor: Colors.red,
-                  radius: 30,
-                  child: Icon(Icons.color_lens, color: Colors.white),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  themeNotifier.state = yellowBlackTheme;
-                  _saveThemeToHive('yellow');
-                },
-                child: const CircleAvatar(
-                  backgroundColor: Colors.amber,
-                  radius: 30,
-                  child: Icon(Icons.color_lens, color: Colors.white),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  themeNotifier.state = tealWhiteTheme;
-                  _saveThemeToHive('teal');
-                },
-                child: const CircleAvatar(
-                  backgroundColor: Colors.teal,
-                  radius: 30,
-                  child: Icon(Icons.color_lens, color: Colors.white),
-                ),
-              ),
-            ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: CircleAvatar(
+          backgroundColor: color,
+          radius: 35,
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 30,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -219,7 +252,7 @@ class VersionNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text(
-      '2.0.6+81 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
+      '2.0.7+82 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
       style: TextStyle(fontSize: 16),
     );
   }

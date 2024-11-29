@@ -15,7 +15,7 @@ class NotificationsPage extends ConsumerWidget {
     final getprofile = ref.watch(profileProvider);
     final currentcolor = ref.watch(themeProvider);
     return Scaffold(
-      endDrawer: CustomDrawer(getprofile, currentcolor, context),
+      endDrawer: CustomDrawer(getprofile, currentcolor, context, ref),
       appBar: AppBar(
         title: const Text('اعلان ها'),
       ),

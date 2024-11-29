@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -94,9 +96,13 @@ final deleteNoteProvider =
   }
 });
 
-// حالت مدیریت تم
 final themeProvider = StateProvider<ThemeData>((ref) {
-  return lightTheme; // به صورت پیش‌فرض تم روشن
+  // بررسی حالت پلتفرم و انتخاب تم متناسب
+  final platformBrightness = PlatformDispatcher.instance.platformBrightness;
+
+  return platformBrightness == Brightness.dark
+      ? darkTheme // اگر گوشی در حالت تیره است
+      : lightTheme; // اگر گوشی در حالت روشن است
 });
 
 final isLoadingProvider = StateProvider<bool>((ref) => false);
@@ -375,7 +381,62 @@ class SupabaseService {
       rethrow;
     }
   }
+
+  Future<List<ProfileModel>> fetchFollowers(String userId) async {
+    final response = await supabase.from('follows').select('''
+      profiles!follows_follower_id_fkey (
+        id, username, full_name, avatar_url, email, bio, 
+        followers_count, created_at, 
+        is_verified, verification_type
+      )
+    ''').eq('following_id', userId);
+
+    if (response == null) {
+      throw Exception('Error fetching followers: response is null');
+    }
+
+    try {
+      return (response as List<dynamic>).map((item) {
+        final profileMap = item['profiles'];
+        if (profileMap == null) {
+          throw Exception('Profile data is missing in the response');
+        }
+        return ProfileModel.fromMap(profileMap);
+      }).toList();
+    } catch (e) {
+      print('Error parsing response: $e');
+      throw Exception('Error converting profiles');
+    }
+  }
+
+  Future<List<ProfileModel>> fetchFollowing(String userId) async {
+    final response = await supabase
+        .from('follows') // جدول دنبال‌شده‌ها
+        .select('''
+        profiles!follows_following_id_fkey (
+          id, username, full_name, avatar_url, email, bio, 
+          followers_count, created_at, 
+          is_verified, verification_type
+        )
+      ''').eq('follower_id', userId); // دریافت دنبال‌شده‌ها
+
+    if (response == null) {
+      throw Exception('Error fetching following');
+    }
+
+    // تبدیل داده به مدل پروفایل
+    final List data = response ?? [];
+    return data.map((item) {
+      final profileMap = item['profiles']; // بررسی وجود داده‌های پروفایل
+      if (profileMap == null) {
+        throw Exception('Missing profile data');
+      }
+      return ProfileModel.fromMap(profileMap);
+    }).toList();
+  }
 }
+
+// Provider برای سرویس Supabase
 
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {
   final supabase = Supabase.instance.client;
@@ -1172,4 +1233,62 @@ final mentionNotifierProvider =
     StateNotifierProvider<MentionNotifier, List<UserModel>>((ref) {
   final mentionService = ref.read(mentionServiceProvider);
   return MentionNotifier(mentionService);
+});
+
+final userFollowersProvider =
+    FutureProvider.family<List<ProfileModel>, String>((ref, userId) async {
+  final supabaseService = ref.read(supabaseServiceProvider);
+  return await supabaseService.fetchFollowers(userId);
+});
+
+final userFollowingProvider =
+    FutureProvider.family<List<ProfileModel>, String>((ref, userId) async {
+  final supabaseService = ref.read(supabaseServiceProvider);
+
+  return await supabaseService.fetchFollowing(userId);
+});
+
+final fetchFollowingPostsProvider =
+    FutureProvider<List<PublicPostModel>>((ref) async {
+  final supabase = Supabase.instance.client;
+  final currentUserId = supabase.auth.currentUser?.id;
+
+  // دریافت لیست افرادی که کاربر فعلی دنبال می‌کند
+  final followingResponse = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', currentUserId.toString());
+
+  final followingIds = followingResponse.map((e) => e['following_id']).toList();
+
+  // دریافت پست‌های افراد دنبال شده
+  final response = await supabase
+      .from('public_posts')
+      .select('''
+        id, 
+        content, 
+        created_at, 
+        user_id,
+        profiles(username, avatar_url, is_verified),
+        post_likes(user_id)
+      ''')
+      .or(followingIds.map((id) => 'user_id.eq.$id').join(','))
+      .order('created_at', ascending: false);
+
+  return response.map((post) {
+    final postLikes = post['post_likes'] as List? ?? [];
+
+    // چک کردن لایک توسط کاربر فعلی
+    final isLikedByCurrentUser =
+        postLikes.any((like) => like['user_id'] == currentUserId);
+
+    return PublicPostModel.fromMap({
+      ...post,
+      'like_count': postLikes.length,
+      'is_liked': isLikedByCurrentUser,
+      'username': post['profiles']?['username'] ?? 'Unknown',
+      'avatar_url': post['profiles']?['avatar_url'] ?? '',
+      'is_verified': post['profiles']?['is_verified'] ?? false,
+    });
+  }).toList();
 });

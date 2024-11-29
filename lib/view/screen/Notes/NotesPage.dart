@@ -22,7 +22,7 @@ class NotesScreen extends ConsumerWidget {
           icon: const Icon(Icons.search),
         ),
       ),
-      endDrawer: CustomDrawer(getprofile, currentcolor, context),
+      endDrawer: CustomDrawer(getprofile, currentcolor, context, ref),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: notesAsyncValue.when(
