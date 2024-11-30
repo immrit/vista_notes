@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vistaNote/main.dart';
@@ -92,6 +93,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       // واکشی مجدد پست‌ها
       ref.read(postsProvider);
+
+      ref.watch(commentsProvider(widget.userId));
     } catch (e) {
       // نمایش خطا در صورت وجود
       ScaffoldMessenger.of(context).showSnackBar(

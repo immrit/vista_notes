@@ -448,6 +448,26 @@ final supabaseServiceProvider = Provider<SupabaseService>((ref) {
 class NotificationsNotifier extends StateNotifier<List<NotificationModel>> {
   NotificationsNotifier() : super([]);
 
+  // متد حذف تمامی اعلان‌ها
+  Future<void> deleteAllNotifications() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+
+      if (userId == null) {
+        throw Exception("User not logged in");
+      }
+
+      // حذف تمامی اعلان‌های کاربر فعلی
+      await supabase.from('notifications').delete().eq('recipient_id', userId);
+
+      // بروزرسانی وضعیت (حذف همه اعلان‌ها از لیست)
+      state = [];
+    } catch (e) {
+      print("Error deleting notifications: $e");
+      throw Exception("Failed to delete notifications");
+    }
+  }
+
   Future<void> fetchNotifications() async {
     final userId = supabase.auth.currentUser?.id; // گرفتن شناسه کاربر فعلی
 
@@ -638,11 +658,9 @@ class CommentService {
     required String postId,
     required String content,
     required String postOwnerId,
+    String? parentCommentId, // اضافه کردن پارامتر جدید
   }) async {
     try {
-      // چاپ اطلاعات برای دیباگ
-      print('Adding comment - PostID: $postId, Content: $content');
-
       final currentUser = _supabase.auth.currentUser;
       if (currentUser == null) {
         throw Exception('کاربر وارد سیستم نشده است');
@@ -652,37 +670,27 @@ class CommentService {
         throw Exception('محتوای کامنت نمی‌تواند خالی باشد');
       }
 
-      // دقت کنید که نام جدول دقیقا مطابق دیتابیس شما باشد
       final response = await _supabase
-          .from('comments') // نام جدول را دقیقا چک کنید
+          .from('comments')
           .insert({
             'post_id': postId,
             'user_id': currentUser.id,
             'content': content,
             'post_owner_id': postOwnerId,
+            'parent_comment_id': parentCommentId, // اضافه کردن فیلد جدید
             'created_at': DateTime.now().toIso8601String(),
           })
           .select('*, user:profiles(username, avatar_url, is_verified)')
           .single();
 
-      print('Comment added successfully: $response');
-
       return CommentModel.fromMap(response);
     } catch (e) {
       print('خطا در ارسال کامنت: $e');
-
-      // چاپ اطلاعات کامل خطا برای دیباگ
-      if (e is PostgrestException) {
-        print('Postgrest Error Details:');
-        print('Code: ${e.code}');
-        print('Hint: ${e.hint}');
-        print('Message: ${e.message}');
-      }
-
       rethrow;
     }
   }
 
+// تغییر متد fetchComments برای دریافت کامنت‌های فرزند
   Future<List<CommentModel>> fetchComments(String postId) async {
     try {
       final response = await _supabase
@@ -691,13 +699,42 @@ class CommentService {
           .eq('post_id', postId)
           .order('created_at');
 
-      return (response as List)
-          .map((item) => CommentModel.fromMap(item))
-          .toList();
+      // دریافت لیست کامنت‌ها
+      List<CommentModel> comments =
+          (response as List).map((item) => CommentModel.fromMap(item)).toList();
+
+      // مرتب‌سازی کامنت‌ها بر اساس والد
+      _organizeComments(comments);
+
+      return comments;
     } catch (e) {
       print('خطا در واکشی کامنت‌ها: $e');
       return [];
     }
+  }
+
+// متد کمکی برای مرتب‌سازی کامنت‌ها
+  void _organizeComments(List<CommentModel> comments) {
+    final Map<String, CommentModel> commentMap = {};
+
+    // ایجاد نقشه از کامنت‌ها بر اساس شناسه
+    for (var comment in comments) {
+      commentMap[comment.id] = comment;
+      comment.replies = []; // مقداردهی اولیه برای replies
+    }
+
+    // اضافه کردن کامنت‌های فرزند به والدین و حذف آنها از لیست اصلی
+    comments.removeWhere((comment) {
+      if (comment.parentCommentId != null) {
+        final parentComment = commentMap[comment.parentCommentId];
+        if (parentComment != null) {
+          parentComment.replies ??= [];
+          parentComment.replies!.add(comment);
+          return true; // حذف ریپلای از لیست اصلی
+        }
+      }
+      return false; // کامنت اصلی حذف نمی‌شود
+    });
   }
 
   Future<void> deleteComment(String commentId) async {
@@ -786,30 +823,36 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
   final CommentService _commentService;
   final TextEditingController contentController = TextEditingController();
 
+  // اضافه کردن یک فلگ برای جلوگیری از ارسال مکرر
+  bool _isSubmitting = false;
+
   CommentNotifier(this._commentService) : super(const AsyncValue.data(null));
 
-  Future<void> addComment({
-    required String postId,
-    required String content,
-    required String postOwnerId, // Add this parameter
+  Future<void> addComment(
+      {required String postId,
+      required String content,
+      required String postOwnerId,
+      String? parentCommentId,
+      List<String> mentionedUserIds = const [],
+      required WidgetRef ref}) async {
+    // جلوگیری از ارسال مکرر
+    if (_isSubmitting) return;
 
-    List<String> mentionedUserIds = const [],
-  }) async {
     final trimmedContent = content.trim();
 
     if (trimmedContent.isEmpty) return;
 
+    // تنظیم فلگ ارسال
+    _isSubmitting = true;
     state = const AsyncValue.loading();
 
     try {
-      // دریافت postOwnerId بر اساس postId
-      final postOwnerId = await getPostOwnerId(postId);
-
       // افزودن کامنت با مشخصات کامل
       final comment = await _commentService.addComment(
         postId: postId,
         content: trimmedContent,
-        postOwnerId: postOwnerId, // Ensure it's passed where expected
+        postOwnerId: postOwnerId,
+        parentCommentId: parentCommentId,
       );
 
       // اگر منشن‌هایی وجود دارد، آنها را اضافه کنید
@@ -820,15 +863,43 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
         );
       }
 
+      // پاک کردن کنترلر
       contentController.clear();
+
+      // بروزرسانی استیت کامنت‌ها
+      await _updateCommentsState(postId, comment, parentCommentId, ref);
+
       state = const AsyncValue.data(null);
     } catch (error) {
       state = AsyncValue.error(error, StackTrace.current);
+    } finally {
+      // بازنشانی فلگ ارسال
+      _isSubmitting = false;
     }
   }
 
+  // متد جدید برای بروزرسانی استیت کامنت‌ها
+  Future<void> _updateCommentsState(
+    String postId,
+    CommentModel newComment,
+    String? parentCommentId,
+    WidgetRef ref,
+  ) async {
+    // دریافت پروایدر کامنت‌ها برای پست مورد نظر
+    final commentsProvider =
+        StateNotifierProvider<CommentsNotifier, List<CommentModel>>((ref) {
+      return CommentsNotifier(_commentService);
+    });
+
+    // بروزرسانی استیت کامنت‌ها
+    ref.read(commentsProvider.notifier).addComment(
+          postId: postId,
+          comment: newComment,
+          parentCommentId: parentCommentId,
+        );
+  }
+
   Future<String> getPostOwnerId(String postId) async {
-    // فرضی بر این که از یک دیتابیس مانند Supabase استفاده می‌کنید.
     final response = await supabase
         .from('public_posts')
         .select('user_id')
@@ -838,19 +909,73 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
     return response['user_id'] as String;
   }
 
-  // New method for deleting comments
   Future<void> deleteComment(String commentId, WidgetRef ref) async {
     state = const AsyncValue.loading();
 
     try {
       await _commentService.deleteComment(commentId);
       state = const AsyncValue.data(null);
-      ref.invalidate(commentsProvider(commentId));
+
+      // بروزرسانی استیت کامنت‌ها برای پست مشخص
+      ref.read(commentsProvider(commentId));
     } catch (error) {
       state = AsyncValue.error(error, StackTrace.current);
     }
   }
 }
+
+// نوتیفایر جدید برای مدیریت کامنت‌ها
+class CommentsNotifier extends StateNotifier<List<CommentModel>> {
+  final CommentService _commentService;
+
+  CommentsNotifier(this._commentService) : super([]);
+
+  void addComment({
+    required String postId,
+    required CommentModel comment,
+    String? parentCommentId,
+  }) {
+    if (parentCommentId != null) {
+      // پیدا کردن کامنت والد و اضافه کردن ریپلای
+      state = state.map((existingComment) {
+        if (existingComment.id == parentCommentId) {
+          final updatedReplies = [...(existingComment.replies ?? []), comment];
+          return existingComment.copyWith(
+            replies: updatedReplies?.cast<CommentModel>(),
+          );
+        }
+        return existingComment;
+      }).toList();
+    } else {
+      // اگر کامنت اصلی است، به لیست اضافه می‌شود
+      // جلوگیری از تکرار
+      if (!state.any((existingComment) => existingComment.id == comment.id)) {
+        state = [...state, comment];
+      }
+    }
+  }
+
+  void removeComment(String commentId) {
+    state = state.where((comment) {
+      // حذف کامنت اصلی
+      if (comment.id == commentId) return false;
+
+      // حذف ریپلای‌های مربوط به کامنت
+      if (comment.replies != null) {
+        comment.replies =
+            comment.replies!.where((reply) => reply.id != commentId).toList();
+      }
+
+      return true;
+    }).toList();
+  }
+}
+
+// پروایدر جدید برای کامنت‌ها
+// final commentsProvider = StateNotifierProvider<CommentsNotifier, List<CommentModel>>((ref) {
+//   final commentService = ref.read(commentServiceProvider);
+//   return CommentsNotifier(commentService);
+// });
 
 final commentNotifierProvider =
     StateNotifierProvider<CommentNotifier, AsyncValue<void>>((ref) {

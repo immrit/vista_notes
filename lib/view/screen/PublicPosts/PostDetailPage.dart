@@ -549,11 +549,11 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
     if (content.isNotEmpty) {
       try {
         await ref.read(commentNotifierProvider.notifier).addComment(
-              postId: widget.postId,
-              content: content,
-              postOwnerId: supabase.auth.currentUser!.id,
-              mentionedUserIds: mentionedUserIds,
-            );
+            postId: widget.postId,
+            content: content,
+            postOwnerId: supabase.auth.currentUser!.id,
+            mentionedUserIds: mentionedUserIds,
+            ref: ref);
         commentController.clear();
         mentionedUserIds.clear();
         ref.invalidate(commentsProvider);
