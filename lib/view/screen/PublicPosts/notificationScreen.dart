@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vistaNote/util/widgets.dart';
@@ -107,6 +109,9 @@ class NotificationsPage extends ConsumerWidget {
                                     postId: notification.PostId),
                               ),
                             );
+
+                            ref.invalidate(
+                                commentsProvider(notification.PostId));
                           }
                         },
                       ),

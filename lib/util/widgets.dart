@@ -1099,11 +1099,12 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
           },
         ),
       ),
+
       // نمایش ریپلای‌ها
       if (comment.replies != null && comment.replies!.isNotEmpty)
         ExpansionTile(
           title: Text(
-            'نمایش ${comment.replies!.length} ریپلای',
+            'نمایش ${comment.replies!.length} پاسخ',
             style: TextStyle(
               color: Colors.blue,
               fontSize: 13,

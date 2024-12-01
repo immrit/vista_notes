@@ -697,7 +697,7 @@ class CommentService {
           .from('comments')
           .select('*, profiles(username, avatar_url, is_verified)')
           .eq('post_id', postId)
-          .order('created_at');
+          .order('created_at', ascending: false);
 
       // دریافت لیست کامنت‌ها
       List<CommentModel> comments =

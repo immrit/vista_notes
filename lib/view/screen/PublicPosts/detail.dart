@@ -19,8 +19,9 @@ class PostDetailsPage extends ConsumerStatefulWidget {
 
 class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
   late TextEditingController commentController;
-  String? replyToCommentId;
+  final FocusNode _commentFocusNode = FocusNode();
   final List<UserModel> mentionedUsers = [];
+  String? _replyToCommentId;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
   @override
   void dispose() {
     commentController.dispose();
+    _commentFocusNode.dispose();
     super.dispose();
   }
 
@@ -185,9 +187,23 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         const Divider(color: Colors.grey, height: 1, endIndent: 75, indent: 25),
         const SizedBox(height: 10),
         commentsAsyncValue.when(
-          data: (comments) => comments.isEmpty
-              ? const Center(child: Text('هنوز کامنتی وجود ندارد'))
-              : _buildCommentTree(comments),
+          data: (comments) {
+            print(
+                "Received comments: ${comments.map((c) => c.toJson()).toList()}");
+
+            if (comments.isEmpty) {
+              return const Center(child: Text('هنوز کامنتی وجود ندارد'));
+            }
+
+            final commentTree = _buildCommentTree(comments);
+            return ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              reverse: true,
+              itemCount: commentTree.length,
+              itemBuilder: (context, index) => commentTree[index],
+            );
+          },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) =>
               Center(child: Text('خطا در بارگذاری کامنت‌ها: $error')),
@@ -196,337 +212,176 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
     );
   }
 
-  Widget _buildCommentTree(List<CommentModel> comments) {
-    // ساختاردهی ریپلای‌ها در نقشه
-    Map<String, CommentModel> commentMap = {
-      for (var comment in comments) comment.id: comment
-    };
+  List<Widget> _buildCommentTree(List<CommentModel> comments) {
+    Map<String, List<CommentModel>> replies = {};
 
+    // گروه‌بندی ریپلای‌ها
     for (var comment in comments) {
       if (comment.parentCommentId != null) {
-        var parent = commentMap[comment.parentCommentId!];
-        if (parent != null) {
-          parent.replies.add(comment);
+        if (!replies.containsKey(comment.parentCommentId)) {
+          replies[comment.parentCommentId!] = [];
         }
+        replies[comment.parentCommentId]!.add(comment);
       }
     }
+    // نمایش کامنت‌های اصلی
+    List<Widget> rootComments = comments
+        .where((comment) => comment.parentCommentId == null)
+        .map((comment) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCommentItem(comment, replies),
+          if (replies[comment.id] != null)
+            ...replies[comment.id]!
+                .map((replyComment) => Padding(
+                      padding: const EdgeInsets.only(left: 24.0),
+                      child: _buildCommentItem(replyComment, replies),
+                    ))
+                .toList(),
+        ],
+      );
+    }).toList();
 
-    // فقط کامنت‌های والد را نمایش دهید
-    return Column(
-      children: comments
-          .where((comment) => comment.parentCommentId == null)
-          .expand(_buildTree)
-          .toList(),
-    );
+    return rootComments;
   }
 
-  List<Widget> _buildTree(CommentModel comment) {
-    return [
-      _buildCommentItem(comment),
-      if (comment.replies.isNotEmpty)
-        ExpansionTile(
-          title: Text(
-            'نمایش ${comment.replies.length} پاسخ',
-            style: TextStyle(
-              color: Colors.blue,
-              fontSize: 13,
-            ),
-          ),
-          children: comment.replies.expand(_buildTree).toList(),
-        ),
-    ];
-  }
-
-  Widget _buildCommentItem(CommentModel comment) {
+  Widget _buildCommentItem(
+      CommentModel comment, Map<String, List<CommentModel>> replies) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // هدر کامنت
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: comment.avatarUrl.isEmpty
-                      ? const AssetImage('assets/default_avatar.png')
-                      : NetworkImage(comment.avatarUrl) as ImageProvider,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: comment.avatarUrl.isEmpty
+                          ? const AssetImage('assets/default_avatar.png')
+                          : NetworkImage(comment.avatarUrl) as ImageProvider,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Text(
+                                comment.username,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              if (comment.isVerified)
+                                const Icon(Icons.verified,
+                                    color: Colors.blue, size: 16),
+                            ],
+                          ),
                           Text(
-                            comment.username,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                            _formatDate(comment.createdAt),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
                             ),
                           ),
-                          const SizedBox(width: 5),
-                          if (comment.isVerified)
-                            const Icon(Icons.verified,
-                                color: Colors.blue, size: 16),
                         ],
                       ),
-                      Text(
-                        _formatDate(comment.createdAt),
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // آیکون‌های اکشن
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.grey),
-                  itemBuilder: (context) => [
-                    if (comment.userId != supabase.auth.currentUser?.id)
-                      PopupMenuItem(
-                        value: 'report',
-                        child: const Row(
-                          children: [
-                            Icon(Icons.flag, color: Colors.orange),
-                            SizedBox(width: 8),
-                            Text(
-                              'گزارش',
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: Colors.grey),
+                      itemBuilder: (context) => [
+                        if (comment.userId != supabase.auth.currentUser?.id)
+                          PopupMenuItem(
+                            value: 'report',
+                            child: const Row(
+                              children: [
+                                Icon(Icons.flag, color: Colors.orange),
+                                SizedBox(width: 8),
+                                Text('گزارش'),
+                              ],
                             ),
-                          ],
+                            onTap: () => _showReportDialog(context, ref,
+                                comment, supabase.auth.currentUser!.id),
+                          ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: const Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('حذف'),
+                            ],
+                          ),
+                          onTap: () => _deleteComment(
+                              context, ref, comment.id, widget.postId),
                         ),
-                        onTap: () {
-                          _showReportDialog(context, ref, comment,
-                              supabase.auth.currentUser!.id);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: const Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('حذف'),
-                        ],
-                      ),
-                      onTap: () {
-                        _deleteComment(context, ref, comment.id, widget.postId);
-                        // Navigator.of(context).pop();
-                      },
+                      ],
                     ),
                   ],
-                  onSelected: (value) {
-                    if (value == 'reply') {
-                      setState(() {
-                        replyToCommentId = comment.id;
-                      });
-                    }
+                ),
+                const SizedBox(height: 10),
+                Directionality(
+                  textDirection: getDirectionality(comment.content),
+                  child: RichText(
+                    text: TextSpan(
+                      children: _buildCommentTextSpans(comment, isDarkMode),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                IconButton(
+                  icon: const Icon(Icons.reply, color: Colors.green),
+                  onPressed: () {
+                    setState(() {
+                      _replyToCommentId = comment.id;
+                      commentController.text = '@${comment.username} ';
+                      FocusScope.of(context).requestFocus(_commentFocusNode);
+                    });
                   },
                 ),
               ],
             ),
-
-            // متن کامنت
-            const SizedBox(height: 10),
-            Directionality(
-              textDirection: getDirectionality(comment.content),
-              child: RichText(
-                text: TextSpan(
-                  children: _buildCommentTextSpans(
-                      comment, theme.brightness == Brightness.dark),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ),
-
-            // گزینه ریپلای
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  replyToCommentId = comment.id;
-                  commentController.text = '@${comment.username} ';
-                  commentController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: commentController.text.length),
-                  );
-                });
-              },
-              child: const Text('پاسخ'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _sendComment() async {
-    final content = commentController.text.trim();
-    final mentionedUserIds = mentionedUsers.map((user) => user.id).toList();
-
-    if (content.isNotEmpty) {
-      try {
-        await ref.read(commentNotifierProvider.notifier).addComment(
-            postId: widget.postId,
-            content: content,
-            postOwnerId: supabase.auth.currentUser!.id,
-            mentionedUserIds: mentionedUserIds,
-            parentCommentId: replyToCommentId,
-            ref: ref);
-        commentController.clear();
-        replyToCommentId = null;
-        mentionedUsers.clear();
-        ref.invalidate(commentsProvider(widget.postId));
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در ارسال کامنت: $e')),
-        );
-      }
-    }
-  }
-
-  Widget _buildCommentInputArea(
-      BuildContext context, List<UserModel> mentionNotifier) {
-    return Container(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (mentionNotifier.isNotEmpty)
-                _buildMentionList(mentionNotifier),
-              _buildTextField(),
-            ],
           ),
         ),
-      ),
+        ...?replies[comment.id]?.map((replyComment) => Padding(
+              padding: const EdgeInsets.only(left: 24.0),
+              child: _buildCommentItem(replyComment, replies),
+            ))
+      ],
     );
   }
 
-  Widget _buildMentionList(List<UserModel> mentionNotifier) {
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: mentionNotifier.length,
-        itemBuilder: (context, index) {
-          final user = mentionNotifier[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () => _onMentionTap(user),
-              child: Chip(
-                avatar: CircleAvatar(
-                  backgroundImage:
-                      user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                          ? NetworkImage(user.avatarUrl!)
-                          : const AssetImage('assets/default_avatar.png'),
-                ),
-                label: Text(user.username),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildTextField() {
-    return TextField(
-      controller: commentController,
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        labelText: 'کامنت خود را بنویسید...',
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.send),
-          onPressed: _sendComment,
-        ),
-      ),
-      onChanged: _onTextChanged,
-    );
-  }
-
-  void _onTextChanged(String text) {
-    // بررسی وجود @ در متن
-    final atIndex = text.lastIndexOf('@');
-
-    // اگر @ پیدا نشد یا بعد از آن کاراکتری وجود ندارد
-    if (atIndex == -1 || atIndex == text.length - 1) {
-      ref.read(mentionNotifierProvider.notifier).clearMentions();
-      return;
-    }
-
-    // استخراج بخش مرتبط با منشن
-    final mentionPart = text.substring(atIndex + 1);
-
-    // اگر بخش منشن خالی است، لیست را پاک کنید
-    if (mentionPart.trim().isEmpty) {
-      ref.read(mentionNotifierProvider.notifier).clearMentions();
-    } else {
-      // جستجوی کاربران قابل منشن
-      ref
-          .read(mentionNotifierProvider.notifier)
-          .searchMentionableUsers(mentionPart);
-    }
-  }
-
-  void _onMentionTap(UserModel user) {
-    final currentText = commentController.text;
-    final mentionPart = currentText.split('@').last;
-    final newText =
-        currentText.replaceFirst('@$mentionPart', '@${user.username} ');
-
-    commentController.text = newText;
-    commentController.selection = TextSelection.fromPosition(
-      TextPosition(offset: newText.length),
-    );
-
-    if (!mentionedUsers.any((u) => u.id == user.id)) {
-      mentionedUsers.add(user);
-    }
-
-    ref.read(mentionNotifierProvider.notifier).clearMentions();
-  }
-
-  Future<void> _deleteComment(
-    BuildContext context,
-    WidgetRef ref,
-    String commentId,
-    String postId,
-  ) async {
+  void _deleteComment(BuildContext context, WidgetRef ref, String commentId,
+      String postId) async {
     try {
       await ref
           .read(commentNotifierProvider.notifier)
           .deleteComment(commentId, ref);
       ref.invalidate(commentsProvider(postId));
 
-      // به دلیل زمان‌بری احتمالی async، از `mounted` برای چک وضعیت ویجت استفاده کنید
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('کامنت با موفقیت حذف شد')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('کامنت با موفقیت حذف شد')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در حذف کامنت: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطا در حذف کامنت: $e')),
+      );
     }
   }
 
@@ -641,6 +496,131 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
     }
   }
 
+  Widget _buildCommentInputArea(
+      BuildContext context, List<UserModel> mentionNotifier) {
+    return Container(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (mentionNotifier.isNotEmpty)
+                _buildMentionList(mentionNotifier),
+              _buildTextField(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMentionList(List<UserModel> mentionNotifier) {
+    return SizedBox(
+      height: 50,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: mentionNotifier.length,
+        itemBuilder: (context, index) {
+          final user = mentionNotifier[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () => _onMentionTap(user),
+              child: Chip(
+                avatar: CircleAvatar(
+                  backgroundImage:
+                      user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                          ? NetworkImage(user.avatarUrl!)
+                          : const AssetImage('assets/default_avatar.png'),
+                ),
+                label: Text(user.username),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTextField() {
+    return TextField(
+      controller: commentController,
+      focusNode: _commentFocusNode,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        labelText: _replyToCommentId != null
+            ? 'در حال پاسخ به کامنت...'
+            : 'کامنت خود را بنویسید...',
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.send),
+          onPressed: _sendComment,
+        ),
+      ),
+      onChanged: _onTextChanged,
+    );
+  }
+
+  void _onTextChanged(String text) {
+    final mentionPartIndex = text.lastIndexOf('@');
+    if (mentionPartIndex != -1 && mentionPartIndex == text.length - 1) {
+      final mentionPart = text.split('@').last;
+      ref
+          .read(mentionNotifierProvider.notifier)
+          .searchMentionableUsers(mentionPart);
+    } else {
+      ref.read(mentionNotifierProvider.notifier).clearMentions();
+    }
+  }
+
+  void _onMentionTap(UserModel user) {
+    final currentText = commentController.text;
+    final mentionPart = currentText.split('@').last;
+    final newText =
+        currentText.replaceFirst('@$mentionPart', '@${user.username} ');
+
+    commentController.text = newText;
+    commentController.selection = TextSelection.fromPosition(
+      TextPosition(offset: newText.length),
+    );
+
+    if (!mentionedUsers.any((u) => u.id == user.id)) {
+      mentionedUsers.add(user);
+    }
+
+    ref.read(mentionNotifierProvider.notifier).clearMentions();
+  }
+
+  void _sendComment() async {
+    final content = commentController.text.trim();
+    final mentionedUserIds = mentionedUsers.map((user) => user.id).toList();
+
+    if (content.isNotEmpty) {
+      try {
+        await ref.read(commentNotifierProvider.notifier).addComment(
+            postId: widget.postId,
+            content: content,
+            postOwnerId: supabase.auth.currentUser!.id,
+            mentionedUserIds: mentionedUserIds,
+            parentCommentId: _replyToCommentId, // توجه: انتقال صحیح شناسه والد
+            ref: ref);
+        commentController.clear();
+        mentionedUsers.clear();
+        _replyToCommentId = null; // ریست کردن شناسه والد پس از ارسال
+        ref.invalidate(commentsProvider(widget.postId));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در ارسال کامنت: $e')),
+        );
+      }
+    }
+  }
+
   List<TextSpan> _buildCommentTextSpans(CommentModel comment, bool isDarkMode) {
     final List<TextSpan> spans = [];
     final mentionRegex = RegExp(r'@(\w+)');
@@ -649,7 +629,6 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
     int lastIndex = 0;
 
     for (final match in matches) {
-      // متن قبل از منشن
       if (match.start > lastIndex) {
         spans.add(
           TextSpan(
@@ -661,7 +640,6 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         );
       }
 
-      // استایل منشن
       spans.add(
         TextSpan(
           text: match.group(0),
@@ -671,12 +649,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
           ),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              final username = match.group(1); // استخراج نام کاربری
+              final username = match.group(1);
               if (username != null) {
-                // دریافت userId از پایگاه داده یا API بر اساس username
                 final userId = await getUserIdByUsername(username);
                 if (userId != null) {
-                  // ناوبری به پروفایل کاربر
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -695,7 +671,6 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
       lastIndex = match.end;
     }
 
-    // متن باقی مانده
     if (lastIndex < comment.content.length) {
       spans.add(
         TextSpan(
