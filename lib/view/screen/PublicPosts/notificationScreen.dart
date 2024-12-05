@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vistaNote/util/widgets.dart';
@@ -140,14 +138,12 @@ class NotificationsPage extends ConsumerWidget {
                   final theme = Theme.of(context);
 
                   return AlertDialog(
-                    title: Directionality(
+                    title: const Directionality(
                         textDirection: TextDirection.rtl,
-                        child:
-                            const Text('آیا از حذف اعلان‌ها اطمینان دارید؟')),
-                    content: Directionality(
+                        child: Text('آیا از حذف اعلان‌ها اطمینان دارید؟')),
+                    content: const Directionality(
                         textDirection: TextDirection.rtl,
-                        child:
-                            const Text('تمامی اعلان‌های شما حذف خواهند شد.')),
+                        child: Text('تمامی اعلان‌های شما حذف خواهند شد.')),
                     actions: [
                       TextButton(
                         style: TextButton.styleFrom(
@@ -198,7 +194,7 @@ class NotificationsPage extends ConsumerWidget {
           FloatingActionButton(
             heroTag: 'refresh_notifications',
             onPressed: () async {
-              await ref.refresh(notificationsProvider);
+              ref.refresh(notificationsProvider);
             },
             child: const Icon(Icons.refresh),
           ),

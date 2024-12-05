@@ -11,7 +11,7 @@ import 'AddPost.dart';
 import 'profileScreen.dart';
 
 class PublicPostsScreen extends ConsumerWidget {
-  const PublicPostsScreen({Key? key}) : super(key: key);
+  const PublicPostsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,9 +41,9 @@ class PublicPostsScreen extends ConsumerWidget {
                 Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Colors.black, // رنگ متن تب‌های انتخاب نشده
-            tabs: [
-              const Tab(text: 'همه پست‌ها'),
-              const Tab(text: 'پست‌های دنبال‌شده‌ها'),
+            tabs: const [
+              Tab(text: 'همه پست‌ها'),
+              Tab(text: 'پست‌های دنبال‌شده‌ها'),
             ],
           ),
         ),
@@ -70,7 +70,7 @@ class PublicPostsScreen extends ConsumerWidget {
 }
 
 class _AllPostsTab extends ConsumerWidget {
-  const _AllPostsTab({Key? key}) : super(key: key);
+  const _AllPostsTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,15 +84,30 @@ class _AllPostsTab extends ConsumerWidget {
         data: (posts) => _buildPostList(context, ref, posts),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(
-          child: Text('خطا در بارگذاری پست‌ها: $err'),
-        ),
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('دسترسی به اینترنت قطع است :('),
+            IconButton(
+              iconSize: 50,
+              splashColor: Colors.transparent,
+              color: Colors.white,
+              onPressed: () {
+                ref.invalidate(fetchPublicPosts);
+                ref.invalidate(commentsProvider);
+              },
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
+        )),
       ),
     );
   }
 }
 
 class _FollowingPostsTab extends ConsumerWidget {
-  const _FollowingPostsTab({Key? key}) : super(key: key);
+  const _FollowingPostsTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -103,14 +118,27 @@ class _FollowingPostsTab extends ConsumerWidget {
         ref.refresh(fetchFollowingPostsProvider);
       },
       child: followingPostsAsyncValue.when(
-          data: (posts) => _buildPostList(context, ref, posts),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) {
-            print(err);
-            return Center(
-              child: Text('خطا در بارگذاری پست‌های دنبال‌شده‌ها: $err'),
-            );
-          }),
+        data: (posts) => _buildPostList(context, ref, posts),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('دسترسی به اینترنت قطع است :('),
+            IconButton(
+              iconSize: 50,
+              splashColor: Colors.transparent,
+              color: Colors.white,
+              onPressed: () {
+                ref.invalidate(fetchPublicPosts);
+                ref.invalidate(commentsProvider);
+              },
+              icon: const Icon(Icons.refresh),
+            ),
+          ],
+        )),
+      ),
     );
   }
 }
@@ -219,11 +247,17 @@ Widget _buildPostList(
                 ),
                 Text('${post.likeCount}'),
                 const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.comment),
-                  onPressed: () {
-                    showCommentsBottomSheet(context, ref, post.id, post.userId);
-                  },
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.comment),
+                      onPressed: () {
+                        showCommentsBottomSheet(
+                            context, ref, post.id, post.userId);
+                      },
+                    ),
+                    Text('${post.commentCount}')
+                  ],
                 ),
                 const SizedBox(width: 16),
                 IconButton(
@@ -251,10 +285,13 @@ PopupMenuButton<String> _buildPostActions(
     onSelected: (value) async {
       switch (value) {
         case 'report':
-          showDialog(
-            context: context,
-            builder: (context) => ReportDialog(post: post),
-          );
+          if (post.userId != currentUserId) {
+            return showDialog(
+              context: context,
+              builder: (context) => ReportDialog(post: post),
+            );
+          }
+
           break;
         case 'copy':
           Clipboard.setData(ClipboardData(text: post.content));
@@ -270,11 +307,46 @@ PopupMenuButton<String> _buildPostActions(
                 content: const Text('آیا از حذف این پست اطمینان دارید؟'),
                 actions: [
                   TextButton(
-                    child: const Text('خیر'),
+                    child: Text(
+                      'انصراف',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[300] // رنگ روشن‌تر برای تم تاریک
+                            : Colors.grey[800], // رنگ تیره‌تر برای تم روشن
+                      ),
+                    ),
+                    style: ButtonStyle(
+                      overlayColor: MaterialStateProperty.all(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white12 // افکت لمس در تم تاریک
+                            : Colors.black12, // افکت لمس در تم روشن
+                      ),
+                    ),
                     onPressed: () => Navigator.pop(context, false),
                   ),
                   ElevatedButton(
-                    child: const Text('بله'),
+                    child: Text(
+                      'حذف',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors
+                            .white, // Text color remains white for both themes
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.red[700] // رنگ دکمه در تم تاریک
+                              : Colors.red, // رنگ دکمه در تم روشن
+                      shadowColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black
+                              : Colors.grey[400], // سایه
+                      elevation: 5,
+                    ),
                     onPressed: () => Navigator.pop(context, true),
                   ),
                 ],
@@ -290,7 +362,8 @@ PopupMenuButton<String> _buildPostActions(
       }
     },
     itemBuilder: (context) => [
-      const PopupMenuItem(value: 'report', child: Text('گزارش')),
+      if (post.userId != currentUserId)
+        const PopupMenuItem(value: 'report', child: Text('گزارش')),
       const PopupMenuItem(value: 'copy', child: Text('کپی')),
       if (post.userId == currentUserId)
         const PopupMenuItem(value: 'delete', child: Text('حذف')),

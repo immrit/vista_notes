@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vistaNote/main.dart';
@@ -109,7 +108,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   SliverAppBar _buildSliverAppBar(ProfileModel profile, dynamic getprofile,
       ThemeData currentcolor, dynamic isCurrentUserProfile) {
     return SliverAppBar(
-      expandedHeight: 300,
+      expandedHeight: 320,
       backgroundColor: Brightness.dark == Theme.of(context).brightness
           ? Colors.grey[900]
           : null,
@@ -270,26 +269,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (profile.bio != null) ...[
           const SizedBox(height: 10),
           Directionality(
-              textDirection: TextDirection.rtl, child: Text(profile.bio!)),
+            textDirection: TextDirection.rtl,
+            child: Text(profile.bio!),
+          ),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        FollowersScreen(userId: widget.userId),
-                  ),
-                );
-              },
-              child: Text(
-                '${profile.followersCount}  دنبال کنندگان',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: 20),
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
@@ -299,9 +286,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 );
               },
-              child: Text(
-                '${profile.followingCount} دنبال شونده ها',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20),
+                child: Column(
+                  children: [
+                    Text(
+                      ' ${profile.followingCount}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'دنبال شونده ها ',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 20),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        FollowersScreen(userId: widget.userId),
+                  ),
+                );
+              },
+              child: Column(
+                children: [
+                  Text(
+                    ' ${profile.followersCount}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'دنبال کنندگان',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 20),
+            GestureDetector(
+              onTap: () => _buildPostsList,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: Column(
+                  children: [
+                    Text(
+                      ' ${profile.posts.length}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      ' پست‌ها',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -514,9 +554,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildCommentButton(PublicPostModel post) {
-    return IconButton(
-      icon: const Icon(Icons.comment),
-      onPressed: () => _showComments(post),
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.comment),
+          onPressed: () => _showComments(post),
+        ),
+        Text('${post.commentCount}'),
+      ],
     );
   }
 

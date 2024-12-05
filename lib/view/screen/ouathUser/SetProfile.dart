@@ -195,8 +195,8 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
               if (value == null || value.isEmpty) {
                 return 'لطفا مقادیر را وارد نمایید';
               }
-              if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
-                return 'لطفاً فقط از حروف انگلیسی استفاده کنید';
+              if (!RegExp(r'^[a-z._-]{5,}$').hasMatch(value)) {
+                return 'نام کاربری باید حداقل ۵ حرف داشته باشد و فقط از حروف کوچک، _، - و . استفاده کنید';
               }
               return null;
             },

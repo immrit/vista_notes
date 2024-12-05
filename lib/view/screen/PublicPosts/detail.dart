@@ -233,12 +233,10 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         children: [
           _buildCommentItem(comment, replies),
           if (replies[comment.id] != null)
-            ...replies[comment.id]!
-                .map((replyComment) => Padding(
-                      padding: const EdgeInsets.only(left: 24.0),
-                      child: _buildCommentItem(replyComment, replies),
-                    ))
-                .toList(),
+            ...replies[comment.id]!.map((replyComment) => Padding(
+                  padding: const EdgeInsets.only(left: 24.0),
+                  child: _buildCommentItem(replyComment, replies),
+                )),
         ],
       );
     }).toList();

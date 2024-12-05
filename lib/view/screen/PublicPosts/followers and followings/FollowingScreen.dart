@@ -7,7 +7,7 @@ import '../profileScreen.dart';
 class FollowingScreen extends ConsumerWidget {
   final String userId;
 
-  const FollowingScreen({Key? key, required this.userId}) : super(key: key);
+  const FollowingScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +59,7 @@ class FollowingScreen extends ConsumerWidget {
 class FollowingTile extends StatelessWidget {
   final ProfileModel followed;
 
-  const FollowingTile({Key? key, required this.followed}) : super(key: key);
+  const FollowingTile({super.key, required this.followed});
 
   @override
   Widget build(BuildContext context) {

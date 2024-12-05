@@ -14,6 +14,7 @@ class PublicPostModel extends Equatable {
   int likeCount;
   bool isLiked;
   final bool isVerified;
+  int commentCount; // جدید: اضافه کردن فیلد تعداد کامنت‌ها
 
   PublicPostModel({
     required this.id,
@@ -26,6 +27,7 @@ class PublicPostModel extends Equatable {
     this.likeCount = 0,
     this.isLiked = false,
     this.isVerified = false,
+    this.commentCount = 0, // مقدار پیش‌فرض
   });
 
   // متد سازنده از Map با روش‌های پیشرفته‌تر
@@ -41,6 +43,8 @@ class PublicPostModel extends Equatable {
       likeCount: _parseInt(map, 'like_count'),
       isLiked: _parseBool(map, 'is_liked'),
       isVerified: _parseVerified(map),
+      commentCount: map['comment_count'] as int? ?? 0, // مقدار پیش‌فرض
+// جدید: افزودن پارسینگ تعداد کامنت
     );
   }
 
@@ -101,6 +105,7 @@ class PublicPostModel extends Equatable {
       },
       'like_count': likeCount,
       'is_liked': isLiked,
+      'comment_count': commentCount, // جدید: اضافه کردن تعداد کامنت‌ها به Map
     };
   }
 
@@ -123,6 +128,7 @@ class PublicPostModel extends Equatable {
     int? likeCount,
     bool? isLiked,
     bool? isVerified,
+    int? commentCount, // جدید: افزودن تعداد کامنت‌ها به copyWith
   }) {
     return PublicPostModel(
       id: id ?? this.id,
@@ -135,6 +141,7 @@ class PublicPostModel extends Equatable {
       likeCount: likeCount ?? this.likeCount,
       isLiked: isLiked ?? this.isLiked,
       isVerified: isVerified ?? this.isVerified,
+      commentCount: commentCount ?? this.commentCount, // جدید
     );
   }
 
@@ -146,14 +153,14 @@ class PublicPostModel extends Equatable {
       id: $id, 
       userId: $userId, 
       fullName: $fullName, 
-    
       content: $content, 
       createdAt: $createdAt, 
       username: $username, 
       avatarUrl: $avatarUrl, 
       likeCount: $likeCount, 
       isLiked: $isLiked, 
-      isVerified: $isVerified
+      isVerified: $isVerified, 
+      commentCount: $commentCount // جدید
     )''';
   }
 
@@ -170,5 +177,6 @@ class PublicPostModel extends Equatable {
         likeCount,
         isLiked,
         isVerified,
+        commentCount, // جدید
       ];
 }

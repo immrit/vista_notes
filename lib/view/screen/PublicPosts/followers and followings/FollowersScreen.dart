@@ -7,7 +7,7 @@ import '../profileScreen.dart';
 class FollowersScreen extends ConsumerWidget {
   final String userId;
 
-  const FollowersScreen({Key? key, required this.userId}) : super(key: key);
+  const FollowersScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +59,7 @@ class FollowersScreen extends ConsumerWidget {
 class FollowerTile extends StatelessWidget {
   final ProfileModel follower;
 
-  const FollowerTile({Key? key, required this.follower}) : super(key: key);
+  const FollowerTile({super.key, required this.follower});
 
   @override
   Widget build(BuildContext context) {

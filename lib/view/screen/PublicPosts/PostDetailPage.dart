@@ -227,7 +227,7 @@ class _PostDetailsPageState extends ConsumerState<PostDetailsPage> {
         ExpansionTile(
           title: Text(
             'نمایش ${comment.replies.length} پاسخ',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.blue,
               fontSize: 13,
             ),

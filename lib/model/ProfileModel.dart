@@ -13,13 +13,13 @@ class ProfileModel extends Equatable {
   final String fullName;
   final String? avatarUrl;
   final String? email;
-  final String? bio; // توضیحات پروفایل
-  final int followersCount; // تعداد دنبال‌کنندگان
-  final int followingCount; // تعداد دنبال‌شده‌ها
+  final String? bio;
+  final int followersCount;
+  final int followingCount;
   final DateTime? createdAt;
   final bool isVerified;
   final VerificationType verificationType;
-  final bool isFollowed; // وضعیت دنبال‌کردن کاربر فعلی
+  final bool isFollowed;
   final List<PublicPostModel> posts;
 
   const ProfileModel({
@@ -29,8 +29,8 @@ class ProfileModel extends Equatable {
     this.avatarUrl,
     this.email,
     this.bio,
-    this.followersCount = 0, // مقدار پیش‌فرض
-    this.followingCount = 0, // مقدار پیش‌فرض
+    this.followersCount = 0,
+    this.followingCount = 0,
     this.createdAt,
     this.isVerified = false,
     this.verificationType = VerificationType.none,
@@ -39,14 +39,13 @@ class ProfileModel extends Equatable {
   });
 
   factory ProfileModel.fromMap(Map<String, dynamic> map) {
-    // بررسی اجباری بودن مقادیر `id` و `username`
     if (map['id'] == null || map['username'] == null) {
       throw ArgumentError('Missing required fields: id or username');
     }
 
     return ProfileModel(
-      id: map['id']!.toString(),
-      username: map['username']!.toString(),
+      id: map['id'].toString(),
+      username: map['username'].toString(),
       fullName: map['full_name']?.toString() ?? '',
       avatarUrl: map['avatar_url']?.toString(),
       email: map['email']?.toString(),
@@ -62,28 +61,29 @@ class ProfileModel extends Equatable {
         orElse: () => VerificationType.none,
       ),
       isFollowed: map['is_followed'] ?? false,
-      posts: List<PublicPostModel>.from(
-        (map['posts'] as List<dynamic>? ?? [])
-            .map((post) => PublicPostModel.fromMap(post)),
-      ),
+      posts: (map['posts'] as List<dynamic>? ?? [])
+          .map((post) => PublicPostModel.fromMap(post))
+          .toList(),
     );
   }
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'username': username,
-        'full_name': fullName,
-        'avatar_url': avatarUrl,
-        'email': email,
-        'bio': bio,
-        'followers_count': followersCount,
-        'following_count': followingCount,
-        'created_at': createdAt?.toIso8601String(),
-        'is_verified': isVerified,
-        'verification_type': verificationType.name,
-        'is_followed': isFollowed,
-        'posts': posts.map((post) => post.toMap()).toList(),
-      };
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'username': username,
+      'full_name': fullName,
+      'avatar_url': avatarUrl,
+      'email': email,
+      'bio': bio,
+      'followers_count': followersCount,
+      'following_count': followingCount,
+      'created_at': createdAt?.toIso8601String(),
+      'is_verified': isVerified,
+      'verification_type': verificationType.name,
+      'is_followed': isFollowed,
+      'posts': posts.map((post) => post.toMap()).toList(),
+    };
+  }
 
   String toJson() => json.encode(toMap());
 
@@ -129,6 +129,7 @@ class ProfileModel extends Equatable {
         bio,
         followersCount,
         followingCount,
+        createdAt,
         isVerified,
         verificationType,
         isFollowed,

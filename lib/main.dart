@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mentions/flutter_mentions.dart';
@@ -9,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
 import 'package:vistaNote/security/security.dart';
 import 'package:vistaNote/view/screen/Settings.dart';
+import 'firebase_options.dart';
 import 'provider/provider.dart';
 import 'util/themes.dart';
 import 'view/screen/homeScreen.dart';
@@ -21,6 +24,12 @@ import 'view/screen/ouathUser/editeProfile.dart';
 void main() async {
   await Hive.initFlutter(); // مقداردهی اولیه Hive
   await Hive.openBox('settings'); // باز کردن جعبه تنظیمات
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   updateIpAddress();
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -58,7 +67,15 @@ void main() async {
         initialTheme = lightTheme;
     }
 
-    runApp(ProviderScope(child: MyApp(initialTheme: initialTheme)));
+    runApp(
+      ProviderScope(
+        overrides: [
+          // Ensure themeProvider has the initial theme from Hive
+          themeProvider.overrideWith((ref) => initialTheme),
+        ],
+        child: MyApp(initialTheme: initialTheme),
+      ),
+    );
   });
 }
 
@@ -84,11 +101,31 @@ class _MyAppState extends ConsumerState<MyApp> {
     _appLinks = AppLinks();
     _handleIncomingLinks();
 
-    // بررسی اینکه مقدار تم اولیه به درستی تنظیم می‌شود
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final themeNotifier = ref.read(themeProvider.notifier);
-      themeNotifier.state = widget.initialTheme;
+    supabase.auth.onAuthStateChange.listen((event) async {
+      if (event.event == AuthChangeEvent.signedIn) {
+        await FirebaseMessaging.instance.requestPermission();
+        await FirebaseMessaging.instance.getAPNSToken();
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+
+        if (fcmToken != null) {
+          await _setFcmToken(fcmToken);
+          print("FcmToken: $fcmToken");
+        }
+      }
     });
+    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
+      await _setFcmToken(fcmToken);
+    });
+  }
+
+  Future<void> _setFcmToken(String fcmToken) async {
+    final userId = supabase.auth.currentUser?.id;
+
+    if (userId != null) {
+      await supabase
+          .from('profiles')
+          .upsert({'id': userId, 'fcm_token': fcmToken});
+    }
   }
 
   // مدیریت دیپ لینک‌ها
