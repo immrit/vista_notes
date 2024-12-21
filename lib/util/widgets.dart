@@ -426,7 +426,7 @@ Route createSearchPageRoute() {
 
 Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
     ThemeData currentcolor, BuildContext context, WidgetRef ref) {
-  void _saveThemeToHive(String theme) async {
+  void saveThemeToHive(String theme) async {
     var box = Hive.box('settings');
     await box.put('selectedTheme', theme);
 
@@ -496,10 +496,10 @@ Drawer CustomDrawer(AsyncValue<Map<String, dynamic>?> getprofile,
 
             if (isDark) {
               themeNotifier.state = darkTheme;
-              _saveThemeToHive('dark');
+              saveThemeToHive('dark');
             } else {
               themeNotifier.state = lightTheme;
-              _saveThemeToHive('light');
+              saveThemeToHive('light');
             }
           },
           secondary: Icon(
@@ -1012,7 +1012,7 @@ Widget _buildCommentTile(BuildContext context, WidgetRef ref,
               backgroundImage: comment.avatarUrl != null
                   ? NetworkImage(comment.avatarUrl)
                   : null,
-              child: comment.avatarUrl == AssetImage(defaultAvatarUrl)
+              child: comment.avatarUrl == const AssetImage(defaultAvatarUrl)
                   ? Icon(
                       Icons.person,
                       color: isDarkMode ? Colors.white : Colors.black,

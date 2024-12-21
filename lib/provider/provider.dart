@@ -108,19 +108,26 @@ final themeProvider = StateProvider<ThemeData>((ref) {
 final isLoadingProvider = StateProvider<bool>((ref) => false);
 final isRedirectingProvider = StateProvider<bool>((ref) => false);
 
-// واکشی پست‌ها
-// واکشی پست‌ها با تعداد کامنت‌ها
 final fetchPublicPosts = FutureProvider<List<PublicPostModel>>((ref) async {
   final userId = Supabase.instance.client.auth.currentUser?.id;
 
   try {
-    final response = await supabase
-        .from('public_posts')
-        .select(
-            '*, profiles(username, avatar_url, is_verified), post_likes(user_id) ,  comments(id)')
-        .order('created_at', ascending: false);
+    final response = await supabase.from('posts').select('''
+          *,
+          profiles!posts_user_id_fkey (
+            username, 
+            avatar_url, 
+            is_verified
+          ),
+          likes (
+            user_id
+          ),
+          comments (
+            id
+          )
+        ''').order('created_at', ascending: false);
 
-    final postsData = response as List<dynamic>; // از فیلد data استفاده کنید
+    final postsData = response as List<dynamic>;
 
     return postsData.map((e) {
       final profile = e['profiles'] as Map<String, dynamic>? ?? {};
@@ -128,11 +135,11 @@ final fetchPublicPosts = FutureProvider<List<PublicPostModel>>((ref) async {
       final username = profile['username'] as String? ?? 'Unknown';
       final isVerified = profile['is_verified'] as bool? ?? false;
 
-      final likes = e['post_likes'] as List<dynamic>? ?? [];
+      // تغییر از likes به likes
+      final likes = e['likes'] as List<dynamic>? ?? [];
       final likeCount = likes.length;
       final isLiked = likes.any((like) => like['user_id'] == userId);
 
-      // شمارش تعداد کامنت‌ها از id‌ها
       final comments = e['comments'] as List<dynamic>? ?? [];
       final commentCount = comments.length;
 
@@ -151,7 +158,6 @@ final fetchPublicPosts = FutureProvider<List<PublicPostModel>>((ref) async {
     throw Exception("Exception in fetching public posts: $e");
   }
 });
-
 final postsProvider = StateProvider<List<PublicPostModel>>((ref) {
   final posts = ref.watch(fetchPublicPosts);
   return posts.value ?? [];
@@ -163,38 +169,61 @@ class SupabaseService {
 
   SupabaseService(this.supabase);
 
+  Future<Map<String, dynamic>?> _checkExistingLike(
+    String postId,
+    String userId,
+  ) async {
+    try {
+      final response = await supabase
+          .from('likes')
+          .select()
+          .eq('post_id', postId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      return response;
+    } catch (e) {
+      print('خطا در بررسی لایک موجود: $e');
+      rethrow;
+    }
+  }
+
   Future<void> toggleLike({
     required String postId,
     required String ownerId,
     required WidgetRef ref,
   }) async {
     try {
-      // بررسی اعتبار شناسه‌ها
-      if (postId.isEmpty) {
-        throw ArgumentError('شناسه پست نمی‌تواند خالی باشد');
-      }
-
-      if (ownerId.isEmpty) {
-        throw ArgumentError('شناسه مالک پست نمی‌تواند خالی باشد');
+      // اعتبارسنجی ورودی‌ها
+      if (postId.isEmpty || ownerId.isEmpty) {
+        throw ArgumentError('شناسه‌های ورودی نمی‌توانند خالی باشند');
       }
 
       final userId = _validateUser();
 
-      // بررسی اینکه آیا شناسه‌ها UUID معتبر هستند
-      _validateUUID(postId);
-      _validateUUID(ownerId);
-      _validateUUID(userId);
+      // اعتبارسنجی UUID ها
+      [postId, ownerId, userId].forEach(_validateUUID);
 
-      // بررسی لایک موجود با استفاده از باکچ سیف
+      // بررسی وضعیت فعلی لایک
       final existingLike = await _checkExistingLike(postId, userId);
 
+      // اعمال تغییرات در دیتابیس
       if (existingLike == null) {
-        await _addLike(postId, userId, ownerId);
+        await supabase.from('likes').insert({
+          'post_id': postId,
+          'user_id': userId,
+          'owner_id': ownerId,
+          'created_at': DateTime.now().toIso8601String(),
+        });
       } else {
-        await _removeLike(postId, userId, ownerId);
+        await supabase
+            .from('likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', userId);
       }
 
-      // بروزرسانی استیت
+      // بروزرسانی UI
       ref.invalidate(fetchPublicPosts);
     } on AuthException catch (e) {
       print('خطای احراز هویت: ${e.message}');
@@ -227,24 +256,24 @@ class SupabaseService {
     return user.id;
   }
 
-  Future<Map<String, dynamic>?> _checkExistingLike(
-      String postId, String userId) async {
-    try {
-      return await supabase
-          .from('post_likes')
-          .select()
-          .eq('post_id', postId)
-          .eq('user_id', userId)
-          .maybeSingle();
-    } catch (e) {
-      print('خطا در بررسی لایک موجود: $e');
-      return null;
-    }
-  }
+  // Future<Map<String, dynamic>?> _checkExistingLike(
+  //     String postId, String userId) async {
+  //   try {
+  //     return await supabase
+  //         .from('likes')
+  //         .select()
+  //         .eq('post_id', postId)
+  //         .eq('user_id', userId)
+  //         .maybeSingle();
+  //   } catch (e) {
+  //     print('خطا در بررسی لایک موجود: $e');
+  //     return null;
+  //   }
+  // }
 
   Future<void> _addLike(String postId, String userId, String ownerId) async {
     try {
-      await supabase.from('post_likes').insert({
+      await supabase.from('likes').insert({
         'post_id': postId,
         'user_id': userId,
       });
@@ -262,7 +291,7 @@ class SupabaseService {
 
   Future<void> _removeLike(String postId, String userId, String ownerId) async {
     try {
-      await supabase.from('post_likes').delete().match({
+      await supabase.from('likes').delete().match({
         'post_id': postId,
         'user_id': userId,
       });
@@ -373,13 +402,13 @@ class SupabaseService {
       final userId = _validateUser();
 
       // حذف لایک‌ها
-      await supabase.from('post_likes').delete().eq('post_id', postId);
+      await supabase.from('likes').delete().eq('post_id', postId);
 
       // حذف نوتیفیکیشن‌ها
       await supabase.from('notifications').delete().eq('post_id', postId);
 
       // حذف پست
-      await supabase.from('public_posts').delete().eq('id', postId);
+      await supabase.from('posts').delete().eq('id', postId);
 
       ref.invalidate(fetchPublicPosts);
 
@@ -658,7 +687,7 @@ class CommentService {
     required String postId,
     required String content,
     required String postOwnerId,
-    String? parentCommentId, // اضافه کردن پارامتر جدید
+    String? parentCommentId,
   }) async {
     try {
       final currentUser = _supabase.auth.currentUser;
@@ -666,22 +695,20 @@ class CommentService {
         throw Exception('کاربر وارد سیستم نشده است');
       }
 
-      if (content.trim().isEmpty) {
-        throw Exception('محتوای کامنت نمی‌تواند خالی باشد');
-      }
-
-      final response = await _supabase
-          .from('comments')
-          .insert({
-            'post_id': postId,
-            'user_id': currentUser.id,
-            'content': content,
-            'post_owner_id': postOwnerId,
-            'parent_comment_id': parentCommentId, // اضافه کردن فیلد جدید
-            'created_at': DateTime.now().toIso8601String(),
-          })
-          .select('*, user:profiles(username, avatar_url, is_verified)')
-          .single();
+      final response = await _supabase.from('comments').insert({
+        'post_id': postId,
+        'owner_id': currentUser.id, // تغییر از user_id به owner_id
+        'user_id': postOwnerId, // صاحب پست
+        'content': content,
+        'parent_comment_id': parentCommentId,
+      }).select('''
+          *,
+          profiles!comments_owner_id_fkey (
+            username, 
+            avatar_url, 
+            is_verified
+          )
+        ''').single();
 
       return CommentModel.fromMap(response);
     } catch (e) {
@@ -693,19 +720,19 @@ class CommentService {
 // تغییر متد fetchComments برای دریافت کامنت‌های فرزند
   Future<List<CommentModel>> fetchComments(String postId) async {
     try {
-      final response = await _supabase
-          .from('comments')
-          .select('*, profiles(username, avatar_url, is_verified)')
-          .eq('post_id', postId)
-          .order('created_at', ascending: false);
+      final response = await _supabase.from('comments').select('''
+          *,
+          profiles!comments_owner_id_fkey (
+            username, 
+            avatar_url, 
+            is_verified
+          )
+        ''').eq('post_id', postId).order('created_at', ascending: false);
 
-      // دریافت لیست کامنت‌ها
       List<CommentModel> comments =
           (response as List).map((item) => CommentModel.fromMap(item)).toList();
 
-      // مرتب‌سازی کامنت‌ها بر اساس والد
       _organizeComments(comments);
-
       return comments;
     } catch (e) {
       print('خطا در واکشی کامنت‌ها: $e');
@@ -901,7 +928,7 @@ class CommentNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<String> getPostOwnerId(String postId) async {
     final response = await supabase
-        .from('public_posts')
+        .from('posts')
         .select('user_id')
         .eq('id', postId)
         .single();
@@ -1008,47 +1035,45 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
           .from('follows')
           .select('id')
           .eq('following_id', userId);
-      final followersCount = followersResponse.length;
 
       // محاسبه تعداد دنبال‌شونده‌ها
       final followingResponse =
           await supabase.from('follows').select('id').eq('follower_id', userId);
-      final followingCount = followingResponse.length;
 
-      // دریافت پست‌ها و محاسبه تعداد آنها
-      final postsResponse = await supabase.from('public_posts').select('''
+      // دریافت پست‌ها با foreign key های مشخص
+      final postsResponse = await supabase.from('posts').select('''
         id, 
         content, 
         created_at, 
         user_id,
-        profiles(username, avatar_url, is_verified),
-        post_likes(user_id),
-        comments(id)
+        profiles!posts_user_id_fkey (
+          username,
+          avatar_url,
+          is_verified
+        ),
+        likes!likes_post_id_fkey (
+          user_id
+        ),
+        comments!comments_post_id_fkey (
+          id
+        )
       ''').eq('user_id', userId).order('created_at', ascending: false);
-
-      final postsCount = postsResponse.length;
 
       // ساخت مدل پروفایل
       final profile = ProfileModel.fromMap(profileResponse);
 
       final posts = postsResponse.map((post) {
-        final postLikes = post['post_likes'] as List? ?? [];
-        final likeCount = postLikes.length;
-        final isLiked =
-            postLikes.any((like) => like['user_id'] == currentUserId);
-
-        // شمارش تعداد کامنت‌ها
+        final postLikes = post['likes'] as List? ?? [];
         final comments = post['comments'] as List<dynamic>? ?? [];
-        final commentCount = comments.length;
 
         return PublicPostModel.fromMap({
           ...post,
-          'like_count': likeCount,
-          'is_liked': isLiked,
-          'username': post['profiles']?['username'] ?? 'Unknown',
-          'avatar_url': post['profiles']?['avatar_url'] ?? '',
-          'is_verified': post['profiles']?['is_verified'] ?? false,
-          'comment_count': commentCount, // اضافه کردن تعداد کامنت‌ها
+          'like_count': postLikes.length,
+          'is_liked': postLikes.any((like) => like['user_id'] == currentUserId),
+          'username': post['profiles']['username'] ?? 'Unknown',
+          'avatar_url': post['profiles']['avatar_url'] ?? '',
+          'is_verified': post['profiles']['is_verified'] ?? false,
+          'comment_count': comments.length,
         });
       }).toList();
 
@@ -1056,18 +1081,16 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
       final followStatusResponse = await supabase
           .from('follows')
           .select('id')
-          .eq('follower_id', supabase.auth.currentUser!.id)
+          .eq('follower_id', currentUserId!)
           .eq('following_id', userId)
           .maybeSingle();
 
       // به‌روزرسانی استیت
       state = profile.copyWith(
         posts: posts,
-        followersCount: followersCount,
-        followingCount: followingCount,
+        followersCount: followersResponse.length,
+        followingCount: followingResponse.length,
         isFollowed: followStatusResponse != null,
-        // اضافه کردن تعداد پست‌ها به مدل در صورت نیاز
-        // postCount: postsCount, // اگر مدل ProfileModel این فیلد را داشته باشد
       );
     } catch (e) {
       print('خطا در دریافت پروفایل: $e');
@@ -1076,28 +1099,28 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
   }
 
   Future<void> toggleFollow(String userId) async {
+    if (state == null) return;
+
     final supabase = Supabase.instance.client;
     final currentUserId = supabase.auth.currentUser?.id;
-
-    if (state == null || currentUserId == null) return;
+    if (currentUserId == null) return;
 
     try {
       if (state!.isFollowed) {
         // حذف فالو
-        await supabase
-            .from('follows')
-            .delete()
-            .eq('follower_id', currentUserId)
-            .eq('following_id', userId);
+        await Future.wait([
+          supabase
+              .from('follows')
+              .delete()
+              .eq('follower_id', currentUserId)
+              .eq('following_id', userId),
+          supabase.from('notifications').delete().match({
+            'recipient_id': userId,
+            'sender_id': currentUserId,
+            'type': 'follow',
+          })
+        ]);
 
-        // حذف اعلان فالو
-        await supabase.from('notifications').delete().match({
-          'recipient_id': userId,
-          'sender_id': currentUserId,
-          'type': 'follow',
-        });
-
-        // کاهش تعداد فالوورها
         state = state!.copyWith(
           isFollowed: false,
           followersCount: state!.followersCount - 1,
@@ -1109,15 +1132,6 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
           'following_id': userId,
         });
 
-        // ایجاد اعلان فالو
-        // await supabase.from('notifications').insert({
-        //   'recipient_id': userId,
-        //   'sender_id': currentUserId,
-        //   'type': 'follow',
-        //   'content': 'کاربر شما را دنبال کرد'
-        // });
-
-        // افزایش تعداد فالوورها
         state = state!.copyWith(
           isFollowed: true,
           followersCount: state!.followersCount + 1,
@@ -1131,24 +1145,20 @@ class ProfileNotifier extends StateNotifier<ProfileModel?> {
   void updatePost(PublicPostModel updatedPost) {
     if (state == null) return;
 
-    final updatedPosts = state!.posts.map((post) {
-      if (post.id == updatedPost.id) {
-        return updatedPost;
-      }
-      return post;
-    }).toList();
+    final updatedPosts = List<PublicPostModel>.from(state!.posts);
+    final index = updatedPosts.indexWhere((post) => post.id == updatedPost.id);
 
-    state = state!.copyWith(posts: updatedPosts);
+    if (index != -1) {
+      updatedPosts[index] = updatedPost;
+      state = state!.copyWith(posts: updatedPosts);
+    }
   }
 
   void addNewPost(PublicPostModel newPost) {
     if (state == null) return;
-
-    // افزودن پست جدید به ابتدای لیست
-    final updatedPosts = [newPost, ...state!.posts];
-
-    // به‌روزرسانی استیت با پست‌های جدید
-    state = state!.copyWith(posts: updatedPosts);
+    state = state!.copyWith(
+      posts: [newPost, ...state!.posts],
+    );
   }
 }
 
@@ -1162,9 +1172,8 @@ final postProvider =
   final supabase = Supabase.instance.client;
 
   final response = await supabase
-      .from('public_posts')
-      .select(
-          '*, profiles(username, avatar_url, is_verified), post_likes(user_id)')
+      .from('posts')
+      .select('*, profiles(username, avatar_url, is_verified), likes(user_id)')
       .eq('id', postId)
       .maybeSingle();
 
@@ -1172,7 +1181,7 @@ final postProvider =
     throw Exception('پستی با این شناسه یافت نشد.');
   }
 
-  final likes = response['post_likes'] as List<dynamic>? ?? [];
+  final likes = response['likes'] as List<dynamic>? ?? [];
   final likeCount = likes.length;
   final isLiked =
       likes.any((like) => like['user_id'] == supabase.auth.currentUser?.id);
@@ -1383,21 +1392,21 @@ final fetchFollowingPostsProvider =
 
   // دریافت پست‌های افراد دنبال شده
   final response = await supabase
-      .from('public_posts')
+      .from('posts')
       .select('''
         id, 
         content, 
         created_at, 
         user_id,
         profiles(username, avatar_url, is_verified),
-        post_likes(user_id),
+        likes(user_id),
         comments(id)
       ''')
       .or(followingIds.map((id) => 'user_id.eq.$id').join(','))
       .order('created_at', ascending: false);
 
   return response.map((post) {
-    final postLikes = post['post_likes'] as List? ?? [];
+    final postLikes = post['likes'] as List? ?? [];
     final comments = post['comments'] as List<dynamic>? ?? [];
 
     // چک کردن لایک توسط کاربر فعلی

@@ -307,6 +307,14 @@ PopupMenuButton<String> _buildPostActions(
                 content: const Text('آیا از حذف این پست اطمینان دارید؟'),
                 actions: [
                   TextButton(
+                    style: ButtonStyle(
+                      overlayColor: WidgetStateProperty.all(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white12 // افکت لمس در تم تاریک
+                            : Colors.black12, // افکت لمس در تم روشن
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context, false),
                     child: Text(
                       'انصراف',
                       style: TextStyle(
@@ -317,25 +325,8 @@ PopupMenuButton<String> _buildPostActions(
                             : Colors.grey[800], // رنگ تیره‌تر برای تم روشن
                       ),
                     ),
-                    style: ButtonStyle(
-                      overlayColor: MaterialStateProperty.all(
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white12 // افکت لمس در تم تاریک
-                            : Colors.black12, // افکت لمس در تم روشن
-                      ),
-                    ),
-                    onPressed: () => Navigator.pop(context, false),
                   ),
                   ElevatedButton(
-                    child: Text(
-                      'حذف',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors
-                            .white, // Text color remains white for both themes
-                      ),
-                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           Theme.of(context).brightness == Brightness.dark
@@ -348,6 +339,15 @@ PopupMenuButton<String> _buildPostActions(
                       elevation: 5,
                     ),
                     onPressed: () => Navigator.pop(context, true),
+                    child: const Text(
+                      'حذف',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors
+                            .white, // Text color remains white for both themes
+                      ),
+                    ),
                   ),
                 ],
               ),

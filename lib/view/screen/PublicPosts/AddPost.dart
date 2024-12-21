@@ -52,7 +52,7 @@ class _AddPublicPostScreenState extends ConsumerState<AddPublicPostScreen> {
         throw Exception('خطا در شناسایی کاربر.');
       }
 
-      await Supabase.instance.client.from('public_posts').insert({
+      await Supabase.instance.client.from('posts').insert({
         'content': content,
         'user_id': userId,
         'created_at': DateTime.now().toIso8601String(),
@@ -64,6 +64,7 @@ class _AddPublicPostScreenState extends ConsumerState<AddPublicPostScreen> {
       );
       Navigator.of(context).pop();
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('خطا در افزودن پست: $e')),
       );

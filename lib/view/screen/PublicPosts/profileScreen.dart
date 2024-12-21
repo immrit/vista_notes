@@ -294,9 +294,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ' ${profile.followingCount}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(
+                    const Text(
                       'دنبال شونده ها ',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -318,9 +318,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ' ${profile.followersCount}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text(
+                  const Text(
                     'دنبال کنندگان',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -336,9 +336,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ' ${profile.posts.length}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(
+                    const Text(
                       ' پست‌ها',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -586,13 +586,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // ارسال درخواست به سرور
     try {
       if (updatedPost.isLiked) {
-        await supabase.from('post_likes').insert({
+        await supabase.from('likes').insert({
           'post_id': updatedPost.id,
           'user_id': supabase.auth.currentUser!.id,
         });
       } else {
         await supabase
-            .from('post_likes')
+            .from('likes')
             .delete()
             .eq('post_id', updatedPost.id)
             .eq('user_id', supabase.auth.currentUser!.id);

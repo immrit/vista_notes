@@ -114,9 +114,9 @@ class ThemeItems extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Directionality(
+            const Directionality(
               textDirection: TextDirection.rtl,
-              child: const Text(
+              child: Text(
                 "استایل‌ها:",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -252,7 +252,7 @@ class VersionNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text(
-      '2.0.10+85 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
+      '2.0.11+86 :نسخه', // به‌روز‌رسانی این خط با شماره نسخه فعلی برنامه
       style: TextStyle(fontSize: 16),
     );
   }
