@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../provider/uploadimage.dart'; // سرویس مربوط به آپلود تصویر در ArvanCloud
 import 'package:vistaNote/util/widgets.dart';
 import 'package:vistaNote/view/screen/homeScreen.dart';
 import '../../../main.dart';
 
-// وضعیت بارگذاری
-final loadingProvider = StateProvider<bool>((ref) => true);
+final loadingProvider = StateProvider<bool>((ref) => false);
 
 class SetProfileData extends ConsumerStatefulWidget {
   const SetProfileData({super.key});
@@ -18,8 +18,8 @@ class SetProfileData extends ConsumerStatefulWidget {
 }
 
 class _SetProfileDataState extends ConsumerState<SetProfileData> {
-  final _usernameController = TextEditingController();
-  TextEditingController fullNameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
   final TextEditingController bioController = TextEditingController();
   File? _imageFile;
   final picker = ImagePicker();
@@ -27,62 +27,86 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
   @override
   void initState() {
     super.initState();
-    _getProfile();
+    // _getProfile();
   }
 
-  Future<void> _getProfile() async {
-    ref.read(loadingProvider.notifier).state = true;
-    try {
-      final userId = supabase.auth.currentSession?.user.id;
-      if (userId == null) return;
+  // Future<void> _getProfile() async {
+  //   ref.read(loadingProvider.notifier).state = true;
+  //   try {
+  //     final userId = supabase.auth.currentSession?.user.id;
+  //     if (userId == null) return;
 
-      final data =
-          await supabase.from('profiles').select().eq('id', userId).single();
+  //     final data =
+  //         await supabase.from('profiles').select().eq('id', userId).single();
 
-      if (!mounted) return;
+  //     if (!mounted) return;
 
-      _usernameController.text = (data['username'] ?? '') as String;
-      fullNameController.text = (data['full_name'] ?? '') as String;
-      bioController.text = (data['bio'] ?? '') as String;
-      final avatarUrl = data['avatar_url'] as String?;
-      if (avatarUrl != null && avatarUrl.isNotEmpty) {
-        _imageFile = File(avatarUrl);
-      }
-    } catch (error) {
-      if (mounted) {
-        context.showSnackBar('خطا در بازیابی پروفایل، لطفاً دوباره تلاش کنید.',
-            isError: true);
-      }
-    } finally {
-      if (mounted) {
-        ref.read(loadingProvider.notifier).state = false;
-      }
-    }
-  }
+  //     _usernameController.text = (data['username'] ?? '') as String;
+  //     fullNameController.text = (data['full_name'] ?? '') as String;
+  //     bioController.text = (data['bio'] ?? '') as String;
+  //   } catch (error) {
+  //     if (mounted) {
+  //       context.showSnackBar('خطا در بازیابی پروفایل، لطفاً دوباره تلاش کنید.',
+  //           isError: true);
+  //     }
+  //   } finally {
+  //     if (mounted) {
+  //       ref.read(loadingProvider.notifier).state = false;
+  //     }
+  //   }
+  // }
 
   Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    try {
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
 
-    if (pickedFile != null) {
-      _imageFile = File(pickedFile.path);
-      await _uploadImage(_imageFile!);
+      if (pickedFile != null) {
+        final imageFile = File(pickedFile.path);
+
+        setState(() {
+          _imageFile = imageFile;
+        });
+
+        await _uploadImage(imageFile);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در انتخاب تصویر: $e')),
+        );
+      }
     }
   }
 
   Future<void> _uploadImage(File imageFile) async {
     try {
-      final userId = supabase.auth.currentUser?.id;
+      if (!await imageFile.exists()) {
+        throw Exception('فایل تصویر وجود ندارد');
+      }
+
+      final fileSize = await imageFile.length();
+      if (fileSize > 5 * 1024 * 1024) {
+        throw Exception('حجم فایل بیشتر از حد مجاز است');
+      }
+
+      // استفاده از سرویس آپلود برای ArvanCloud
+      final imageUrl = await ImageUploadService.uploadImage(imageFile);
+
+      if (imageUrl == null) {
+        throw Exception('آپلود تصویر به ArvanCloud شکست خورد');
+      }
+
+      final userId = supabase.auth.currentSession?.user.id;
       if (userId == null) return;
-
-      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      await supabase.storage.from('avatars').upload(fileName, imageFile);
-
-      final publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName);
 
       await supabase
           .from('profiles')
-          .update({'avatar_url': publicUrl}).eq('id', userId);
+          .update({'avatar_url': imageUrl}).eq('id', userId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -92,7 +116,7 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در آپلود تصویر، دوباره تلاش کنید: $e')),
+          SnackBar(content: Text('خطا در آپلود تصویر: $e')),
         );
       }
     }
@@ -100,9 +124,11 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
 
   Future<void> _updateProfile() async {
     ref.read(loadingProvider.notifier).state = true;
+
     final userName = _usernameController.text.trim();
     final user = supabase.auth.currentUser;
-    if (user == null) return;
+
+    if (user == null || userName.isEmpty) return;
 
     if (!RegExp(r'^[a-zA-Z]+$').hasMatch(userName)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -153,6 +179,8 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
   @override
   void dispose() {
     _usernameController.dispose();
+    fullNameController.dispose();
+    bioController.dispose();
     super.dispose();
   }
 
@@ -204,19 +232,31 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
             TextInputType.text,
           ),
           SizedBox(height: 20.h),
-          customTextField('نام', fullNameController, (value) {
-            if (value == null || value.isEmpty) {
-              return 'لطفا مقادیر را وارد نمایید';
-            }
-            return null;
-          }, false, TextInputType.text),
+          customTextField(
+            'نام',
+            fullNameController,
+            (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا مقادیر را وارد نمایید';
+              }
+              return null;
+            },
+            false,
+            TextInputType.text,
+          ),
           SizedBox(height: 20.h),
-          customTextField('درباره شما', bioController, (value) {
-            if (value == null || value.isEmpty) {
-              return 'لطفا مقادیر را وارد نمایید';
-            }
-            return null;
-          }, false, TextInputType.text)
+          customTextField(
+            'درباره شما',
+            bioController,
+            (value) {
+              if (value == null || value.isEmpty) {
+                return 'لطفا مقادیر را وارد نمایید';
+              }
+              return null;
+            },
+            false,
+            TextInputType.text,
+          ),
         ],
       ),
       bottomNavigationBar: Padding(

@@ -118,12 +118,23 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _setFcmToken(String fcmToken) async {
-    final userId = supabase.auth.currentUser?.id;
+    final user = supabase.auth.currentUser;
+    final userId = user?.id;
 
     if (userId != null) {
-      await supabase
-          .from('profiles')
-          .upsert({'id': userId, 'fcm_token': fcmToken});
+      final username = user?.userMetadata?['username'] ??
+          user?.email?.split('@')[0] ??
+          'user_$userId';
+
+      final fullName = user?.userMetadata?['full_name'] ??
+          username; // Fallback to username if no full_name
+
+      await supabase.from('profiles').upsert({
+        'id': userId,
+        'fcm_token': fcmToken,
+        'username': username,
+        'full_name': fullName, // Add required full_name field
+      });
     }
   }
 

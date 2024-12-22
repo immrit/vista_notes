@@ -36,7 +36,7 @@ class ImageUploadService {
 
     final dir = path.dirname(file.path);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final convertedFile = File('$dir/converted_${timestamp}.jpg')
+    final convertedFile = File('$dir/converted_$timestamp.jpg')
       ..writeAsBytesSync(img);
 
     print('فایل تبدیل شده در مسیر: ${convertedFile.path}');
@@ -73,7 +73,7 @@ class ImageUploadService {
       final Uint8List fileBytes = await compressedFile.readAsBytes();
 
       // همیشه با نوع 'image/jpeg' پس از تبدیل کار می‌کنید
-      final contentType = 'image/jpeg';
+      const contentType = 'image/jpeg';
       print('Content-Type: $contentType');
       print('File size: ${fileBytes.length} bytes');
 
@@ -148,7 +148,7 @@ class ImageUploadService {
       final dir = path.dirname(file.path);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       // همیشه با پسوند jpg ذخیره می‌کنیم
-      final compressedFile = File('$dir/compressed_${timestamp}.jpg')
+      final compressedFile = File('$dir/compressed_$timestamp.jpg')
         ..writeAsBytesSync(img);
 
       print('فایل فشرده شده در مسیر: ${compressedFile.path}');

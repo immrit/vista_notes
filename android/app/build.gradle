@@ -32,30 +32,38 @@ android {
         versionName = flutter.versionName
     }
 
-//    signingConfigs {
-//        release {
-//            // Load signing properties from key.properties file
-
-//            def keystoreProperties = new Properties()
-//            def keystorePropertiesFile = rootProject.file("key.properties")
-//            if (keystorePropertiesFile.exists()) {
-//                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-//            }
-//
-//            keyAlias = keystoreProperties['keyAlias']
-//            keyPassword = keystoreProperties['keyPassword']
-//            storeFile = file(keystoreProperties['storeFile'])
-//            storePassword = keystoreProperties['storePassword']
-//        }
-//    }
-
-
+    signingConfigs {
+        debug {
+            storeFile file("debug.keystore") // Make sure path is relative to app folder
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+        
+        release {
+            def keystoreProperties = new Properties()
+            def keystorePropertiesFile = rootProject.file("key.properties")
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+            }
+            
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword'] 
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            debuggable true
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }

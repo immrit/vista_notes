@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/util/widgets.dart';
 import '../../../provider/provider.dart';
 import '../../../provider/uploadimage.dart';
-import 'package:path/path.dart' as path;
 
 class EditProfile extends ConsumerStatefulWidget {
   const EditProfile({super.key});
