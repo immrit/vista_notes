@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../provider/uploadimage.dart'; // سرویس مربوط به آپلود تصویر در ArvanCloud
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vistaNote/util/widgets.dart';
-import 'package:vistaNote/view/screen/homeScreen.dart';
+import 'package:vistaNote/view/screen/Notes/NotesPage.dart';
+
 import '../../../main.dart';
 
-final loadingProvider = StateProvider<bool>((ref) => false);
+// وضعیت بارگذاری
+final loadingProvider = StateProvider<bool>((ref) => true);
 
+// کلاس اصلی
 class SetProfileData extends ConsumerStatefulWidget {
   const SetProfileData({super.key});
 
@@ -18,169 +19,105 @@ class SetProfileData extends ConsumerStatefulWidget {
 }
 
 class _SetProfileDataState extends ConsumerState<SetProfileData> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController bioController = TextEditingController();
+  final _usernameController = TextEditingController();
   File? _imageFile;
   final picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    // _getProfile();
+    _getProfile();
   }
 
-  // Future<void> _getProfile() async {
-  //   ref.read(loadingProvider.notifier).state = true;
-  //   try {
-  //     final userId = supabase.auth.currentSession?.user.id;
-  //     if (userId == null) return;
-
-  //     final data =
-  //         await supabase.from('profiles').select().eq('id', userId).single();
-
-  //     if (!mounted) return;
-
-  //     _usernameController.text = (data['username'] ?? '') as String;
-  //     fullNameController.text = (data['full_name'] ?? '') as String;
-  //     bioController.text = (data['bio'] ?? '') as String;
-  //   } catch (error) {
-  //     if (mounted) {
-  //       context.showSnackBar('خطا در بازیابی پروفایل، لطفاً دوباره تلاش کنید.',
-  //           isError: true);
-  //     }
-  //   } finally {
-  //     if (mounted) {
-  //       ref.read(loadingProvider.notifier).state = false;
-  //     }
-  //   }
-  // }
-
-  Future<void> _pickImage() async {
-    try {
-      final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
-
-      if (pickedFile != null) {
-        final imageFile = File(pickedFile.path);
-
-        setState(() {
-          _imageFile = imageFile;
-        });
-
-        await _uploadImage(imageFile);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در انتخاب تصویر: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _uploadImage(File imageFile) async {
-    try {
-      if (!await imageFile.exists()) {
-        throw Exception('فایل تصویر وجود ندارد');
-      }
-
-      final fileSize = await imageFile.length();
-      if (fileSize > 5 * 1024 * 1024) {
-        throw Exception('حجم فایل بیشتر از حد مجاز است');
-      }
-
-      // استفاده از سرویس آپلود برای ArvanCloud
-      final imageUrl = await ImageUploadService.uploadImage(imageFile);
-
-      if (imageUrl == null) {
-        throw Exception('آپلود تصویر به ArvanCloud شکست خورد');
-      }
-
-      final userId = supabase.auth.currentSession?.user.id;
-      if (userId == null) return;
-
-      await supabase
-          .from('profiles')
-          .update({'avatar_url': imageUrl}).eq('id', userId);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تصویر با موفقیت آپلود شد')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطا در آپلود تصویر: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateProfile() async {
+  // واکشی پروفایل
+  Future<void> _getProfile() async {
     ref.read(loadingProvider.notifier).state = true;
 
+    try {
+      final userId = supabase.auth.currentSession!.user.id;
+      final data =
+          await supabase.from('profiles').select().eq('id', userId).single();
+      _usernameController.text = (data['username'] ?? '') as String;
+      final avatarUrl = data['avatar_url'] as String?;
+      if (avatarUrl != null && avatarUrl.isNotEmpty) {
+        _imageFile = File(avatarUrl);
+      }
+    } catch (error) {
+      context.showSnackBar('خطا در بازیابی پروفایل', isError: true);
+    } finally {
+      ref.read(loadingProvider.notifier).state = false;
+    }
+  }
+
+  // انتخاب تصویر
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      _imageFile = File(pickedFile.path);
+      await _uploadImage(_imageFile!);
+    }
+  }
+
+  // آپلود تصویر
+  Future<void> _uploadImage(File imageFile) async {
+    try {
+      final userId = supabase.auth.currentUser!.id;
+      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // آپلود به فضای ذخیره‌سازی
+      await supabase.storage.from('avatars').upload(fileName, imageFile);
+
+      // دریافت URL عمومی
+      final publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      // ذخیره URL تصویر در جدول profiles
+      await supabase
+          .from('profiles')
+          .update({'avatar_url': publicUrl}).eq('id', userId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تصویر با موفقیت آپلود شد')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطا در آپلود تصویر: $e')),
+      );
+    }
+  }
+
+  // به‌روزرسانی پروفایل
+  Future<void> _updateProfile() async {
+    ref.read(loadingProvider.notifier).state = true;
     final userName = _usernameController.text.trim();
     final user = supabase.auth.currentUser;
 
-    if (user == null || userName.isEmpty) return;
-
-    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(userName)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لطفاً فقط از حروف انگلیسی استفاده کنید')),
-      );
-      ref.read(loadingProvider.notifier).state = false;
-      return;
-    }
-
     final updates = {
-      'id': user.id,
+      'id': user!.id,
       'username': userName,
-      'full_name': fullNameController.text,
-      'bio': bioController.text,
       'updated_at': DateTime.now().toIso8601String(),
-      'email': user.email,
+      'email': user.email
     };
 
     try {
       await supabase.from('profiles').upsert(updates);
-      if (mounted) {
-        context.showSnackBar('پروفایل با موفقیت به‌روزرسانی شد!',
-            isError: false);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
+      context.showSnackBar('پروفایل با موفقیت به‌روزرسانی شد!');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NotesScreen()),
+      );
     } catch (error) {
-      if (mounted) {
-        String errorMessage = 'خطا در بروزرسانی پروفایل: $error';
-        if (error
-            .toString()
-            .contains('duplicate key value violates unique constraint')) {
-          errorMessage = 'نام کاربری تکراری است، لطفاً نام دیگری انتخاب کنید.';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطا در بروزرسانی پروفایل: $error')),
+      );
     } finally {
-      if (mounted) {
-        ref.read(loadingProvider.notifier).state = false;
-      }
+      ref.read(loadingProvider.notifier).state = false;
     }
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
-    fullNameController.dispose();
-    bioController.dispose();
     super.dispose();
   }
 
@@ -201,8 +138,8 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
           GestureDetector(
             onTap: _pickImage,
             child: Container(
-              width: .16.sh,
-              height: .16.sh,
+              width: 150,
+              height: 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 image: DecorationImage(
@@ -216,60 +153,21 @@ class _SetProfileDataState extends ConsumerState<SetProfileData> {
             ),
           ),
           const SizedBox(height: 30),
-          customTextField(
-            'نام کاربری',
-            _usernameController,
-            (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفا مقادیر را وارد نمایید';
-              }
-              if (!RegExp(r'^[a-z._-]{5,}$').hasMatch(value)) {
-                return 'نام کاربری باید حداقل ۵ حرف داشته باشد و فقط از حروف کوچک، _، - و . استفاده کنید';
-              }
-              return null;
-            },
-            false,
-            TextInputType.text,
-          ),
-          SizedBox(height: 20.h),
-          customTextField(
-            'نام',
-            fullNameController,
-            (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفا مقادیر را وارد نمایید';
-              }
-              return null;
-            },
-            false,
-            TextInputType.text,
-          ),
-          SizedBox(height: 20.h),
-          customTextField(
-            'درباره شما',
-            bioController,
-            (value) {
-              if (value == null || value.isEmpty) {
-                return 'لطفا مقادیر را وارد نمایید';
-              }
-              return null;
-            },
-            false,
-            TextInputType.text,
-          ),
+          customTextField('نام کاربری', _usernameController, (value) {
+            if (value == null || value.isEmpty) {
+              return 'لطفا مقادیر را وارد نمایید';
+            }
+          }, false, TextInputType.text),
+          const SizedBox(height: 18),
         ],
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          right: 10,
-          left: 10,
-        ),
-        child: customButton(
-          loading ? null : _updateProfile,
-          loading ? 'در حال ذخیره‌سازی...' : 'ذخیره',
-          ref,
-        ),
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            right: 10,
+            left: 10),
+        child: customButton(loading ? null : _updateProfile,
+            loading ? 'در حال ذخیره‌سازی...' : 'ذخیره', ref),
       ),
     );
   }

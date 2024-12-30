@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vistaNote/util/widgets.dart';
 import '../../../provider/provider.dart';
-import '../../../provider/uploadimage.dart';
 
 class EditProfile extends ConsumerStatefulWidget {
   const EditProfile({super.key});
@@ -61,43 +60,45 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
   Future<void> _deleteImage() async {
     try {
-      final supabase = Supabase.instance.client;
+      final supabase = ref.read(supabaseClientProvider);
       final userId = supabase.auth.currentUser!.id;
 
-      // دریافت URL عکس پروفایل فعلی از پروفایل کاربر
+      // دریافت URL عکس پروفایل فعلی
       final profileResponse = await supabase
           .from('profiles')
           .select('avatar_url')
           .eq('id', userId)
           .single();
 
-      final previousAvatarUrl = profileResponse['avatar_url'];
+      final previousAvatarUrl = profileResponse['avatar_url'] as String?;
 
-      // حذف عکس از آروان کلود اگر وجود داشته باشد
-      if (previousAvatarUrl != null && previousAvatarUrl.isNotEmpty) {
-        final success = await ImageUploadService.deleteImage(previousAvatarUrl);
-        if (!success) {
-          throw Exception('خطا در حذف فایل از آروان کلود');
-        }
+      if (previousAvatarUrl != null) {
+        // حذف فایل از باکت
+        final fileName = previousAvatarUrl.split('/').last;
+        await supabase.storage.from('avatars').remove([fileName]);
 
-        // به‌روزرسانی URL تصویر پروفایل به null
+        // به‌روزرسانی پروفایل
         await supabase
             .from('profiles')
             .update({'avatar_url': null}).eq('id', userId);
 
-        // نمایش پیام موفقیت
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('عکس پروفایل حذف شد')),
-        );
+        setState(() {
+          _imageFile = null;
+        });
 
-        // به‌روزرسانی UI
-        setState(() {});
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('عکس پروفایل حذف شد')),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطا در حذف تصویر: $e')),
-      );
       print('Error deleting image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطا در حذف تصویر: $e')),
+        );
+      }
     }
   }
 
@@ -139,20 +140,6 @@ class _EditProfileState extends ConsumerState<EditProfile> {
         throw Exception('فایل تصویر وجود ندارد');
       }
 
-      // بررسی سایز فایل (محدودیت 5 مگابایت)
-      final fileSize = await imageFile.length();
-      if (fileSize > 5 * 1024 * 1024) {
-        throw Exception('حجم فایل بیشتر از حد مجاز است');
-      }
-
-      // آپلود تصویر به ArvanCloud
-      final imageUrl = await ImageUploadService.uploadImage(imageFile);
-
-      if (imageUrl == null) {
-        throw Exception('آپلود تصویر به ArvanCloud شکست خورد');
-      }
-
-      // به‌روزرسانی URL تصویر در پروفایل کاربر در Supabase
       final supabase = ref.read(supabaseClientProvider);
       final user = supabase.auth.currentUser;
 
@@ -160,6 +147,49 @@ class _EditProfileState extends ConsumerState<EditProfile> {
         throw Exception('کاربر وارد نشده است');
       }
 
+      // بررسی سایز فایل (محدودیت 5 مگابایت)
+      final fileSize = await imageFile.length();
+      if (fileSize > 5 * 1024 * 1024) {
+        throw Exception('حجم فایل بیشتر از حد مجاز است');
+      }
+
+      // حذف عکس قبلی از باکت اگر وجود داشته باشد
+      final profileData = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+
+      final previousAvatarUrl = profileData['avatar_url'] as String?;
+      if (previousAvatarUrl != null) {
+        final previousPath = previousAvatarUrl.split('/').last;
+        await supabase.storage.from('avatars').remove([previousPath]);
+      }
+
+      // آپلود عکس جدید
+      final fileExtension = imageFile.path.split('.').last;
+      final fileName =
+          '${user.id}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+
+      final storageResponse = await supabase.storage
+          .from('avatars') // نام باکت شما در سوپابیس
+          .upload(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(
+              cacheControl: '3600',
+              upsert: false,
+            ),
+          );
+
+      if (storageResponse.isEmpty) {
+        throw Exception('آپلود تصویر شکست خورد');
+      }
+
+      // دریافت URL عمومی فایل
+      final imageUrl = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      // به‌روزرسانی URL تصویر در پروفایل کاربر
       await supabase
           .from('profiles')
           .update({'avatar_url': imageUrl}).eq('id', user.id);
@@ -171,13 +201,11 @@ class _EditProfileState extends ConsumerState<EditProfile> {
       }
     } catch (e) {
       print('Error uploading image: $e');
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('خطا در آپلود تصویر: $e')),
         );
       }
-      print('Error uploading image: $e');
     }
   }
 

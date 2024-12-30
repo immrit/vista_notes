@@ -18,10 +18,10 @@ class WelcomePage extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20).r,
-                    child: Image.asset('lib/util/images/vistalogo.png'),
+                    child: Image.asset('lib/util/images/vistaNotes.png'),
                   ),
                   Text(
-                    '!سلام خیلی خوش اومدی به ویستا',
+                    '!سلام خیلی خوش اومدی به ویستانوت',
                     style: TextStyle(
                         fontSize: 20.sp,
                         color: Colors.white,
@@ -30,7 +30,7 @@ class WelcomePage extends StatelessWidget {
                   SizedBox(height: 10.h),
                   Text(
                     textAlign: TextAlign.right,
-                    '😊خانواده ویستا منتظر ورودت هستن',
+                    '!یادداشت کن فراموش نکنی',
                     style: TextStyle(fontSize: 15.sp, color: Colors.grey),
                   ),
                   // SizedBox(height: 200.h),

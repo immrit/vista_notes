@@ -5,9 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shamsi_date/shamsi_date.dart'; // اضافه شده
 import 'package:vistaNote/main.dart';
 import 'package:vistaNote/util/widgets.dart';
-import 'package:vistaNote/view/screen/homeScreen.dart';
 import '../../../model/NotesModel.dart';
 import '../../../provider/provider.dart';
+import 'NotesPage.dart';
 
 class AddNoteScreen extends ConsumerStatefulWidget {
   final Note? note;
@@ -52,7 +52,7 @@ class _AddNoteScreenState extends ConsumerState<AddNoteScreen> {
     }
 
     Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()));
+        MaterialPageRoute(builder: (context) => const NotesScreen()));
   }
 
   @override
